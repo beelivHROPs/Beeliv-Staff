@@ -1,0 +1,470 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-sans);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* Beeliv semantic status colors — distinct from brand purple/gold on purpose */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  /* Beeliv gold — sparing decorative accent, deliberately separate from --accent
+     (which stays a light purple tint for hover/active surfaces) so gold never
+     leaks in anywhere a generic `accent` utility is used. */
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* Beeliv brand tokens (docs/architecture/design-system.md) mapped onto the
+     shadcn semantic slots. Non-negotiable light canvas: warm white background,
+     white cards/sidebar, purple as an accent/interaction color, gold reserved
+     for the dedicated --gold token rather than flooding --accent/--primary. */
+  --background: #FAFAF8;
+  --foreground: #1A1621;
+  --card: #FFFFFF;
+  --card-foreground: #1A1621;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1621;
+  --primary: #2A0B47;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1EEF4;
+  --secondary-foreground: #1A1621;
+  --muted: #F6F4F7;
+  --muted-foreground: #7C7488;
+  --accent: #F5F1F8;
+  --accent-foreground: #2A0B47;
+  --destructive: #B3261E;
+  --destructive-foreground: #FFFFFF;
+  --border: #E7E3EB;
+  --input: #D2CCD9;
+  --ring: #8F5FAE;
+  --success: #1E7B4D;
+  --success-foreground: #FFFFFF;
+  --warning: #B8862B;
+  --warning-foreground: #FFFFFF;
+  --info: #2A5B8C;
+  --info-foreground: #FFFFFF;
+  --gold: #C1AC75;
+  --gold-foreground: #2A0B47;
+  --chart-1: #B48FC9;
+  --chart-2: #6B3B8C;
+  --chart-3: #3A1651;
+  --chart-4: #C1AC75;
+  --chart-5: #A79FB0;
+  --radius: 0.875rem;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1621;
+  --sidebar-primary: #2A0B47;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F1F8;
+  --sidebar-accent-foreground: #2A0B47;
+  --sidebar-border: #E7E3EB;
+  --sidebar-ring: #8F5FAE;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* Shimmer-sweep loading treatment (docs/architecture/design-system.md §12) —
+     a diagonal-reading gradient sweep rather than a flat pulse. Respects
+     prefers-reduced-motion via the motion-reduce:animate-none pairing used
+     wherever this class is applied. */
+  @keyframes shimmer-sweep {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  .animate-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      var(--muted) 25%,
+      var(--border) 50%,
+      var(--muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-sweep 1.6s ease-in-out infinite;
+  }
+
+  /* Same sweep, white/translucent instead of --muted/--border — for skeleton
+     blocks sitting on a solid brand-color surface (the purple job-listing
+     cards) where the default gray shimmer would read as a mismatched plain
+     card rather than "this purple card is loading". */
+  .animate-shimmer-inverse {
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, white 30%, transparent) 25%,
+      color-mix(in srgb, white 50%, transparent) 50%,
+      color-mix(in srgb, white 30%, transparent) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-sweep 1.6s ease-in-out infinite;
+  }
+
+  /* Application-journey current-stage pulse — gentle, not a hard flash. */
+  @keyframes journey-breathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 7px transparent;
+    }
+  }
+  .animate-journey-breathe {
+    animation: journey-breathe 2.6s ease-in-out infinite;
+  }
+
+  /* Staggered fade-up entrance for activity timelines / dashboard sections. */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-fade-up {
+    animation: fade-up 0.5s ease forwards;
+  }
+
+  /* Documentation wizard step transitions — content slides in from the
+     direction implied by the nav action (Next → right, Back/jump-back →
+     left), paired with a fade so it reads as a soft slide rather than a
+     hard shove. Only one step is ever mounted (components/applicant/
+     documentation/DocumentationWizard.tsx), so this animates the new
+     step's entrance rather than sliding two panels past each other. */
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  .animate-slide-in-right {
+    animation: slide-in-right 0.28s ease-out;
+  }
+  .animate-slide-in-left {
+    animation: slide-in-left 0.28s ease-out;
+  }
+
+  /* Hero preview card only (components/shared/HeroPreviewCard.tsx) — a
+     single traveling pulse sweeps the connector line once per cycle, and a
+     gentle bob on the floating chip, so the one hero-adjacent glass moment
+     reads as a live product screenshot rather than a static mock. This is
+     the one decorative surface allowed continuous motion at all; nothing
+     else in the app should reach for this pattern.
+
+     dash-flow: the polyline carries `pathLength="100"` (same normalization
+     trick as the FAQ/HowItWorks connectors elsewhere), so regardless of its
+     actual on-screen geometry, one 100-unit-long dash cycle = exactly one
+     full sweep from the path's start point (Application's center — the
+     polyline's own points ARE the circle centers, so the sweep genuinely
+     starts there, not just near it) to its end point (Decision's center).
+     stroke-dasharray splits that into one ~20-unit visible segment + an
+     80-unit gap, so only one glowing dash is ever on-screen, not the old
+     repeating "marching ants" pattern. */
+  @keyframes dash-flow {
+    0% {
+      stroke-dashoffset: 120;
+    }
+    100% {
+      stroke-dashoffset: -20;
+    }
+  }
+  .animate-dash-flow {
+    stroke-dasharray: 20 80;
+    animation: dash-flow 1s linear infinite;
+  }
+  /* Step-circle "impact" bounce — an elastic overshoot (expand past impact,
+     contract past rest, small correcting overshoot, settle) rather than a
+     single scale pulse, so it reads as the traveling pulse actually
+     bouncing off the circle rather than the circle just flashing. Timed to
+     the same 1s cycle as dash-flow above and staggered per circle
+     (animation-delay in HeroPreviewCard.tsx) to roughly match when the
+     traveling dash reaches that point along the path. Applied to the
+     circle itself, not its positioning wrapper (which already carries a
+     translate transform for centering — animating transform there would
+     fight it). */
+  @keyframes circle-bounce {
+    0%,
+    92%,
+    100% {
+      transform: scale(1);
+    }
+    4% {
+      transform: scale(1.4);
+    }
+    9% {
+      transform: scale(0.85);
+    }
+    14% {
+      transform: scale(1.12);
+    }
+    19% {
+      transform: scale(0.96);
+    }
+  }
+  .animate-circle-bounce {
+    animation: circle-bounce 1s ease-out infinite;
+  }
+  @keyframes float-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  .animate-float-bob {
+    animation: float-bob 3.2s ease-in-out infinite;
+  }
+  /* Slower, smaller-amplitude float for the main hero preview card itself —
+     the chip already bobs; giving the card the exact same motion made them
+     move in lockstep and read as one rigid unit rather than two independent
+     layers, so this one runs on its own timing. */
+  @keyframes float-bob-slow {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  .animate-float-bob-slow {
+    animation: float-bob-slow 5s ease-in-out infinite;
+  }
+  /* Hero headline's hand-drawn underline (app/page.tsx) — draws in, then
+     back out, on a continuous 2s loop (project-lead direction) — same
+     stroke-dasharray/dashoffset technique as everywhere else in this
+     codebase (FAQ, HowItWorks connectors, ProgressRing) rather than a new
+     animation library for one flourish. This is the one place besides the
+     hero preview card allowed a continuous (non-fire-once) motion — a
+     small decorative accent, not a large distracting one. */
+  @keyframes underline-draw {
+    0%,
+    100% {
+      stroke-dashoffset: 100;
+    }
+    50% {
+      stroke-dashoffset: 0;
+    }
+  }
+  .animate-underline-draw {
+    animation: underline-draw 2s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-shimmer,
+    .animate-shimmer-inverse,
+    .animate-journey-breathe,
+    .animate-fade-up,
+    .animate-slide-in-right,
+    .animate-slide-in-left,
+    .animate-dash-flow,
+    .animate-circle-bounce,
+    .animate-float-bob,
+    .animate-float-bob-slow {
+      animation: none !important;
+    }
+    /* Also needs its resting value forced, since (unlike the others above)
+       its un-animated starting attribute is deliberately hidden
+       (stroke-dashoffset="100") rather than already the visible state. */
+    .animate-underline-draw {
+      animation: none !important;
+      stroke-dashoffset: 0 !important;
+    }
+  }
+
+  /* Sparing brand-gradient accents — restraint rule per design-system.md §3/§4
+     (gold/gradient reserved for at most one emphasized moment per screen,
+     never flooding the interface). Three call sites, not a general-purpose
+     gradient system. */
+
+  /* Dashboard welcome band — a soft two-corner wash, not a hard fill. */
+  .bg-brand-wash {
+    background-image:
+      radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--primary) 7%, transparent), transparent 55%),
+      radial-gradient(100% 120% at 100% 0%, color-mix(in srgb, var(--gold) 12%, transparent), transparent 50%);
+  }
+
+  /* Public homepage hero only — deliberately stronger than .bg-brand-wash
+     above (which stays subtle everywhere it's used, e.g. dashboard welcome
+     headers). This is the one place design-system.md §4 allows a real glass
+     moment, and glass needs genuine color/contrast behind it to actually
+     read as glass — a wash this faint gives the floating header nothing to
+     blur. Strongest right at the top (behind the floating glass header),
+     fading to fully transparent by ~380px so the headline/CTA area below
+     stays on the plain page background and dark text stays legible
+     throughout (even the strongest band is a light tint, not a solid fill).
+     Percentages nudged up slightly this session (22/14/18 → 27/18/23) —
+     review feedback flagged it as borderline low-saturation, risking
+     washing out entirely on some displays. Still a tint, not a fill — just
+     no longer right at the edge of disappearing. */
+  .bg-hero-glow {
+    background-image:
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--primary) 27%, transparent) 0,
+        color-mix(in srgb, var(--gold) 18%, transparent) 220px,
+        transparent 480px
+      ),
+      radial-gradient(60% 80% at 85% 0%, color-mix(in srgb, var(--gold) 23%, transparent), transparent 60%);
+  }
+
+  /* Login/signup gradient header only (app/login/page.tsx, app/apply/[id]/
+     page.tsx) — deliberately richer than .bg-hero-glow above, which stays
+     untouched (still used, still that subtle, on the homepage hero).
+     Feedback this session, two rounds: first that the header read as
+     washed-out/murky at this smaller size using hero-level subtlety, then
+     — after a first fix — that it still "didn't fill well," visibly patchy
+     toward the bottom on a real phone screenshot. Root cause of round two:
+     the gradient's first stop used `color-mix(..., transparent)`, which
+     lets the page's off-white background show through underneath rather
+     than being a real fill — combined with a white decorative "shine" blob
+     positioned right where the patchiness showed. Both are removed here:
+     every stop below is a fully opaque brand-color blend (no transparent
+     component at all), so there's no page-background bleed-through
+     anywhere in the header, and the header's own decorative blobs (in the
+     page files, not this class) dropped the white one. This is still a
+     genuine two-stop GRADIENT, not a flat single-color fill (per
+     design-system.md's rule against color-flooded surfaces) — it just no
+     longer has a transparency leak undermining that gradient's own fill. */
+  .bg-auth-glow {
+    background-image: linear-gradient(
+      160deg,
+      var(--primary) 0%,
+      color-mix(in srgb, var(--primary) 65%, var(--gold)) 100%
+    );
+  }
+
+  /* Primary button hover — a warmth shift toward gold rather than a flat
+     opacity dim, echoing the brand's purple/gold duality on the one control
+     users press most. */
+  .bg-primary-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--primary),
+      color-mix(in srgb, var(--primary) 78%, var(--gold))
+    );
+  }
+
+  /* "All caught up" success-state icon wash. */
+  .bg-success-wash {
+    background-image: radial-gradient(
+      120% 120% at 30% 20%,
+      color-mix(in srgb, var(--success) 18%, transparent),
+      color-mix(in srgb, var(--success) 6%, transparent) 70%
+    );
+  }
+}

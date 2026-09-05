@@ -1,0 +1,331 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Bell, Menu, Search } from "lucide-react";
+import type { NavGroup } from "@/lib/nav-config";
+import { Avatar } from "@/components/shared/Avatar";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+/**
+ * Shared authenticated-area shell (header + sidebar + content), per
+ * docs/architecture/ui-ux-framework.md §1. One component, role-conditional
+ * navigation — not five separate layouts — matching the "single Next.js
+ * codebase" principle in docs/architecture/system-architecture.md §1/§3.
+ *
+ * No real session/auth check happens here (Stage 2 work). This renders the
+ * structural shell only; it does not gate access.
+ */
+// Per-role sidebar/drawer identity — project-lead direction: every role
+// except Applicant ("quite okay, can be maintained") needs a genuinely
+// dominant, distinguishing nav color. Two failed attempts already ruled
+// out: a faint ~7% gold wash on white ("no changes made"), then pale-but-
+// solid gold/lavender/slate blocks with dark text ("wack" next to Ops's
+// dark purple). What actually reads as premium is Ops's own treatment —
+// a fully dark, saturated block with white text — so every tone below now
+// follows that same register, just a different existing token so each
+// still reads as its own color: Ops stays --primary purple, HR is a dark
+// gold/purple bronze blend, Staff is --chart-2 (a mid-dark purple already
+// in the app's chart palette, related-but-distinct from Ops), Client is
+// --foreground (a near-black neutral) — dark, not colorful, matching its
+// "oversight, not control" restraint while still being visibly its own
+// block instead of Applicant's plain white.
+const NAV_TONE_STYLES = {
+  default: {
+    container: "bg-sidebar border-sidebar-border",
+    groupLabel: "text-muted-foreground",
+    itemActive: "border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+    itemInactive: "border-transparent text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+    divider: "border-sidebar-border",
+    profileName: "text-sidebar-foreground",
+    profileRole: "text-muted-foreground",
+  },
+  purple: {
+    container: "bg-primary border-transparent",
+    groupLabel: "text-white/55",
+    itemActive: "border-white bg-white/15 font-medium text-white",
+    itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
+    divider: "border-white/15",
+    profileName: "text-white",
+    profileRole: "text-white/60",
+  },
+  gold: {
+    container: "bg-[color-mix(in_srgb,var(--gold)_40%,var(--primary)_60%)] border-transparent",
+    groupLabel: "text-white/55",
+    itemActive: "border-white bg-white/15 font-medium text-white",
+    itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
+    divider: "border-white/15",
+    profileName: "text-white",
+    profileRole: "text-white/60",
+  },
+  lavender: {
+    container: "bg-[color:var(--chart-2)] border-transparent",
+    groupLabel: "text-white/55",
+    itemActive: "border-white bg-white/15 font-medium text-white",
+    itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
+    divider: "border-white/15",
+    profileName: "text-white",
+    profileRole: "text-white/60",
+  },
+  slate: {
+    container: "bg-[color:var(--foreground)] border-transparent",
+    groupLabel: "text-white/55",
+    itemActive: "border-white bg-white/15 font-medium text-white",
+    itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
+    divider: "border-white/15",
+    profileName: "text-white",
+    profileRole: "text-white/60",
+  },
+} as const;
+
+export function AppShell({
+  roleLabel,
+  scopeLabel,
+  navItems,
+  userName,
+  showSearch = false,
+  notificationCount = 0,
+  navTone = "default",
+  children,
+}: {
+  roleLabel: string;
+  scopeLabel?: string;
+  navItems: NavGroup[];
+  /** When provided, renders the user identity slot (header avatar + sidebar
+   *  identity card). Omitted roles just don't show one yet. */
+  userName?: string;
+  /** Structural placeholder only — no search backend exists yet. */
+  showSearch?: boolean;
+  /** Sidebar/mobile-drawer identity — see NAV_TONE_STYLES. */
+  navTone?: "default" | "purple" | "gold" | "lavender" | "slate";
+  /** Unread count for the notification bell (structural placeholder, no real backend). */
+  notificationCount?: number;
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const tone = NAV_TONE_STYLES[navTone];
+
+  const isActive = (href: string) =>
+    pathname === href || pathname?.startsWith(`${href}/`);
+
+  const flatItems = navItems.flatMap((group) => group.items);
+  // Derived, not hardcoded — only the applicant nav has a "Profile" entry so
+  // far (other roles aren't redesigned yet, per nav-config.ts); the avatar
+  // only becomes a link once that role actually has somewhere to send it.
+  const profileHref = flatItems.find((item) => item.label === "Profile")?.href;
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-2.5">
+          {/* Mobile nav trigger — now the same Sheet drawer primitive as
+              PublicHeader's mobile nav (components/shared/PublicHeader.tsx),
+              swapped in this session for consistency with that established
+              pattern instead of the old inline below-header dropdown. Opens
+              from the left, matching this button's own position (unlike
+              PublicHeader, which moved its trigger to the right and opens
+              from the right — here the bell/role/avatar cluster on the
+              right needs to stay visible on every breakpoint, so the
+              trigger has nowhere to move to). */}
+          <Sheet>
+            <SheetTrigger
+              aria-label="Open navigation menu"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent sm:hidden"
+            >
+              <Menu className="size-5" />
+            </SheetTrigger>
+            <SheetContent
+              side="left"
+              overlayClassName="bg-black/50 backdrop-blur-sm"
+              className={`w-72 gap-0 p-0 ${tone.container}`}
+            >
+              <SheetHeader className={`border-b ${tone.divider}`}>
+                <SheetTitle className="sr-only">{roleLabel} navigation</SheetTitle>
+                <Image
+                  src="/beeliv-logo-mark-v2.png"
+                  alt="Beeliv Hospitality"
+                  width={214}
+                  height={223}
+                  className="h-10 w-auto object-contain"
+                />
+              </SheetHeader>
+              <nav aria-label={`${roleLabel} navigation`} className="flex flex-col gap-4 overflow-y-auto p-3">
+                {navItems.map((group, groupIndex) => (
+                  <div key={group.label ?? groupIndex}>
+                    {group.label ? (
+                      <p className={`mb-1 px-3 text-[11px] font-semibold tracking-wide uppercase ${tone.groupLabel}`}>
+                        {group.label}
+                      </p>
+                    ) : null}
+                    <ul className="space-y-0.5">
+                      {group.items.map((item) => (
+                        <li key={item.href}>
+                          <SheetClose
+                            nativeButton={false}
+                            render={
+                              <Link
+                                href={item.href}
+                                className={`block rounded-lg border-l-2 px-3 py-2.5 text-sm transition-colors ${
+                                  isActive(item.href) ? tone.itemActive : tone.itemInactive
+                                }`}
+                              />
+                            }
+                          >
+                            {item.label}
+                          </SheetClose>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
+          <Image
+            src="/beeliv-logo-mark-v2.png"
+            alt="Beeliv Hospitality"
+            width={214}
+            height={223}
+            priority
+            className="h-16 w-auto object-contain sm:h-20"
+          />
+          {scopeLabel ? (
+            <span className="hidden text-sm text-muted-foreground sm:inline">
+              · {scopeLabel}
+            </span>
+          ) : null}
+        </div>
+
+        {showSearch ? (
+          <div className="hidden max-w-xs flex-1 px-6 md:block">
+            <div className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search…"
+                disabled
+                title="Search isn't available yet"
+                className="rounded-full bg-muted pl-9"
+              />
+            </div>
+          </div>
+        ) : null}
+
+        <div className="flex items-center gap-3">
+          <span
+            aria-label={
+              notificationCount > 0
+                ? `Notifications (${notificationCount} unread)`
+                : "Notifications"
+            }
+            title="Notifications"
+            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <Bell className="size-4" />
+            {notificationCount > 0 ? (
+              <Badge
+                variant="default"
+                className="absolute -top-1.5 -right-1.5 h-4 min-w-4 justify-center rounded-full bg-gold px-1 text-[10px] text-gold-foreground"
+              >
+                {notificationCount}
+              </Badge>
+            ) : null}
+          </span>
+          {/* Purple-branded role pill with a thin gold ring — project-lead
+              direction ("make purple the primary color here, with a touch
+              of gold"), replacing the plain neutral bg-secondary pill. */}
+          <span className="rounded-full border border-[color:var(--gold)]/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            {roleLabel}
+          </span>
+          {userName ? (
+            profileHref ? (
+              <Link
+                href={profileHref}
+                aria-label={`${userName} — view profile`}
+                title="View profile"
+                className="rounded-full transition-opacity hover:opacity-80"
+              >
+                <Avatar name={userName} size="sm" ring />
+              </Link>
+            ) : (
+              <Avatar name={userName} size="sm" ring />
+            )
+          ) : null}
+        </div>
+      </header>
+
+      <div className="flex flex-1">
+        {/* Desktop sidebar navigation */}
+        <nav
+          aria-label={`${roleLabel} navigation`}
+          className={`hidden w-56 shrink-0 border-r p-4 sm:block ${tone.container}`}
+        >
+          <div className="space-y-5">
+            {navItems.map((group, groupIndex) => (
+              <div key={group.label ?? groupIndex}>
+                {group.label ? (
+                  <p className={`mb-1.5 px-3 text-[11px] font-semibold tracking-wide uppercase ${tone.groupLabel}`}>
+                    {group.label}
+                  </p>
+                ) : null}
+                <ul className="space-y-1">
+                  {group.items.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={`block rounded-md border-l-2 px-3 py-2 text-sm transition-colors ${
+                          isActive(item.href) ? tone.itemActive : tone.itemInactive
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {userName ? (
+            profileHref ? (
+              <Link
+                href={profileHref}
+                className={`mt-6 flex items-center gap-2.5 border-t pt-4 transition-opacity hover:opacity-80 ${tone.divider}`}
+              >
+                <Avatar name={userName} size="md" ring />
+                <div className="min-w-0">
+                  <div className={`truncate text-sm font-semibold ${tone.profileName}`}>
+                    {userName}
+                  </div>
+                  <div className={`text-xs ${tone.profileRole}`}>{roleLabel}</div>
+                </div>
+              </Link>
+            ) : (
+              <div className={`mt-6 flex items-center gap-2.5 border-t pt-4 ${tone.divider}`}>
+                <Avatar name={userName} size="md" ring />
+                <div className="min-w-0">
+                  <div className={`truncate text-sm font-semibold ${tone.profileName}`}>
+                    {userName}
+                  </div>
+                  <div className={`text-xs ${tone.profileRole}`}>{roleLabel}</div>
+                </div>
+              </div>
+            )
+          ) : null}
+        </nav>
+
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
