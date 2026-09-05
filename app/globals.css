@@ -72,14 +72,27 @@
   --card-foreground: #1A1621;
   --popover: #FFFFFF;
   --popover-foreground: #1A1621;
-  --primary: #2A0B47;
+  /* Brightened 2026-09-05 (project-lead direction, referencing a "Mintora"
+     fintech dashboard mockup): #2A0B47 was near-black. First pass (#6D28D9)
+     was flagged as too bright/electric after seeing it live; settled on
+     #5B21B6 instead — same purple/violet hue family (~265-271°), still a
+     real brightness/saturation jump over the original, but richer/darker
+     than the first attempt. Verified white-on-primary contrast stays
+     ~9:1 (was ~19:1 at the original near-black) — comfortably past WCAG AA.
+     --accent-foreground below intentionally does NOT follow this
+     brightening — it's dark text ON the pale --accent tint, and a bright
+     primary gives poor contrast there regardless of exact shade; routed to
+     --foreground (the dedicated dark-neutral token) instead, which is the
+     more correct fix independent of primary's brightness. Same reasoning
+     applies to --gold-foreground and --sidebar-accent-foreground below. */
+  --primary: #5B21B6;
   --primary-foreground: #FFFFFF;
   --secondary: #F1EEF4;
   --secondary-foreground: #1A1621;
   --muted: #F6F4F7;
   --muted-foreground: #7C7488;
   --accent: #F5F1F8;
-  --accent-foreground: #2A0B47;
+  --accent-foreground: #1A1621;
   --destructive: #B3261E;
   --destructive-foreground: #FFFFFF;
   --border: #E7E3EB;
@@ -92,7 +105,7 @@
   --info: #2A5B8C;
   --info-foreground: #FFFFFF;
   --gold: #C1AC75;
-  --gold-foreground: #2A0B47;
+  --gold-foreground: #1A1621;
   --chart-1: #B48FC9;
   --chart-2: #6B3B8C;
   --chart-3: #3A1651;
@@ -101,10 +114,10 @@
   --radius: 0.875rem;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #1A1621;
-  --sidebar-primary: #2A0B47;
+  --sidebar-primary: #5B21B6;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F5F1F8;
-  --sidebar-accent-foreground: #2A0B47;
+  --sidebar-accent-foreground: #1A1621;
   --sidebar-border: #E7E3EB;
   --sidebar-ring: #8F5FAE;
 }
