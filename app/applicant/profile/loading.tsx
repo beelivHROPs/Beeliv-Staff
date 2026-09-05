@@ -1,15 +1,18 @@
 import { Skeleton } from "@/components/shared/Skeleton";
 
-/** Mirrors app/applicant/profile/page.tsx: PageHeading + a two-column grid
- *  — the main form card (2 half-width fields, 2 full-width fields, a
- *  button row) beside a narrower identity card (avatar + name + caption). */
+/** Mirrors app/applicant/profile/page.tsx: PageHeading (h1 text-xl, mb-6,
+ *  mt-1 description) + a two-column grid — the main form card (2 half-width
+ *  fields, 2 full-width fields, a button row) beside a narrower identity
+ *  card (avatar + name + caption). */
 export default function Loading() {
   return (
     <div className="mx-auto max-w-3xl">
-      <Skeleton className="h-8 w-32" />
-      <Skeleton className="mt-2 h-4 w-56 max-w-full" />
+      <div className="mb-6">
+        <Skeleton className="h-6 w-24" />
+        <Skeleton className="mt-1 h-3.5 w-56 max-w-full" />
+      </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]">
+      <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
         <div className="rounded-lg border border-border bg-card p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
