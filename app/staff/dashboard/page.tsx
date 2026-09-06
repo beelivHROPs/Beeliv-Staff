@@ -10,6 +10,7 @@ import {
   SAMPLE_STAFF_PROFILE,
   SAMPLE_UPCOMING_SHIFTS,
   SAMPLE_STAFF_NOTICES,
+  SAMPLE_STAFF_DOCUMENTS,
 } from "@/lib/placeholder-data";
 import { DASHBOARD_ACCENT_BG } from "@/lib/dashboard-accent";
 
@@ -34,12 +35,13 @@ export default function StaffDashboardPage() {
   const nextShift = SAMPLE_UPCOMING_SHIFTS[0];
   const latestNotice = SAMPLE_STAFF_NOTICES[0];
 
-  // SAMPLE_STAFF_PROFILE (this user's own record) has no documentation-
-  // completeness field yet — unlike the HR-facing SAMPLE_STAFF list, whose
-  // per-row `documentationStatus` belongs to different sample staff. Per
-  // project rules, default to the safer "complete" state rather than
-  // inventing an incomplete one; revisit once a real field is modeled.
-  const documentationComplete = true;
+  // Derived from SAMPLE_STAFF_DOCUMENTS — the same per-document list
+  // app/staff/documentation renders — instead of a hardcoded true. That
+  // page previously always showed "Complete" regardless of actual status;
+  // this keeps both screens in sync with one source of truth.
+  const documentationComplete = SAMPLE_STAFF_DOCUMENTS.every(
+    (doc) => doc.status === "submitted" || doc.status === "approved"
+  );
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -132,7 +134,74 @@ export default function StaffDashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+        <div className="space-y-4">
+          {/* Primary action: context-dependent per ui-ux-framework.md §3
+              ("Complete Outstanding Documentation" if applicable). Secondary
+              action: "View SOPs". Leads the page (project-lead: an
+              outstanding action shouldn't sit below reference-only lists)
+              — was previously last, after Upcoming Shifts/Notices/
+              Documentation Status detail. */}
+          <Card>
+            <CardContent>
+              <h2 className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                Quick Actions
+              </h2>
+              {/* bg matches this dashboard's own nav color (navTone="lavender"
+                  on AppShell, app/staff/layout.tsx). */}
+              <div className="flex flex-col gap-2">
+                {documentationComplete ? (
+                  <Link
+                    href="/staff/documentation"
+                    className={DASHBOARD_ACCENT_BG.lavender}
+                  >
+                    View Documentation
+                    <ArrowRight data-icon="inline-end" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/staff/documentation"
+                    className={DASHBOARD_ACCENT_BG.lavender}
+                  >
+                    Complete Outstanding Documentation
+                    <ArrowRight data-icon="inline-end" />
+                  </Link>
+                )}
+                <Link href="/staff/sops" className={buttonVariants({ variant: "outline" })}>
+                  <BookOpen data-icon="inline-start" />
+                  View SOPs
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Documentation Status detail */}
+          <Card>
+            <CardContent>
+              <div className="mb-2.5 flex items-center justify-between">
+                <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Documentation Status
+                </h2>
+                <StatusBadge
+                  label={documentationComplete ? "Complete" : "Incomplete"}
+                  tone={documentationComplete ? "success" : "warning"}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {documentationComplete
+                  ? "All required documentation is on file."
+                  : "Some required documentation is outstanding."}
+              </p>
+              <Link
+                href="/staff/documentation"
+                className="mt-3 inline-block text-xs font-medium text-primary hover:underline"
+              >
+                View Documentation →
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="space-y-4">
           {/* Upcoming Shifts */}
           <Card>
@@ -190,70 +259,6 @@ export default function StaffDashboardPage() {
               ) : (
                 <p className="text-sm text-muted-foreground">No new notices.</p>
               )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-4">
-          {/* Documentation Status detail */}
-          <Card>
-            <CardContent>
-              <div className="mb-2.5 flex items-center justify-between">
-                <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  Documentation Status
-                </h2>
-                <StatusBadge
-                  label={documentationComplete ? "Complete" : "Incomplete"}
-                  tone={documentationComplete ? "success" : "warning"}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {documentationComplete
-                  ? "All required documentation is on file."
-                  : "Some required documentation is outstanding."}
-              </p>
-              <Link
-                href="/staff/documentation"
-                className="mt-3 inline-block text-xs font-medium text-primary hover:underline"
-              >
-                View Documentation →
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Primary action: context-dependent per ui-ux-framework.md §3
-              ("Complete Outstanding Documentation" if applicable). Secondary
-              action: "View SOPs". */}
-          <Card>
-            <CardContent>
-              <h2 className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Quick Actions
-              </h2>
-              {/* bg matches this dashboard's own nav color (navTone="lavender"
-                  on AppShell, app/staff/layout.tsx). */}
-              <div className="flex flex-col gap-2">
-                {documentationComplete ? (
-                  <Link
-                    href="/staff/documentation"
-                    className={DASHBOARD_ACCENT_BG.lavender}
-                  >
-                    View Documentation
-                    <ArrowRight data-icon="inline-end" />
-                  </Link>
-                ) : (
-                  <Link
-                    href="/staff/documentation"
-                    className={DASHBOARD_ACCENT_BG.lavender}
-                  >
-                    Complete Outstanding Documentation
-                    <ArrowRight data-icon="inline-end" />
-                  </Link>
-                )}
-                <Link href="/staff/sops" className={buttonVariants({ variant: "outline" })}>
-                  <BookOpen data-icon="inline-start" />
-                  View SOPs
-                </Link>
-              </div>
             </CardContent>
           </Card>
         </div>

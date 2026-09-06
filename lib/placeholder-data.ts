@@ -243,6 +243,47 @@ export const SAMPLE_STAFF_PROFILE = {
   employmentStatus: "Active" as const,
 };
 
+// This staff member's own onboarding documentation — same confirmed
+// checklist/status vocabulary as SAMPLE_APPLICANT_DOCUMENTS (both trace
+// back to the same onboarding document set), used by both
+// app/staff/documentation (the per-document list) and app/staff/dashboard
+// (whose "documentationComplete" is derived from this instead of a
+// hardcoded true). One item left in "attention" so the incomplete state
+// has something real to show, not just a theoretical branch.
+export const SAMPLE_STAFF_DOCUMENTS: SampleDocumentEntry[] = [
+  {
+    id: "personal-information",
+    title: "Personal Information",
+    description: "Name, contact, address",
+    status: "submitted",
+  },
+  {
+    id: "nin-document",
+    title: "NIN Document",
+    description: "Required identity document",
+    status: "submitted",
+  },
+  {
+    id: "passport-photograph",
+    title: "Passport Photograph",
+    description: "Recent, plain background",
+    status: "approved",
+    icon: "person",
+  },
+  {
+    id: "proof-of-address",
+    title: "Proof of Address",
+    description: "Utility bill or equivalent",
+    status: "approved",
+  },
+  {
+    id: "onboarding-acknowledgement",
+    title: "Onboarding Acknowledgement",
+    description: "Upload didn't complete",
+    status: "attention",
+  },
+];
+
 export interface SampleShift {
   id: string;
   label: string;

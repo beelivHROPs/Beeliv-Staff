@@ -8,6 +8,7 @@ import type { NavGroup } from "@/lib/nav-config";
 import { Avatar } from "@/components/shared/Avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
   Sheet,
   SheetClose,
@@ -92,7 +93,7 @@ export function AppShell({
   navItems,
   userName,
   showSearch = false,
-  notificationCount = 0,
+  notifications = [],
   navTone = "default",
   children,
 }: {
@@ -106,10 +107,13 @@ export function AppShell({
   showSearch?: boolean;
   /** Sidebar/mobile-drawer identity — see NAV_TONE_STYLES. */
   navTone?: "default" | "purple" | "gold" | "lavender" | "slate";
-  /** Unread count for the notification bell (structural placeholder, no real backend). */
-  notificationCount?: number;
+  /** Bell badge count is this array's length, not a separately-passed
+   *  number — a role with no real notification data model yet (no backing
+   *  list) shows no badge instead of an arbitrary/unfounded count. */
+  notifications?: { id: string; title: string; date: string }[];
   children: React.ReactNode;
 }) {
+  const notificationCount = notifications.length;
   const pathname = usePathname();
   const tone = NAV_TONE_STYLES[navTone];
 
@@ -220,25 +224,45 @@ export function AppShell({
         ) : null}
 
         <div className="flex items-center gap-3">
-          <span
-            aria-label={
-              notificationCount > 0
-                ? `Notifications (${notificationCount} unread)`
-                : "Notifications"
-            }
-            title="Notifications"
-            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <Bell className="size-4" />
-            {notificationCount > 0 ? (
-              <Badge
-                variant="default"
-                className="absolute -top-1.5 -right-1.5 h-4 min-w-4 justify-center rounded-full bg-gold px-1 text-[10px] text-gold-foreground"
-              >
-                {notificationCount}
-              </Badge>
-            ) : null}
-          </span>
+          <Popover>
+            <PopoverTrigger
+              aria-label={
+                notificationCount > 0
+                  ? `Notifications (${notificationCount} unread)`
+                  : "Notifications"
+              }
+              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Bell className="size-4" />
+              {notificationCount > 0 ? (
+                <Badge
+                  variant="default"
+                  className="absolute -top-1.5 -right-1.5 h-4 min-w-4 justify-center rounded-full bg-gold px-1 text-[10px] text-gold-foreground"
+                >
+                  {notificationCount}
+                </Badge>
+              ) : null}
+            </PopoverTrigger>
+            <PopoverContent align="end">
+              <div className="border-b border-border px-4 py-3">
+                <p className="text-sm font-semibold text-foreground">Notifications</p>
+              </div>
+              {notifications.length > 0 ? (
+                <ul className="m-0 max-h-80 list-none divide-y divide-border overflow-y-auto p-0">
+                  {notifications.map((item) => (
+                    <li key={item.id} className="px-4 py-3">
+                      <p className="text-sm font-medium text-foreground">{item.title}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{item.date}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  No notifications yet.
+                </p>
+              )}
+            </PopoverContent>
+          </Popover>
           {/* Purple-branded role pill with a thin gold ring — project-lead
               direction ("make purple the primary color here, with a touch
               of gold"), replacing the plain neutral bg-secondary pill. */}
