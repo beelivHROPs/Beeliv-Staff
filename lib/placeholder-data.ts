@@ -277,6 +277,14 @@ export interface SampleWarning {
 // severity taxonomy exists in any source document, so none is invented here.
 export const SAMPLE_WARNINGS: SampleWarning[] = [
   { id: "warning-1", staffName: "Sample Staff Member B", reason: "Late arrival", date: "Aug 10, 2026" },
+  // warning-2 through warning-4 — added alongside the extra SAMPLE_STAFF
+  // records so a "by reason" breakdown has more than one data point; same
+  // shape/fields as the original entry, no new reason taxonomy invented
+  // (reasons are still free-text, matching the "no severity taxonomy exists
+  // in any source document" note above).
+  { id: "warning-2", staffName: "Sample Staff Member D", reason: "Uniform violation", date: "Aug 14, 2026" },
+  { id: "warning-3", staffName: "Sample Staff Member A", reason: "Late arrival", date: "Aug 18, 2026" },
+  { id: "warning-4", staffName: "Sample Staff Member H", reason: "Missed shift", date: "Aug 22, 2026" },
 ];
 
 export const SAMPLE_ATTENDANCE_TODAY = {
@@ -330,5 +338,48 @@ export const SAMPLE_STAFF: SampleStaffRecord[] = [
     outlet: "Sample Outlet 2",
     documentationStatus: "Complete",
     employmentStatus: "Active",
+  },
+  // staff-4 through staff-8 — added so per-outlet status breakdowns (e.g.
+  // HR's dashboard) have more than 1-2 records to chart; same shape/fields
+  // as the original three, no new statuses or business rules introduced.
+  {
+    id: "staff-4",
+    name: "Sample Staff Member D",
+    position: "Front Desk Associate",
+    outlet: "Sample Outlet 1",
+    documentationStatus: "Complete",
+    employmentStatus: "Active",
+  },
+  {
+    id: "staff-5",
+    name: "Sample Staff Member E",
+    position: "Maintenance Technician",
+    outlet: "Sample Outlet 1",
+    documentationStatus: "Complete",
+    employmentStatus: "Active",
+  },
+  {
+    id: "staff-6",
+    name: "Sample Staff Member F",
+    position: "Restaurant Server",
+    outlet: "Sample Outlet 2",
+    documentationStatus: "Incomplete",
+    employmentStatus: "Onboarding",
+  },
+  {
+    id: "staff-7",
+    name: "Sample Staff Member G",
+    position: "Housekeeping Attendant",
+    outlet: "Sample Outlet 2",
+    documentationStatus: "Complete",
+    employmentStatus: "Active",
+  },
+  {
+    id: "staff-8",
+    name: "Sample Staff Member H",
+    position: "Front Desk Associate",
+    outlet: "Sample Outlet 1",
+    documentationStatus: "Incomplete",
+    employmentStatus: "Onboarding",
   },
 ];
