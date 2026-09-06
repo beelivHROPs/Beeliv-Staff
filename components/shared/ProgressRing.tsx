@@ -1,9 +1,45 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useState } from "react";
+import { DASHBOARD_TONE_BASE } from "@/lib/dashboard-accent";
+
+// Irregular wedge-width weights (project-lead reference: Mintora's
+// "Monthly Growth" donut — a faceted ring of varying-width segments with
+// visible gaps, not a smooth arc or uniform ticks). Still a single-value
+// gauge underneath — Mintora's own "+64%" is one number too — so these
+// widths are pure decorative texture, not fabricated categories; a
+// segment is colored "filled" if its midpoint falls within `value`%.
+const WEDGE_WEIGHTS = [0.16, 0.09, 0.19, 0.08, 0.15, 0.2, 0.13];
+const GAP_DEGREES = 5;
+
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArc = endAngle - startAngle <= 180 ? 0 : 1;
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
+}
+
+const totalGapDegrees = GAP_DEGREES * WEDGE_WEIGHTS.length;
+const availableDegrees = 360 - totalGapDegrees;
+const wedges = (() => {
+  let cursor = 0;
+  return WEDGE_WEIGHTS.map((weight) => {
+    const width = weight * availableDegrees;
+    const start = cursor;
+    const end = cursor + width;
+    cursor = end + GAP_DEGREES;
+    return { start, end, mid: (start + end) / 2 };
+  });
+})();
 
 /**
- * Circular progress indicator. Animates from 0 to `value` once on mount
+ * Circular progress indicator — a faceted ring of irregular-width wedges
+ * (see WEDGE_WEIGHTS above). Animates from 0 to `value` once on mount
  * (design-system.md §15: progress animates on first load, ease-out,
  * ~1-1.2s, runs once) — not on every re-render, and not repeatedly.
  */
@@ -11,72 +47,102 @@ export function ProgressRing({
   value,
   size = 60,
   label,
-  centerLabel,
+  showCenterLabel = false,
+  centerLabelClassName = "text-lg font-bold text-foreground",
+  tone = "purple",
 }: {
   /** 0-100 */
   value: number;
   size?: number;
   label?: React.ReactNode;
-  /** Optional text overlaid in the ring's center (e.g. "64%"). */
-  centerLabel?: React.ReactNode;
+  /** Renders a "64%"-style label in the ring's center, counting up in sync
+   *  with the wedges filling in. A plain boolean + className (not a render
+   *  function) — every caller here is a Server Component, and a function
+   *  prop can't cross the Server-to-Client-Component boundary ("Functions
+   *  cannot be passed directly to Client Components", a real build error
+   *  the dev-server page-loads-fine checks never caught). */
+  showCenterLabel?: boolean;
+  centerLabelClassName?: string;
+  /** Matches the dashboard's own AppShell navTone/HeroStatCard tone, so the
+   *  ring's color reads as belonging to that dashboard instead of always
+   *  being purple. */
+  tone?: "purple" | "gold" | "lavender" | "slate";
 }) {
-  const circleRef = useRef<SVGCircleElement>(null);
   const gradientId = `progress-ring-${useId().replace(/:/g, "")}`;
-  const radius = size / 2 - 5;
-  const circumference = 2 * Math.PI * radius;
+  const strokeWidth = Math.max(6, size * 0.15);
+  const radius = size / 2 - strokeWidth / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const base = DASHBOARD_TONE_BASE[tone];
   const clamped = Math.max(0, Math.min(100, value));
-  const targetOffset = circumference - (clamped / 100) * circumference;
+  const targetFraction = clamped / 100;
+  const [animatedFraction, setAnimatedFraction] = useState(0);
 
   useEffect(() => {
-    const el = circleRef.current;
-    if (!el) return;
-    // Start fully "empty" then animate to target on the next frame so the
-    // CSS transition actually runs (a same-tick style write wouldn't).
-    el.style.transition = "none";
-    el.style.strokeDashoffset = String(circumference);
-    el.getBoundingClientRect();
-    el.style.transition = "stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1) 0.1s";
-    el.style.strokeDashoffset = String(targetOffset);
-  }, [clamped, circumference, targetOffset]);
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    let raf: number;
+    const start = performance.now();
+    const duration = prefersReducedMotion ? 0 : 1100;
+    function tick(now: number) {
+      const elapsed = now - start;
+      const t = duration === 0 ? 1 : Math.min(1, elapsed / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setAnimatedFraction(eased * targetFraction);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [targetFraction]);
 
   return (
     <div className="flex items-center gap-3">
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="motion-reduce:[&_circle.value]:!transition-none">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
           <defs>
-            {/* One emphasized element per screen (design-system.md §3 gold-restraint
-                rule) — the single hero metric gets the brand's purple→gold duality,
-                everything else stays solid var(--primary). */}
-            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--primary)" />
-              <stop offset="100%" stopColor="var(--gold)" />
+            {/* userSpaceOnUse + fixed coordinates spanning the whole ring —
+                without this, gradientUnits defaults to objectBoundingBox,
+                which stretches the full color range across EACH wedge's
+                own tiny bounding box independently. That's what caused the
+                "scattered" look ("still doesn't match") — every filled
+                wedge cycled through both colors on its own instead of the
+                ring showing one continuous sweep. Single-hue light->dark
+                of the dashboard's own tone token, matching HeroStatCard's
+                gradient exactly (not primary->gold — mixing two different
+                hues per-stop desaturates into a muddy color, the same
+                lesson already learned on that component). */}
+            <linearGradient
+              id={gradientId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={0}
+              x2={size}
+              y2={size}
+            >
+              <stop offset="0%" stopColor={`color-mix(in srgb, ${base} 45%, white 55%)`} />
+              <stop offset="100%" stopColor={base} />
             </linearGradient>
           </defs>
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke="var(--border)"
-            strokeWidth={5}
-          />
-          <circle
-            ref={circleRef}
-            className="value"
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={`url(#${gradientId})`}
-            strokeWidth={5}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={targetOffset}
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
+          {wedges.map((wedge, i) => {
+            const isFilled = wedge.mid / 360 <= animatedFraction;
+            return (
+              <path
+                key={i}
+                d={arcPath(cx, cy, radius, wedge.start, wedge.end)}
+                fill="none"
+                stroke={isFilled ? `url(#${gradientId})` : "var(--border)"}
+                strokeWidth={strokeWidth}
+                strokeLinecap="butt"
+                className="transition-[stroke] duration-200"
+              />
+            );
+          })}
         </svg>
-        {centerLabel ? (
-          <div className="absolute inset-0 flex items-center justify-center">{centerLabel}</div>
+        {showCenterLabel ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={centerLabelClassName}>{Math.round(animatedFraction * 100)}%</span>
+          </div>
         ) : null}
       </div>
       {label}

@@ -42,7 +42,7 @@ export function MetricCard({
   value: React.ReactNode;
   caption?: React.ReactNode;
   trailing?: React.ReactNode;
-  icon?: ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
   /** Gives the card a subtle accent-tinted surface (used sparingly, e.g. one tip card). */
   accent?: boolean;
   /** Icon treatment — "plain" (default, every dashboard except below) or a
@@ -59,10 +59,10 @@ export function MetricCard({
           <div className="flex items-center gap-1.5">
             {Icon ? (
               iconTone === "plain" ? (
-                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={2.25} />
               ) : (
-                <span className={`flex size-8 items-center justify-center rounded-lg ${ICON_TONE_CLASSES[iconTone]}`}>
-                  <Icon className="h-4.5 w-4.5" />
+                <span className={`flex size-9 items-center justify-center rounded-lg ${ICON_TONE_CLASSES[iconTone]}`}>
+                  <Icon className="h-5 w-5" strokeWidth={2.25} />
                 </span>
               )
             ) : null}

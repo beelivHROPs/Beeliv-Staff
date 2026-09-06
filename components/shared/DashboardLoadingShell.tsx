@@ -22,6 +22,37 @@ export function DashboardHeaderSkeleton() {
   );
 }
 
+/**
+ * Hero row for the 3 dashboards redesigned with a HeroStatCard + donut
+ * ring (HR, Ops, Client) — DashboardHeaderSkeleton above is now stale for
+ * these three (it mirrors the flat .bg-brand-wash header those pages no
+ * longer have; Applicant/Staff still use that header, so it stays correct
+ * there). Without this, the loading state showed no hero/ring placeholder
+ * at all, then the real redesigned content popped in with a completely
+ * different shape — the "previous skeleton...overlaps the current design"
+ * mismatch.
+ */
+export function DashboardHeroRowSkeleton() {
+  return (
+    <div className="mb-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className="rounded-2xl bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)] px-5 py-5 sm:px-6 sm:py-6">
+        <Skeleton className="h-3 w-48 bg-[color-mix(in_srgb,var(--foreground)_12%,transparent)]" />
+        <Skeleton className="mt-2 h-5 w-32 bg-[color-mix(in_srgb,var(--foreground)_12%,transparent)]" />
+        <Skeleton className="mt-3 h-9 w-20 bg-[color-mix(in_srgb,var(--foreground)_12%,transparent)]" />
+        <Skeleton className="mt-1.5 h-4 w-24 bg-[color-mix(in_srgb,var(--foreground)_12%,transparent)]" />
+        <Skeleton className="mt-3 h-6 w-40 rounded-full bg-[color-mix(in_srgb,var(--foreground)_12%,transparent)]" />
+      </div>
+      <Card>
+        <CardContent className="flex h-full flex-col items-center justify-center gap-2">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="size-26 rounded-full" />
+          <Skeleton className="h-3 w-28" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function MetricTileSkeleton() {
   return (
     <Card size="sm" className="border-border/80">

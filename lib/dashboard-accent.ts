@@ -24,3 +24,15 @@ export const DASHBOARD_ACCENT_BG: Record<"purple" | "gold" | "lavender" | "slate
   lavender: `${BASE} bg-[color:var(--chart-2)] text-white hover:brightness-110`,
   slate: `${BASE} bg-[color:var(--foreground)] text-white hover:brightness-125`,
 };
+
+// Same per-dashboard base color, as a raw CSS value instead of a Tailwind
+// class — shared by components/shared/HeroStatCard.tsx and ProgressRing.tsx
+// so a dashboard's hero card, its ring charts, and its nav/buttons all
+// resolve to the exact same anchor token instead of three separate copies
+// drifting apart.
+export const DASHBOARD_TONE_BASE: Record<"purple" | "gold" | "lavender" | "slate", string> = {
+  purple: "var(--primary)",
+  gold: "var(--tone-gold)",
+  lavender: "var(--chart-2)",
+  slate: "var(--foreground)",
+};
