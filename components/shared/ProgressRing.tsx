@@ -11,11 +11,14 @@ export function ProgressRing({
   value,
   size = 60,
   label,
+  centerLabel,
 }: {
   /** 0-100 */
   value: number;
   size?: number;
   label?: React.ReactNode;
+  /** Optional text overlaid in the ring's center (e.g. "64%"). */
+  centerLabel?: React.ReactNode;
 }) {
   const circleRef = useRef<SVGCircleElement>(null);
   const gradientId = `progress-ring-${useId().replace(/:/g, "")}`;
@@ -38,39 +41,44 @@ export function ProgressRing({
 
   return (
     <div className="flex items-center gap-3">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="motion-reduce:[&_circle.value]:!transition-none">
-        <defs>
-          {/* One emphasized element per screen (design-system.md §3 gold-restraint
-              rule) — the single hero metric gets the brand's purple→gold duality,
-              everything else stays solid var(--primary). */}
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--gold)" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="var(--border)"
-          strokeWidth={5}
-        />
-        <circle
-          ref={circleRef}
-          className="value"
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={`url(#${gradientId})`}
-          strokeWidth={5}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={targetOffset}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="motion-reduce:[&_circle.value]:!transition-none">
+          <defs>
+            {/* One emphasized element per screen (design-system.md §3 gold-restraint
+                rule) — the single hero metric gets the brand's purple→gold duality,
+                everything else stays solid var(--primary). */}
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--primary)" />
+              <stop offset="100%" stopColor="var(--gold)" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="var(--border)"
+            strokeWidth={5}
+          />
+          <circle
+            ref={circleRef}
+            className="value"
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={`url(#${gradientId})`}
+            strokeWidth={5}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={targetOffset}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        </svg>
+        {centerLabel ? (
+          <div className="absolute inset-0 flex items-center justify-center">{centerLabel}</div>
+        ) : null}
+      </div>
       {label}
     </div>
   );

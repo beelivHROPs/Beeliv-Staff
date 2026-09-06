@@ -26,20 +26,15 @@ import {
  * No real session/auth check happens here (Stage 2 work). This renders the
  * structural shell only; it does not gate access.
  */
-// Per-role sidebar/drawer identity — project-lead direction: every role
-// except Applicant ("quite okay, can be maintained") needs a genuinely
-// dominant, distinguishing nav color. Two failed attempts already ruled
-// out: a faint ~7% gold wash on white ("no changes made"), then pale-but-
-// solid gold/lavender/slate blocks with dark text ("wack" next to Ops's
-// dark purple). What actually reads as premium is Ops's own treatment —
-// a fully dark, saturated block with white text — so every tone below now
-// follows that same register, just a different existing token so each
-// still reads as its own color: Ops stays --primary purple, HR is a dark
-// gold/purple bronze blend, Staff is --chart-2 (a mid-dark purple already
-// in the app's chart palette, related-but-distinct from Ops), Client is
-// --foreground (a near-black neutral) — dark, not colorful, matching its
-// "oversight, not control" restraint while still being visibly its own
-// block instead of Applicant's plain white.
+// Per-role sidebar/drawer identity — every role except Applicant ("quite
+// okay, can be maintained") gets a genuinely dominant, distinguishing nav
+// color (a plain bg-card sidebar with only the active item tinted was
+// tried and reversed — project-lead: "reverse that"). Ops stays --primary
+// purple, HR is a dark gold/purple bronze blend, Staff is --chart-2 (a
+// mid-dark purple already in the app's chart palette, related-but-distinct
+// from Ops), Client is --foreground (a near-black neutral) — dark, not
+// colorful, matching its "oversight, not control" restraint while still
+// being visibly its own block instead of Applicant's plain white.
 const NAV_TONE_STYLES = {
   default: {
     container: "bg-sidebar border-sidebar-border",
@@ -60,7 +55,10 @@ const NAV_TONE_STYLES = {
     profileRole: "text-white/60",
   },
   gold: {
-    container: "bg-[color-mix(in_srgb,var(--gold)_40%,var(--primary)_60%)] border-transparent",
+    // Same gradient formula/base token as HeroStatCard's tone="gold" —
+    // project-lead: nav and hero card should be the exact matching color.
+    container:
+      "bg-[linear-gradient(135deg,color-mix(in_srgb,var(--tone-gold)_45%,white_55%)_0%,var(--tone-gold)_100%)] border-transparent",
     groupLabel: "text-white/55",
     itemActive: "border-white bg-white/15 font-medium text-white",
     itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
@@ -149,13 +147,13 @@ export function AppShell({
               overlayClassName="bg-black/50 backdrop-blur-sm"
               className={`w-72 gap-0 p-0 ${tone.container}`}
             >
-              <SheetHeader className={`border-b ${tone.divider}`}>
+              <SheetHeader className={`border-b bg-white ${tone.divider}`}>
                 <SheetTitle className="sr-only">{roleLabel} navigation</SheetTitle>
                 <Image
-                  src="/beeliv-logo-mark-v2.png"
+                  src="/beeliv-logo-mark-hd.png"
                   alt="Beeliv Hospitality"
-                  width={214}
-                  height={223}
+                  width={314}
+                  height={342}
                   className="h-10 w-auto object-contain"
                 />
               </SheetHeader>
@@ -192,10 +190,10 @@ export function AppShell({
             </SheetContent>
           </Sheet>
           <Image
-            src="/beeliv-logo-mark-v2.png"
+            src="/beeliv-logo-mark-hd.png"
             alt="Beeliv Hospitality"
-            width={214}
-            height={223}
+            width={314}
+            height={342}
             priority
             className="h-16 w-auto object-contain sm:h-20"
           />

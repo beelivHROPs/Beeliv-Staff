@@ -20,7 +20,7 @@ const BASE =
 
 export const DASHBOARD_ACCENT_BG: Record<"purple" | "gold" | "lavender" | "slate", string> = {
   purple: `${BASE} bg-primary text-primary-foreground hover:bg-primary/90`,
-  gold: `${BASE} bg-[color-mix(in_srgb,var(--gold)_40%,var(--primary)_60%)] text-white hover:brightness-110`,
+  gold: `${BASE} bg-[color:var(--tone-gold)] text-white hover:brightness-110`,
   lavender: `${BASE} bg-[color:var(--chart-2)] text-white hover:brightness-110`,
   slate: `${BASE} bg-[color:var(--foreground)] text-white hover:brightness-125`,
 };

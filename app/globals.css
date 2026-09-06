@@ -106,6 +106,12 @@
   --info-foreground: #FFFFFF;
   --gold: #C1AC75;
   --gold-foreground: #1A1621;
+  /* HR's nav/hero tone — single source of truth so the sidebar and the
+     gradient hero card use the exact same base color instead of drifting
+     apart. Plain --primary, not a gold blend — project-lead: keep the
+     hero's existing violet as-is and reuse it for the nav, not a mixed
+     or lightened variant. */
+  --tone-gold: var(--primary);
   --chart-1: #B48FC9;
   --chart-2: #6B3B8C;
   --chart-3: #3A1651;

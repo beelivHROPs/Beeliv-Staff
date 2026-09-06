@@ -38,10 +38,10 @@ export default function NotFound() {
         className="relative z-10 mb-8 flex items-center justify-center rounded-2xl bg-white p-3 shadow-md"
       >
         <Image
-          src="/beeliv-logo-mark-v2.png"
+          src="/beeliv-logo-mark-hd.png"
           alt="Beeliv Hospitality"
-          width={214}
-          height={223}
+          width={314}
+          height={342}
           className="h-14 w-auto object-contain"
         />
       </Link>
