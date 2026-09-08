@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { Avatar } from "@/components/shared/Avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { toast } from "@/components/ui/toast";
 
 const OPTION_BUTTON_CLASS =
   "w-full rounded-full border border-primary py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/5";
@@ -36,6 +37,11 @@ export function ProfileAvatarUpload({ name }: { name: string }) {
       return URL.createObjectURL(file);
     });
     setOpen(false);
+    toast.add({
+      title: "Photo updated",
+      description: "This is a preview only — nothing is uploaded or saved yet.",
+      type: "success",
+    });
   }
 
   const previewImg = preview ? (

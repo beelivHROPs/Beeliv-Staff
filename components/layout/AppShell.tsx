@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import { Bell, Menu, Search } from "lucide-react";
 import type { NavGroup } from "@/lib/nav-config";
 import { Avatar } from "@/components/shared/Avatar";
@@ -36,11 +37,18 @@ import {
 // from Ops), Client is --foreground (a near-black neutral) — dark, not
 // colorful, matching its "oversight, not control" restraint while still
 // being visibly its own block instead of Applicant's plain white.
+// itemActiveIndicator/itemActiveText split out from itemActive (kept
+// unchanged, still used verbatim by the mobile Sheet nav) so the desktop
+// nav can animate a single shared layoutId background behind the active
+// link — border+bg live on the animated element, font/text stay on the
+// Link so the label is never visually affected by the slide.
 const NAV_TONE_STYLES = {
   default: {
     container: "bg-sidebar border-sidebar-border",
     groupLabel: "text-muted-foreground",
     itemActive: "border-sidebar-primary bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+    itemActiveIndicator: "border-sidebar-primary bg-sidebar-accent",
+    itemActiveText: "font-medium text-sidebar-accent-foreground",
     itemInactive: "border-transparent text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
     divider: "border-sidebar-border",
     profileName: "text-sidebar-foreground",
@@ -50,6 +58,8 @@ const NAV_TONE_STYLES = {
     container: "bg-primary border-transparent",
     groupLabel: "text-white/55",
     itemActive: "border-white bg-white/15 font-medium text-white",
+    itemActiveIndicator: "border-white bg-white/15",
+    itemActiveText: "font-medium text-white",
     itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
     divider: "border-white/15",
     profileName: "text-white",
@@ -62,6 +72,8 @@ const NAV_TONE_STYLES = {
       "bg-[linear-gradient(135deg,color-mix(in_srgb,var(--tone-gold)_45%,white_55%)_0%,var(--tone-gold)_100%)] border-transparent",
     groupLabel: "text-white/55",
     itemActive: "border-white bg-white/15 font-medium text-white",
+    itemActiveIndicator: "border-white bg-white/15",
+    itemActiveText: "font-medium text-white",
     itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
     divider: "border-white/15",
     profileName: "text-white",
@@ -71,15 +83,29 @@ const NAV_TONE_STYLES = {
     container: "bg-[color:var(--chart-2)] border-transparent",
     groupLabel: "text-white/55",
     itemActive: "border-white bg-white/15 font-medium text-white",
+    itemActiveIndicator: "border-white bg-white/15",
+    itemActiveText: "font-medium text-white",
     itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
     divider: "border-white/15",
     profileName: "text-white",
     profileRole: "text-white/60",
   },
   slate: {
-    container: "bg-[color:var(--foreground)] border-transparent",
+    // The sidebar itself now uses --tone-client (the logo hand's exact
+    // sampled color) instead of plain --foreground — the earlier version
+    // only added small accents on top of an unchanged near-black
+    // background, which is why it still read as "close to black".
+    container: "bg-[color:var(--tone-client)] border-transparent",
     groupLabel: "text-white/55",
-    itemActive: "border-white bg-white/15 font-medium text-white",
+    itemActive: "border-[color:var(--chart-1)] bg-white/15 font-medium text-white",
+    // Soft inset glow on the active-item indicator — Client-only for now
+    // (project-lead: try the sidebar active-item polish idea from the
+    // pasted reference CSS, scoped to this one dashboard rather than all
+    // five). Uses --chart-1 (the same token already driving this tone's
+    // active-item border) via color-mix instead of a hardcoded rgba.
+    itemActiveIndicator:
+      "border-[color:var(--chart-1)] bg-white/15 shadow-[inset_0_0_18px_color-mix(in_srgb,var(--chart-1)_40%,transparent)]",
+    itemActiveText: "font-medium text-white",
     itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
     divider: "border-white/15",
     profileName: "text-white",
@@ -116,6 +142,10 @@ export function AppShell({
   const notificationCount = notifications.length;
   const pathname = usePathname();
   const tone = NAV_TONE_STYLES[navTone];
+  const prefersReducedMotion = useReducedMotion();
+  const navIndicatorTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 480, damping: 38, mass: 0.9 };
 
   const isActive = (href: string) =>
     pathname === href || pathname?.startsWith(`${href}/`);
@@ -231,9 +261,9 @@ export function AppShell({
                   ? `Notifications (${notificationCount} unread)`
                   : "Notifications"
               }
-              className="relative flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/15"
             >
-              <Bell className="size-4" />
+              <Bell className="size-4.5" strokeWidth={2.25} />
               {notificationCount > 0 ? (
                 <Badge
                   variant="default"
@@ -301,18 +331,28 @@ export function AppShell({
                   </p>
                 ) : null}
                 <ul className="space-y-1">
-                  {group.items.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`block rounded-md border-l-2 px-3 py-2 text-sm transition-colors ${
-                          isActive(item.href) ? tone.itemActive : tone.itemInactive
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
+                  {group.items.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <li key={item.href} className="relative">
+                        {active ? (
+                          <motion.div
+                            layoutId="desktop-nav-active-indicator"
+                            transition={navIndicatorTransition}
+                            className={`absolute inset-0 rounded-md border-l-2 ${tone.itemActiveIndicator}`}
+                          />
+                        ) : null}
+                        <Link
+                          href={item.href}
+                          className={`relative block rounded-md border-l-2 border-transparent px-3 py-2 text-sm transition-colors ${
+                            active ? tone.itemActiveText : tone.itemInactive
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
