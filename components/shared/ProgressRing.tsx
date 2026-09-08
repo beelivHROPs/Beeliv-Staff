@@ -12,9 +12,17 @@ import { DASHBOARD_TONE_BASE } from "@/lib/dashboard-accent";
 const WEDGE_WEIGHTS = [0.16, 0.09, 0.19, 0.08, 0.15, 0.2, 0.13];
 const GAP_DEGREES = 5;
 
+// Rounded to 4 decimals — full float precision differed by ~1 part in 1e15
+// between server and client renders of the same trig call (a real, if
+// tiny, SSR hydration mismatch React logged a warning for), and nothing
+// visually needs more precision than this anyway.
+function round(n: number) {
+  return Math.round(n * 10000) / 10000;
+}
+
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  return { x: round(cx + r * Math.cos(rad)), y: round(cy + r * Math.sin(rad)) };
 }
 
 function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
