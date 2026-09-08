@@ -112,6 +112,11 @@
      hero's existing violet as-is and reuse it for the nav, not a mixed
      or lightened variant. */
   --tone-gold: var(--primary);
+  /* Client's tone — the logo mark's actual hand/tray color, sampled
+     directly from public/beeliv-logo-mark-hd.png (average of the violet
+     fill pixels, not a guess or an existing chart token), per project-lead
+     request to match it precisely. */
+  --tone-client: #32174C;
   --chart-1: #B48FC9;
   --chart-2: #6B3B8C;
   --chart-3: #3A1651;

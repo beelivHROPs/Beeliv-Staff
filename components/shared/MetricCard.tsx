@@ -22,10 +22,25 @@ const ICON_TONE_CLASSES = {
   // moment per screen" restraint (the welcome header already spends that
   // budget) while still giving these two dashboards a visibly richer feel.
   purple: "bg-primary/10 text-primary",
-  gold: "bg-[color-mix(in_srgb,var(--gold)_18%,transparent)] text-[color:var(--gold)]",
-  // Semantic override, not part of the purple/gold pair — for tiles whose
-  // subject is genuinely alarming (e.g. "Recent Warnings Issued"), where
-  // gold read as too decorative/celebratory to communicate a warning.
+  // Uses --tone-gold (lib/dashboard-accent.ts's DASHBOARD_TONE_BASE.gold —
+  // HR's actual hero/nav/ring color), NOT the literal brand --gold token
+  // (#C1AC75). Those are two different tokens that happen to share a name;
+  // this previously pointed at --gold, so HR's icon chips rendered a warm
+  // tan while the rest of HR's dashboard rendered purple (--tone-gold is
+  // currently aliased to --primary) — project-lead: "hr icon color should
+  // match the dashboard color instead of using gold." This stays in sync
+  // automatically if --tone-gold's value ever changes.
+  gold: "bg-[color-mix(in_srgb,var(--tone-gold)_18%,transparent)] text-[color:var(--tone-gold)]",
+  // Client's own dashboard color (--tone-client, the logo hand's exact
+  // sampled purple) — same "match the dashboard color" fix as gold above,
+  // applied to Client (project-lead: "i think same thing fr the client as
+  // well"). Client's tiles previously used the "plain" default (no chip at
+  // all), not a wrong color, but the same principle applies: the icon
+  // should read as belonging to this dashboard.
+  slate: "bg-[color-mix(in_srgb,var(--tone-client)_18%,transparent)] text-[color:var(--tone-client)]",
+  // Semantic override, not part of the purple/gold/slate set — for tiles
+  // whose subject is genuinely alarming (e.g. "Recent Warnings Issued"),
+  // where a dashboard tone read as too decorative to communicate a warning.
   destructive: "bg-destructive/10 text-destructive",
 } as const;
 
@@ -45,9 +60,9 @@ export function MetricCard({
   icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
   /** Gives the card a subtle accent-tinted surface (used sparingly, e.g. one tip card). */
   accent?: boolean;
-  /** Icon treatment — "plain" (default, every dashboard except below) or a
-   *  small purple/gold chip (HR/Ops only, see ICON_TONE_CLASSES). */
-  iconTone?: "plain" | "purple" | "gold" | "destructive";
+  /** Icon treatment — "plain" (default) or a small dashboard-tone chip
+   *  (purple/gold/slate — one per dashboard's own color, see ICON_TONE_CLASSES). */
+  iconTone?: "plain" | "purple" | "gold" | "slate" | "destructive";
 }) {
   return (
     <Card
