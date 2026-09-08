@@ -70,7 +70,7 @@ export default function StaffDashboardPage() {
         {nextShift ? (
           <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Clock className="h-4.5 w-4.5" />
+              <Clock className="h-5 w-5" strokeWidth={2.25} />
             </span>
             <div>
               <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">

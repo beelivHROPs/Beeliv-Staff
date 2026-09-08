@@ -149,8 +149,12 @@ export function ApplicationJourney({
         ))}
       </div>
 
+      {/* Info tone instead of the plain neutral accent tint — a pending-
+          status message read as too easy to miss (project-lead: "this
+          text should be highlighted with a different color"). Same
+          info/10 + text-info pattern StatusBadge already uses. */}
       {note ? (
-        <p className="mt-4 rounded-md bg-accent px-3 py-2.5 text-xs text-accent-foreground">
+        <p className="mt-4 rounded-md bg-info/10 px-3 py-2.5 text-xs text-info">
           {note}
         </p>
       ) : null}

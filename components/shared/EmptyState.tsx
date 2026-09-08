@@ -2,8 +2,23 @@
 // 2026-09-02): custom inline SVG only — no illustration library, no stock imagery.
 // Each variant is 2-3 simple geometric shapes, single-color or purple/gold duotone.
 // Purely decorative + static markup, so this stays a server component (no "use client").
+//
+// Second pass ("make them look more interesting" — the first version read as
+// skeletal: a thin-stroked rectangle/line and one small gold dot). Same shape
+// count and constraint, executed with more craft: a soft tinted-circle backdrop
+// (the same "icon chip" language MetricCard already uses), bolder rounded
+// strokes, and the gold accent as a deliberate small badge instead of a
+// leftover dot.
 
 type EmptyStateVariant = "tray" | "briefcase" | "default";
+
+/** Shared backdrop wash behind every illustration's shapes — the actual
+ *  "more interesting" fix: these read as flat line art with nothing behind
+ *  them, unlike every other icon surface in this app (MetricCard's chips,
+ *  HeroStatCard's decorative circle) which all sit on a soft tinted circle. */
+function Backdrop() {
+  return <circle cx="60" cy="60" r="54" fill="var(--primary)" opacity="0.06" />;
+}
 
 /** Inbox-tray + document motif — reused for both "no documents" and "no notifications"
  *  contexts (design-system.md §11 names this one shared motif for that pairing). */
@@ -17,23 +32,33 @@ function TrayIllustration() {
       aria-hidden="true"
       focusable="false"
     >
-      <path
-        d="M22 68 L98 68 L84 96 L36 96 Z"
+      <Backdrop />
+      <rect
+        x="38"
+        y="18"
+        width="46"
+        height="58"
+        rx="5"
+        transform="rotate(-6 38 18)"
         stroke="var(--primary)"
-        strokeWidth="3"
+        strokeWidth="4"
         strokeLinejoin="round"
       />
-      <rect
-        x="40"
-        y="20"
-        width="44"
-        height="56"
-        rx="4"
-        transform="rotate(-6 40 20)"
+      <path
+        d="M20 70 L100 70 L86 98 L34 98 Z"
         stroke="var(--primary)"
-        strokeWidth="3"
+        strokeWidth="4"
+        strokeLinejoin="round"
+        strokeLinecap="round"
       />
-      <circle cx="82" cy="30" r="6" fill="var(--gold)" />
+      <circle cx="86" cy="28" r="9" fill="var(--gold)" />
+      <path
+        d="M82.5 28 L85 30.5 L90 25"
+        stroke="var(--gold-foreground)"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -49,25 +74,34 @@ function BriefcaseIllustration() {
       aria-hidden="true"
       focusable="false"
     >
+      <Backdrop />
       <rect
-        x="22"
-        y="48"
-        width="76"
-        height="52"
-        rx="6"
+        x="20"
+        y="46"
+        width="80"
+        height="54"
+        rx="7"
         stroke="var(--primary)"
-        strokeWidth="3"
+        strokeWidth="4"
+        strokeLinejoin="round"
       />
-      <rect
-        x="46"
-        y="30"
-        width="28"
-        height="20"
-        rx="4"
+      <path
+        d="M44 46 L44 34 Q44 28 50 28 L70 28 Q76 28 76 34 L76 46"
         stroke="var(--primary)"
-        strokeWidth="3"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <circle cx="60" cy="74" r="5" fill="var(--gold)" />
+      <line
+        x1="20"
+        y1="70"
+        x2="100"
+        y2="70"
+        stroke="var(--primary)"
+        strokeWidth="4"
+        opacity="0.35"
+      />
+      <circle cx="60" cy="70" r="7" fill="var(--gold)" />
     </svg>
   );
 }
@@ -83,26 +117,38 @@ function DefaultIllustration() {
       aria-hidden="true"
       focusable="false"
     >
+      <Backdrop />
       <rect
-        x="26"
-        y="24"
-        width="68"
-        height="72"
-        rx="8"
+        x="24"
+        y="22"
+        width="72"
+        height="76"
+        rx="9"
         stroke="var(--primary)"
-        strokeWidth="3"
+        strokeWidth="4"
+        strokeLinejoin="round"
       />
       <line
-        x1="40"
-        y1="56"
-        x2="80"
-        y2="56"
+        x1="38"
+        y1="50"
+        x2="82"
+        y2="50"
         stroke="var(--primary)"
-        strokeWidth="3"
+        strokeWidth="4"
         strokeLinecap="round"
         opacity="0.5"
       />
-      <circle cx="80" cy="38" r="5" fill="var(--gold)" />
+      <line
+        x1="38"
+        y1="66"
+        x2="68"
+        y2="66"
+        stroke="var(--primary)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        opacity="0.3"
+      />
+      <circle cx="84" cy="34" r="9" fill="var(--gold)" />
     </svg>
   );
 }

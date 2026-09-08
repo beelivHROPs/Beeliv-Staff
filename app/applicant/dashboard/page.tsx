@@ -155,7 +155,16 @@ export default function ApplicantDashboardPage() {
             key="progress"
             icon={TrendingUp}
             label="Application Progress"
-            value={<CountUp value={progressPercent} suffix="%" />}
+            value={
+              // Semantic color instead of always-neutral text — a low
+              // completion number reading the same as a high one made it
+              // easy to miss at a glance (project-lead: "info like this
+              // should be in red"). Same threshold/tone pattern already
+              // used by StatusBadge elsewhere in this app.
+              <span className={progressPercent < 50 ? "text-destructive" : undefined}>
+                <CountUp value={progressPercent} suffix="%" />
+              </span>
+            }
             trailing={<TrendChart values={progressTrend} />}
             caption="Overall completion"
           />,
