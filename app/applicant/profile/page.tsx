@@ -74,12 +74,17 @@ function Field({
   defaultValue: string;
   full?: boolean;
 }) {
+  // Derived from label, not a separate prop — labels are unique within
+  // each page's Field usages, so this is enough to give every label/input
+  // pair a real htmlFor/id association (found missing via a QA sweep).
+  const id = `field-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <div className={full ? "sm:col-span-2" : undefined}>
-      <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+      <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-muted-foreground">
         {label}
       </label>
       <input
+        id={id}
         type="text"
         defaultValue={defaultValue}
         disabled

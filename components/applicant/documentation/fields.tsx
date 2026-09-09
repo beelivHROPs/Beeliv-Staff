@@ -19,6 +19,13 @@ import { DISABLED_FIELD_TITLE, DISABLED_UPLOAD_TITLE } from "./constants";
  * equally-weighted.
  */
 
+// Derived from label, not a separate prop — labels are unique within any
+// one caller's fields, so this is enough to give every label/field pair a
+// real htmlFor/id association (found missing via a QA sweep).
+function idFor(label: string) {
+  return `field-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}
+
 export function TextField({
   label,
   defaultValue,
@@ -30,10 +37,12 @@ export function TextField({
   placeholder?: string;
   type?: string;
 }) {
+  const id = idFor(label);
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
       <Input
+        id={id}
         type={type}
         disabled
         title={DISABLED_FIELD_TITLE}
@@ -54,13 +63,15 @@ export function SelectField({
   options: string[];
   defaultValue?: string;
 }) {
+  const id = idFor(label);
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
       {/* Plain native <select>, styled to match Input's visual treatment —
           no new select primitive introduced, per the task brief's own
           allowance for this handful of naturally-enumerated fields. */}
       <select
+        id={id}
         disabled
         title={DISABLED_FIELD_TITLE}
         defaultValue={defaultValue ?? ""}
@@ -88,10 +99,12 @@ export function TextAreaField({
   defaultValue?: string;
   placeholder?: string;
 }) {
+  const id = idFor(label);
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
       <textarea
+        id={id}
         disabled
         title={DISABLED_FIELD_TITLE}
         defaultValue={defaultValue}
@@ -110,9 +123,10 @@ export function FileUploadField({
   label: string;
   description?: string;
 }) {
+  const id = idFor(label);
   return (
     <div>
-      <label className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
       <div className="mt-1 flex items-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-3.5 py-3">
         <div className="min-w-0 flex-1">
           {description ? (
@@ -126,6 +140,7 @@ export function FileUploadField({
           </p>
         </div>
         <Button
+          id={id}
           type="button"
           size="sm"
           variant="outline"
