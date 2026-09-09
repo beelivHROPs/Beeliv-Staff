@@ -155,6 +155,12 @@ export function AppShell({
   // far (other roles aren't redesigned yet, per nav-config.ts); the avatar
   // only becomes a link once that role actually has somewhere to send it.
   const profileHref = flatItems.find((item) => item.label === "Profile")?.href;
+  // Same derivation for Notifications — only Staff/Applicant have a real
+  // route (lib/nav-config.ts); HR/Ops/Client have no notifications page or
+  // data model, so their bell stays a Popover preview instead of a dead
+  // link. Project-lead: "I want them to be clickable so they take us to
+  // the notification page when clicked."
+  const notificationsHref = flatItems.find((item) => item.label === "Notifications")?.href;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -254,8 +260,12 @@ export function AppShell({
         ) : null}
 
         <div className="flex items-center gap-3">
-          <Popover>
-            <PopoverTrigger
+          {notificationsHref ? (
+            // Direct link, not a Popover preview — this role has a real
+            // notifications page, so clicking the bell takes you straight
+            // there instead of opening a dropdown first.
+            <Link
+              href={notificationsHref}
               aria-label={
                 notificationCount > 0
                   ? `Notifications (${notificationCount} unread)`
@@ -272,27 +282,48 @@ export function AppShell({
                   {notificationCount}
                 </Badge>
               ) : null}
-            </PopoverTrigger>
-            <PopoverContent align="end">
-              <div className="border-b border-border px-4 py-3">
-                <p className="text-sm font-semibold text-foreground">Notifications</p>
-              </div>
-              {notifications.length > 0 ? (
-                <ul className="m-0 max-h-80 list-none divide-y divide-border overflow-y-auto p-0">
-                  {notifications.map((item) => (
-                    <li key={item.id} className="px-4 py-3">
-                      <p className="text-sm font-medium text-foreground">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{item.date}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                  No notifications yet.
-                </p>
-              )}
-            </PopoverContent>
-          </Popover>
+            </Link>
+          ) : (
+            <Popover>
+              <PopoverTrigger
+                aria-label={
+                  notificationCount > 0
+                    ? `Notifications (${notificationCount} unread)`
+                    : "Notifications"
+                }
+                className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/15"
+              >
+                <Bell className="size-4.5" strokeWidth={2.25} />
+                {notificationCount > 0 ? (
+                  <Badge
+                    variant="default"
+                    className="absolute -top-1.5 -right-1.5 h-4 min-w-4 justify-center rounded-full bg-gold px-1 text-[10px] text-gold-foreground"
+                  >
+                    {notificationCount}
+                  </Badge>
+                ) : null}
+              </PopoverTrigger>
+              <PopoverContent align="end">
+                <div className="border-b border-border px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground">Notifications</p>
+                </div>
+                {notifications.length > 0 ? (
+                  <ul className="m-0 max-h-80 list-none divide-y divide-border overflow-y-auto p-0">
+                    {notifications.map((item) => (
+                      <li key={item.id} className="px-4 py-3">
+                        <p className="text-sm font-medium text-foreground">{item.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{item.date}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                    No notifications yet.
+                  </p>
+                )}
+              </PopoverContent>
+            </Popover>
+          )}
           {/* Purple-branded role pill with a thin gold ring — project-lead
               direction ("make purple the primary color here, with a touch
               of gold"), replacing the plain neutral bg-secondary pill. */}
