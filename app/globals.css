@@ -66,6 +66,12 @@
      shadcn semantic slots. Non-negotiable light canvas: warm white background,
      white cards/sidebar, purple as an accent/interaction color, gold reserved
      for the dedicated --gold token rather than flooding --accent/--primary. */
+  /* Never declared before — without it, browsers/OSes that auto-dark-invert
+     websites with no explicit color-scheme (Android Chrome's "Force Dark"
+     is the common case) invert this whole light canvas, crushing light-gray
+     skeleton shimmer down to near-black-on-black and making loading states
+     look broken/stuck rather than loading. */
+  color-scheme: light;
   --background: #FAFAF8;
   --foreground: #1A1621;
   --card: #FFFFFF;

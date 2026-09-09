@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
@@ -25,6 +25,17 @@ export const metadata: Metadata = {
   },
   description:
     "Beeliv Hospitality HR, Recruitment & Operations platform.",
+};
+
+// The app never declared it's light-only, so Android Chrome's "Force Dark"
+// auto-inverts the whole page — including skeleton/shimmer loaders, which
+// go from light-gray-on-white to near-black-on-black and look broken/stuck
+// rather than loading (project-lead: "still tripping with the old shimmer
+// loader" — a phone screenshot showing exactly this). This tells the
+// browser not to auto-invert; app/globals.css's `:root` also sets the
+// matching CSS `color-scheme: light` for browsers that read it directly.
+export const viewport: Viewport = {
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
