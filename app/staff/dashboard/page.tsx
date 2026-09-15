@@ -56,7 +56,7 @@ export default function StaffDashboardPage() {
           removed. */}
       <div className="bg-brand-wash mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl px-4 py-5 sm:px-6">
         <div>
-          <p className="mb-0.5 text-[11px] font-semibold tracking-wide text-warning uppercase">
+          <p className="mb-0.5 text-sm font-semibold tracking-wide text-warning uppercase">
             Assigned Staff
           </p>
           <h1 className="font-heading text-2xl font-semibold text-foreground">
@@ -73,13 +73,13 @@ export default function StaffDashboardPage() {
               <Clock className="h-5 w-5" strokeWidth={2.25} />
             </span>
             <div>
-              <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+              <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                 Next Shift
               </p>
               <p className="text-sm font-semibold text-foreground">
                 {nextShift.label} · {nextShift.date}
               </p>
-              <p className="font-mono text-xs text-muted-foreground">{nextShift.time}</p>
+              <p className="font-mono text-sm text-muted-foreground">{nextShift.time}</p>
             </div>
           </div>
         ) : null}
@@ -87,7 +87,7 @@ export default function StaffDashboardPage() {
 
       {/* Key metrics — one tile per wireframe widget, staggered entrance
           (~70ms/tile, design-system.md §15). */}
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 duo:grid-cols-3 sm:grid-cols-4">
         {[
           <MetricCard
             key="profile"
@@ -144,7 +144,7 @@ export default function StaffDashboardPage() {
               Documentation Status detail. */}
           <Card>
             <CardContent>
-              <h2 className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <h2 className="mb-2.5 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                 Quick Actions
               </h2>
               {/* bg matches this dashboard's own nav color (navTone="lavender"
@@ -179,7 +179,7 @@ export default function StaffDashboardPage() {
           <Card>
             <CardContent>
               <div className="mb-2.5 flex items-center justify-between">
-                <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                   Documentation Status
                 </h2>
                 <StatusBadge
@@ -194,7 +194,7 @@ export default function StaffDashboardPage() {
               </p>
               <Link
                 href="/staff/documentation"
-                className="mt-3 inline-block text-xs font-medium text-primary hover:underline"
+                className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
               >
                 View Documentation →
               </Link>
@@ -207,10 +207,10 @@ export default function StaffDashboardPage() {
           <Card>
             <CardContent>
               <div className="mb-2.5 flex items-center justify-between">
-                <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                   Upcoming Shifts
                 </h2>
-                <Link href="/staff/schedule" className="text-xs font-medium text-primary hover:underline">
+                <Link href="/staff/schedule" className="text-sm font-medium text-primary hover:underline">
                   View Schedule →
                 </Link>
               </div>
@@ -223,9 +223,9 @@ export default function StaffDashboardPage() {
                     >
                       <div>
                         <div className="text-sm font-medium text-foreground">{shift.label}</div>
-                        <div className="text-xs text-muted-foreground">{shift.date}</div>
+                        <div className="text-sm text-muted-foreground">{shift.date}</div>
                       </div>
-                      <span className="font-mono text-xs text-muted-foreground">{shift.time}</span>
+                      <span className="font-mono text-sm text-muted-foreground">{shift.time}</span>
                     </li>
                   ))}
                 </ul>
@@ -238,7 +238,7 @@ export default function StaffDashboardPage() {
           {/* Notices feed */}
           <Card>
             <CardContent>
-              <h2 className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <h2 className="mb-2.5 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                 Notices
               </h2>
               {SAMPLE_STAFF_NOTICES.length > 0 ? (
@@ -251,7 +251,7 @@ export default function StaffDashboardPage() {
                       <Bell className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <div>
                         <div className="text-sm font-medium text-foreground">{notice.title}</div>
-                        <div className="text-xs text-muted-foreground">{notice.date}</div>
+                        <div className="text-sm text-muted-foreground">{notice.date}</div>
                       </div>
                     </li>
                   ))}

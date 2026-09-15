@@ -4,8 +4,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
-import { Bell, Menu, Search } from "lucide-react";
-import type { NavGroup } from "@/lib/nav-config";
+import {
+  Bell,
+  Menu,
+  Search,
+  LayoutDashboard,
+  FileText,
+  FolderOpen,
+  User,
+  HelpCircle,
+  Calendar,
+  CalendarDays,
+  Clock,
+  BookOpen,
+  Users,
+  AlertTriangle,
+  FileBarChart,
+  FileCheck,
+  Wallet,
+  Building2,
+  UserPlus,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import type { NavGroup, NavIconName } from "@/lib/nav-config";
 import { Avatar } from "@/components/shared/Avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -18,6 +39,30 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+// Resolves nav-config.ts's icon *names* to actual components — kept here,
+// entirely inside this Client Component, so a component reference never
+// has to cross the Server -> Client boundary as a prop (see nav-config.ts's
+// NavIconName doc comment for why that broke every dashboard's nav).
+const NAV_ICONS: Record<NavIconName, LucideIcon> = {
+  "layout-dashboard": LayoutDashboard,
+  "file-text": FileText,
+  "folder-open": FolderOpen,
+  user: User,
+  bell: Bell,
+  "help-circle": HelpCircle,
+  calendar: Calendar,
+  "calendar-days": CalendarDays,
+  clock: Clock,
+  "book-open": BookOpen,
+  users: Users,
+  "alert-triangle": AlertTriangle,
+  "file-bar-chart": FileBarChart,
+  "file-check": FileCheck,
+  wallet: Wallet,
+  "building-2": Building2,
+  "user-plus": UserPlus,
+};
 
 /**
  * Shared authenticated-area shell (header + sidebar + content), per
@@ -53,6 +98,7 @@ const NAV_TONE_STYLES = {
     divider: "border-sidebar-border",
     profileName: "text-sidebar-foreground",
     profileRole: "text-muted-foreground",
+    iconActiveText: "text-sidebar-primary",
   },
   purple: {
     container: "bg-primary border-transparent",
@@ -64,6 +110,7 @@ const NAV_TONE_STYLES = {
     divider: "border-white/15",
     profileName: "text-white",
     profileRole: "text-white/60",
+    iconActiveText: "text-primary",
   },
   gold: {
     // Same gradient formula/base token as HeroStatCard's tone="gold" —
@@ -78,6 +125,7 @@ const NAV_TONE_STYLES = {
     divider: "border-white/15",
     profileName: "text-white",
     profileRole: "text-white/60",
+    iconActiveText: "text-[color:var(--tone-gold)]",
   },
   lavender: {
     container: "bg-[color:var(--chart-2)] border-transparent",
@@ -87,6 +135,7 @@ const NAV_TONE_STYLES = {
     itemActiveText: "font-medium text-white",
     itemInactive: "border-transparent text-white/75 hover:bg-white/10 hover:text-white",
     divider: "border-white/15",
+    iconActiveText: "text-[color:var(--chart-2)]",
     profileName: "text-white",
     profileRole: "text-white/60",
   },
@@ -110,6 +159,7 @@ const NAV_TONE_STYLES = {
     divider: "border-white/15",
     profileName: "text-white",
     profileRole: "text-white/60",
+    iconActiveText: "text-[color:var(--tone-client)]",
   },
 } as const;
 
@@ -163,7 +213,7 @@ export function AppShell({
   const notificationsHref = flatItems.find((item) => item.label === "Notifications")?.href;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2.5">
           {/* Mobile nav trigger — now the same Sheet drawer primitive as
@@ -206,23 +256,36 @@ export function AppShell({
                       </p>
                     ) : null}
                     <ul className="space-y-0.5">
-                      {group.items.map((item) => (
-                        <li key={item.href}>
-                          <SheetClose
-                            nativeButton={false}
-                            render={
-                              <Link
-                                href={item.href}
-                                className={`block rounded-lg border-l-2 px-3 py-2.5 text-sm transition-colors ${
-                                  isActive(item.href) ? tone.itemActive : tone.itemInactive
-                                }`}
-                              />
-                            }
-                          >
-                            {item.label}
-                          </SheetClose>
-                        </li>
-                      ))}
+                      {group.items.map((item) => {
+                        const ItemIcon = NAV_ICONS[item.icon];
+                        const active = isActive(item.href);
+                        return (
+                          <li key={item.href}>
+                            <SheetClose
+                              nativeButton={false}
+                              render={
+                                <Link
+                                  href={item.href}
+                                  className={`flex items-center gap-2.5 rounded-lg border-l-2 px-3 py-2.5 text-sm transition-colors ${
+                                    active ? tone.itemActive : tone.itemInactive
+                                  }`}
+                                />
+                              }
+                            >
+                              {active ? (
+                                <span
+                                  className={`flex size-6 shrink-0 items-center justify-center rounded-full bg-white shadow-[2px_2px_5px_rgba(0,0,0,0.25),-1px_-1px_4px_rgba(255,255,255,0.2)] ${tone.iconActiveText}`}
+                                >
+                                  <ItemIcon className="size-3.5" strokeWidth={2.5} />
+                                </span>
+                              ) : (
+                                <ItemIcon className="size-4 shrink-0" strokeWidth={2.25} />
+                              )}
+                              {item.label}
+                            </SheetClose>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 ))}
@@ -364,6 +427,7 @@ export function AppShell({
                 <ul className="space-y-1">
                   {group.items.map((item) => {
                     const active = isActive(item.href);
+                    const ItemIcon = NAV_ICONS[item.icon];
                     return (
                       <li key={item.href} className="relative">
                         {active ? (
@@ -375,10 +439,19 @@ export function AppShell({
                         ) : null}
                         <Link
                           href={item.href}
-                          className={`relative block rounded-md border-l-2 border-transparent px-3 py-2 text-sm transition-colors ${
+                          className={`relative flex items-center gap-2.5 rounded-md border-l-2 border-transparent px-3 py-2 text-sm transition-colors ${
                             active ? tone.itemActiveText : tone.itemInactive
                           }`}
                         >
+                          {active ? (
+                            <span
+                              className={`flex size-6 shrink-0 items-center justify-center rounded-full bg-white shadow-[2px_2px_5px_rgba(0,0,0,0.25),-1px_-1px_4px_rgba(255,255,255,0.2)] ${tone.iconActiveText}`}
+                            >
+                              <ItemIcon className="size-3.5" strokeWidth={2.5} />
+                            </span>
+                          ) : (
+                            <ItemIcon className="size-4 shrink-0" strokeWidth={2.25} />
+                          )}
                           {item.label}
                         </Link>
                       </li>

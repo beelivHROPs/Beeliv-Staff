@@ -82,7 +82,7 @@ export default function ApplicantDashboardPage() {
       {/* Welcome header — the one hero moment on this screen, so it's also
           the one place carrying the bg-brand-wash gradient accent. */}
       <div className="bg-brand-wash mb-5 rounded-2xl px-4 py-5 sm:px-6">
-        <p className="mb-0.5 text-[11px] font-semibold tracking-wide text-warning uppercase">
+        <p className="mb-0.5 text-sm font-semibold tracking-wide text-warning uppercase">
           Applicant Portal
         </p>
         <h1 className="font-heading text-2xl font-semibold text-foreground">
@@ -100,7 +100,7 @@ export default function ApplicantDashboardPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-lg font-semibold text-foreground">{position}</div>
-              <div className="mt-1 font-mono text-xs text-muted-foreground">
+              <div className="mt-1 font-mono text-sm text-muted-foreground">
                 Application ID: {applicationId} · Applied {appliedOn} · {outlet}
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function ApplicantDashboardPage() {
                     <div className="text-lg leading-none font-semibold text-foreground">
                       <CountUp value={progressPercent} suffix="%" />
                     </div>
-                    <div className="mt-1 text-[11px] text-muted-foreground">progress</div>
+                    <div className="mt-1 text-sm text-muted-foreground">progress</div>
                   </div>
                 }
               />
@@ -130,8 +130,15 @@ export default function ApplicantDashboardPage() {
         />
       </div>
 
-      {/* Key metrics — staggered entrance, ~70ms/tile (design-system.md §15). */}
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      {/* Key metrics — staggered entrance, ~70ms/tile (design-system.md §15).
+          sm:grid-cols-3 lg:grid-cols-5 — was a bare sm:grid-cols-5 (found via
+          a responsive-design audit), the only dashboard jumping straight to
+          5 columns at 640px while every other dashboard caps at
+          sm:grid-cols-4; at 640-767px that left too little width per tile
+          for "Quick Tip"'s full-sentence caption. This 5-tile grid gets an
+          intermediate 3-column step instead, matching all 5 only once
+          there's real room (lg, 1024px+). */}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[
           <MetricCard
             key="status"
@@ -196,10 +203,10 @@ export default function ApplicantDashboardPage() {
 
           <Card>
             <CardContent>
-              <h2 className="mb-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              <h2 className="mb-2.5 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                 Helpful Information
               </h2>
-              <ul className="m-0 list-disc space-y-1.5 pl-4 text-xs text-muted-foreground">
+              <ul className="m-0 list-disc space-y-1.5 pl-4 text-sm text-muted-foreground">
                 <li>Keep your documents up to date</li>
                 <li>Check notifications regularly</li>
                 <li>Respond promptly to document requests</li>
@@ -210,7 +217,7 @@ export default function ApplicantDashboardPage() {
 
         <Card>
           <CardContent>
-            <h2 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
               Recent Activity
             </h2>
             <ActivityTimeline items={SAMPLE_APPLICATION_ACTIVITY} />
