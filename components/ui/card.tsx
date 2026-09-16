@@ -16,7 +16,19 @@ function Card({
         // "too cramped" feedback, same fix spirit as the login/apply
         // screens' more generous card padding) — default 16px -> 20px,
         // sm 12px -> 16px.
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(5)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        //
+        // Neumorphic soft-UI treatment (project-lead, 2026-09-16: "use
+        // neumorphism in our dashboards" -> "full soft-UI redesign of
+        // cards/surfaces") — replaces the flat ring-1 hairline border with a
+        // dual soft shadow (light catch top-left, soft dark falloff
+        // bottom-right) so every card reads as gently raised off the page
+        // background instead of flat-and-outlined. Relies on --background
+        // and --card already sitting close in tone (#FAFAF8 vs #FFFFFF) —
+        // classic neumorphism needs a low-contrast surface/background pair
+        // to read as "molded from the same material" rather than a floating
+        // panel. No ring/border alongside it — the shadow alone carries the
+        // depth cue, per the style's own convention.
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground shadow-[6px_6px_14px_rgba(26,22,33,0.08),-6px_-6px_14px_rgba(255,255,255,0.9)] [--card-spacing:--spacing(5)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         className
       )}
       {...props}

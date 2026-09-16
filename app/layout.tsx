@@ -1,14 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Inter, Karla } from "next/font/google";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
-// Headline face: Plus Jakarta Sans (sans-serif). Body face: a system
-// Georgia serif stack — set directly in globals.css's :root as --font-sans
-// since Georgia isn't a Google Font distributable via next/font. Synced
-// from the main monorepo's latest design pass.
-const plusJakartaSansHeading = Plus_Jakarta_Sans({
+// App-wide (dashboards + everything except the new marketing site): Inter
+// for headings, Karla for body — project-lead, 2026-09-16: "make sure the
+// dashboards only use inter and the new body font only and no other fonts."
+// Archivo/Bodoni Moda (beeliv.co's real display/logo fonts) are scoped to
+// just the marketing-site draft's own layout instead (app/demo/
+// marketing-site/layout.tsx), not applied here — they were briefly global
+// but that pulled the dashboards off Inter too, which this reverts.
+// Karla itself stays global: --font-sans had no concrete value defined
+// anywhere before this (a real gap — see prior commit), so body text had
+// been silently falling back to the browser default; Karla is the fix,
+// independent of which heading font is active.
+const interHeading = Inter({
   variable: "--font-heading",
+  subsets: ["latin"],
+});
+const karlaBody = Karla({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -36,7 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${plusJakartaSansHeading.variable} h-full antialiased`}
+      className={`${interHeading.variable} ${karlaBody.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}

@@ -13,7 +13,7 @@ export function StepDocuments() {
     <Card>
       <CardContent>
         <h2 className="mb-1 text-sm font-semibold text-foreground">Required Documents</h2>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-sm font-medium text-muted-foreground">
           Upload the document requested below. Your passport photograph was already collected in
           Personal Information.
         </p>
@@ -25,7 +25,7 @@ export function StepDocuments() {
 
         {/* docs/BEELIV-SOURCE-OF-TRUTH.md §7 note under Identification
             Documents — do not invent what "other documentation" might be. */}
-        <p className="mt-4 rounded-md bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+        <p className="mt-4 rounded-md bg-muted/40 px-3 py-2.5 text-sm font-medium text-muted-foreground">
           Other documentation may be added here as operational requirements are finalized.
         </p>
       </CardContent>

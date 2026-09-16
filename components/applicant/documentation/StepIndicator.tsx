@@ -47,7 +47,7 @@ export function StepIndicator({
       <div className="sm:hidden">
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm font-semibold text-foreground">{currentStep?.label}</span>
-          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+          <span className="shrink-0 text-sm font-medium text-muted-foreground">
             Step {currentIndex + 1} of {steps.length}
           </span>
         </div>

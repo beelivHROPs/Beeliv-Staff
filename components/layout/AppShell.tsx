@@ -228,9 +228,9 @@ export function AppShell({
           <Sheet>
             <SheetTrigger
               aria-label="Open navigation menu"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent sm:hidden"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-accent sm:hidden"
             >
-              <Menu className="size-5" />
+              <Menu className="size-6" />
             </SheetTrigger>
             <SheetContent
               side="left"
@@ -266,7 +266,7 @@ export function AppShell({
                               render={
                                 <Link
                                   href={item.href}
-                                  className={`flex items-center gap-2.5 rounded-lg border-l-2 px-3 py-2.5 text-sm transition-colors ${
+                                  className={`flex items-center gap-3 rounded-lg border-l-2 px-3 py-3 text-base transition-colors ${
                                     active ? tone.itemActive : tone.itemInactive
                                   }`}
                                 />
@@ -274,12 +274,12 @@ export function AppShell({
                             >
                               {active ? (
                                 <span
-                                  className={`flex size-6 shrink-0 items-center justify-center rounded-full bg-white shadow-[2px_2px_5px_rgba(0,0,0,0.25),-1px_-1px_4px_rgba(255,255,255,0.2)] ${tone.iconActiveText}`}
+                                  className={`flex size-7 shrink-0 items-center justify-center rounded-full bg-white shadow-[2px_2px_5px_rgba(0,0,0,0.25),-1px_-1px_4px_rgba(255,255,255,0.2)] ${tone.iconActiveText}`}
                                 >
-                                  <ItemIcon className="size-3.5" strokeWidth={2.5} />
+                                  <ItemIcon className="size-4" strokeWidth={2.5} />
                                 </span>
                               ) : (
-                                <ItemIcon className="size-4 shrink-0" strokeWidth={2.25} />
+                                <ItemIcon className="size-5 shrink-0" strokeWidth={2.25} />
                               )}
                               {item.label}
                             </SheetClose>
@@ -393,19 +393,26 @@ export function AppShell({
           <span className="rounded-full border border-[color:var(--gold)]/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             {roleLabel}
           </span>
+          {/* Desktop only now — project-lead: "scrap the avatar design at
+              the top" for mobile, now that Profile is one tap away in the
+              new bottom tab bar below instead of buried in the hamburger
+              drawer. Desktop has no bottom bar, so it keeps the header
+              avatar as its one profile entry point. */}
           {userName ? (
-            profileHref ? (
-              <Link
-                href={profileHref}
-                aria-label={`${userName} — view profile`}
-                title="View profile"
-                className="rounded-full transition-opacity hover:opacity-80"
-              >
+            <div className="hidden sm:block">
+              {profileHref ? (
+                <Link
+                  href={profileHref}
+                  aria-label={`${userName} — view profile`}
+                  title="View profile"
+                  className="rounded-full transition-opacity hover:opacity-80"
+                >
+                  <Avatar name={userName} size="sm" ring />
+                </Link>
+              ) : (
                 <Avatar name={userName} size="sm" ring />
-              </Link>
-            ) : (
-              <Avatar name={userName} size="sm" ring />
-            )
+              )}
+            </div>
           ) : null}
         </div>
       </header>
@@ -490,7 +497,7 @@ export function AppShell({
           ) : null}
         </nav>
 
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ export function StepPersonalInfo() {
     <Card>
       <CardContent>
         <h2 className="mb-1 text-sm font-semibold text-foreground">Personal Information</h2>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-sm font-medium text-muted-foreground">
           Your basic personal and contact details.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">

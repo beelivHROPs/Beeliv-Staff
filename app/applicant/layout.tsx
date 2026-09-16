@@ -23,7 +23,13 @@ export default function ApplicantLayout({
       showSearch
       notifications={notifications}
     >
-      {children}
+      {/* applicant-scope — lets globals.css add a drop shadow to every Card
+          on the applicant side only (project-lead, 2026-09-16: "add some
+          dropshadows to the cards / for applicant only"), without touching
+          the shared Card component (used by every other role/dashboard) or
+          editing each individual call site across app/applicant + components/
+          applicant. */}
+      <div className="applicant-scope contents">{children}</div>
     </AppShell>
   );
 }

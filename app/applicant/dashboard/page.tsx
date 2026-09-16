@@ -100,8 +100,9 @@ export default function ApplicantDashboardPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="text-lg font-semibold text-foreground">{position}</div>
-              <div className="mt-1 font-mono text-sm text-muted-foreground">
-                Application ID: {applicationId} · Applied {appliedOn} · {outlet}
+              <div className="mt-1 text-sm text-muted-foreground">
+                Application ID: <span className="font-semibold text-primary">{applicationId}</span> · Applied{" "}
+                {appliedOn} · {outlet}
               </div>
             </div>
             <div className="flex items-center gap-5">
@@ -138,11 +139,20 @@ export default function ApplicantDashboardPage() {
           for "Quick Tip"'s full-sentence caption. This 5-tile grid gets an
           intermediate 3-column step instead, matching all 5 only once
           there's real room (lg, 1024px+). */}
+      {/* Colored icon chips added (project-lead: "add more colors and
+          design... add some colors to the card bg") — Applicant was the
+          other dashboard (with Staff) left fully colorless after HR/Ops/
+          Client each got their own tone-matched chips. Uses
+          iconTone="purple-solid" — Applicant has no dashboard-specific tone
+          (AppShell navTone="default"), so this uses the app's own primary
+          purple, same choice already made for its profile-page hero. */}
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {[
           <MetricCard
             key="status"
             icon={ClipboardCheck}
+            iconTone="purple-solid"
+            chipShape="circle"
             label="Application Status"
             value={<StatusBadge label={status} tone="info" />}
             caption="Since Aug 14, 2026"
@@ -150,6 +160,8 @@ export default function ApplicantDashboardPage() {
           <MetricCard
             key="documents"
             icon={FileStack}
+            iconTone="purple-solid"
+            chipShape="circle"
             label="Documents"
             value={
               <>
@@ -161,6 +173,8 @@ export default function ApplicantDashboardPage() {
           <MetricCard
             key="progress"
             icon={TrendingUp}
+            iconTone="purple-solid"
+            chipShape="circle"
             label="Application Progress"
             value={
               // Semantic color instead of always-neutral text — a low
@@ -178,6 +192,8 @@ export default function ApplicantDashboardPage() {
           <MetricCard
             key="updated"
             icon={Clock}
+            iconTone="purple-solid"
+            chipShape="circle"
             label="Last Updated"
             value="Today, 10:42 AM"
             caption="Aug 14, 2026"
@@ -185,6 +201,8 @@ export default function ApplicantDashboardPage() {
           <MetricCard
             key="tip"
             icon={Lightbulb}
+            iconTone="purple-solid"
+            chipShape="circle"
             label="Quick Tip"
             value={<span className="text-sm font-medium">Stay ready</span>}
             caption="Keep documents current — we'll notify you here the moment something changes."

@@ -14,7 +14,10 @@ import { useEffect, useRef, useState } from "react";
  * synchronous setState in the effect body.
  */
 export function useCountUp(target: number, duration = 1100) {
-  const [value, setValue] = useState(0);
+  // Starts at `target`, not 0 — the server render (and any tab where rAF
+  // never fires, e.g. a background tab) otherwise shows a literal "0"
+  // instead of the real value. The mount animation still runs from 0 below.
+  const [value, setValue] = useState(target);
   const fromRef = useRef<number | null>(null);
 
   useEffect(() => {

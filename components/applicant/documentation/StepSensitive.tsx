@@ -30,7 +30,7 @@ export function StepSensitive() {
             Sensitive / Banking Information
           </h2>
         </div>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-sm font-medium text-muted-foreground">
           This information is classified as sensitive. Access to it after submission is
           restricted by role — see docs/architecture/rbac.md §8.
         </p>

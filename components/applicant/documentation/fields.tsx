@@ -40,7 +40,7 @@ export function TextField({
   const id = idFor(label);
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-base font-semibold text-foreground">{label}</label>
       <Input
         id={id}
         type={type}
@@ -48,7 +48,7 @@ export function TextField({
         title={DISABLED_FIELD_TITLE}
         defaultValue={defaultValue}
         placeholder={placeholder}
-        className="mt-1"
+        className="mt-1 text-base disabled:bg-transparent disabled:opacity-100"
       />
     </div>
   );
@@ -66,7 +66,7 @@ export function SelectField({
   const id = idFor(label);
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-base font-semibold text-foreground">{label}</label>
       {/* Plain native <select>, styled to match Input's visual treatment —
           no new select primitive introduced, per the task brief's own
           allowance for this handful of naturally-enumerated fields. */}
@@ -75,7 +75,7 @@ export function SelectField({
         disabled
         title={DISABLED_FIELD_TITLE}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base text-foreground outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm"
+        className="mt-1 h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base text-foreground outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-transparent disabled:opacity-100 md:text-sm"
       >
         <option value="" disabled>
           Select...
@@ -102,7 +102,7 @@ export function TextAreaField({
   const id = idFor(label);
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-base font-semibold text-foreground">{label}</label>
       <textarea
         id={id}
         disabled
@@ -110,7 +110,7 @@ export function TextAreaField({
         defaultValue={defaultValue}
         placeholder={placeholder}
         rows={3}
-        className="mt-1 w-full min-w-0 resize-none rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50"
+        className="mt-1 w-full min-w-0 resize-none rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-transparent disabled:opacity-100"
       />
     </div>
   );
@@ -126,11 +126,11 @@ export function FileUploadField({
   const id = idFor(label);
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">{label}</label>
+      <label htmlFor={id} className="block text-base font-semibold text-foreground">{label}</label>
       <div className="mt-1 flex items-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-3.5 py-3">
         <div className="min-w-0 flex-1">
           {description ? (
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-sm font-medium text-muted-foreground">{description}</p>
           ) : null}
           {/* Confirmed constraint (database-architecture.md §10) — accepted
               file *formats* are not confirmed anywhere, so none is stated

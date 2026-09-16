@@ -43,7 +43,7 @@ export function StepTerms() {
     <Card>
       <CardContent>
         <h2 className="mb-1 text-sm font-semibold text-foreground">Terms & Declarations</h2>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-sm font-medium text-muted-foreground">
           Please review and acknowledge each item below.
         </p>
         <div className="space-y-3">
@@ -62,7 +62,7 @@ export function StepTerms() {
                 <span className="block text-sm font-medium text-foreground">
                   {i + 1}. {item.title}
                 </span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">{item.body}</span>
+                <span className="mt-0.5 block text-sm font-medium text-muted-foreground">{item.body}</span>
               </span>
             </label>
           ))}

@@ -39,10 +39,28 @@ const ICON_TONE_CLASSES = {
   // all), not a wrong color, but the same principle applies: the icon
   // should read as belonging to this dashboard.
   slate: "bg-[color-mix(in_srgb,var(--tone-client)_18%,transparent)] text-[color:var(--tone-client)]",
-  // Semantic override, not part of the purple/gold/slate set — for tiles
-  // whose subject is genuinely alarming (e.g. "Recent Warnings Issued"),
-  // where a dashboard tone read as too decorative to communicate a warning.
+  // Staff's own dashboard color (--chart-2, DASHBOARD_TONE_BASE.lavender in
+  // lib/dashboard-accent.ts) — same "match the dashboard color" principle
+  // as gold/slate above. Staff's tiles previously had no chip at all
+  // (project-lead: "add more colors... to the card bg" — this and the
+  // Applicant dashboard were the two left fully colorless after HR/Ops/
+  // Client each got their own tone).
+  lavender: "bg-[color-mix(in_srgb,var(--chart-2)_18%,transparent)] text-[color:var(--chart-2)]",
+  // Semantic override, not part of the purple/gold/slate/lavender set —
+  // for tiles whose subject is genuinely alarming (e.g. "Recent Warnings
+  // Issued"), where a dashboard tone read as too decorative to communicate
+  // a warning.
   destructive: "bg-destructive/10 text-destructive",
+  // Solid-fill variants — the chip itself is a solid brand/semantic color
+  // with a white icon line, not a light tint (project-lead, HR dashboard,
+  // 2026-09-16: "the bg color should be purple and the line should be
+  // white, then red bg for warning and white for the line"). Distinct from
+  // "purple"/"destructive" above (which stay light-tint) so this doesn't
+  // change any existing tile elsewhere in the app — opt-in per call site.
+  "purple-solid": "bg-primary text-white",
+  "destructive-solid": "bg-destructive text-white",
+  "lavender-solid": "bg-[color:var(--chart-2)] text-white",
+  "slate-solid": "bg-[color:var(--tone-client)] text-white",
 } as const;
 
 export function MetricCard({
@@ -67,7 +85,17 @@ export function MetricCard({
   accent?: boolean;
   /** Icon treatment — "plain" (default) or a small dashboard-tone chip
    *  (purple/gold/slate — one per dashboard's own color, see ICON_TONE_CLASSES). */
-  iconTone?: "plain" | "purple" | "gold" | "slate" | "destructive";
+  iconTone?:
+    | "plain"
+    | "purple"
+    | "gold"
+    | "slate"
+    | "lavender"
+    | "destructive"
+    | "purple-solid"
+    | "destructive-solid"
+    | "lavender-solid"
+    | "slate-solid";
   /** Icon chip shape — "square" (default, rounded-lg) everywhere except
    *  where a page opts into "circle" (rounded-full), matching a specific
    *  reference's circular icon chips. Scoped per call site rather than
@@ -108,7 +136,13 @@ export function MetricCard({
     return (
       <Card
         size="sm"
-        className={cn(RESPONSIVE_CHROME, "border-none text-white", className)}
+        // Overrides the base Card's light-surface neumorphic shadow (a
+        // white top-left highlight, tuned for white cards on the light
+        // app background) with a plain soft drop shadow instead — the
+        // neumorphic "molded from the same material" look only reads
+        // correctly when card and background are close in tone, which
+        // isn't true for these solid brand-colored tiles.
+        className={cn(RESPONSIVE_CHROME, "border-none text-white shadow-lg", className)}
         style={{ backgroundColor: solidColorVar ?? "var(--primary)" }}
       >
         <CardContent>

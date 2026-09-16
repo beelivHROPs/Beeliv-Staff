@@ -111,12 +111,20 @@
      --foreground (the dedicated dark-neutral token) instead, which is the
      more correct fix independent of primary's brightness. Same reasoning
      applies to --gold-foreground and --sidebar-accent-foreground below. */
+  /* Reverted back to the app's own original purple (project-lead,
+     2026-09-16: "use our purple color" after seeing beeliv.co's #310F50
+     everywhere) — that deeper plum was the live site's color, not
+     necessarily what should apply app-wide. --gold below stays on
+     beeliv.co's brighter value; only purple was reverted. */
   --primary: #5B21B6;
   --primary-foreground: #FFFFFF;
   --secondary: #F1EEF4;
   --secondary-foreground: #1A1621;
   --muted: #F6F4F7;
-  --muted-foreground: #7C7488;
+  /* Darkened for contrast/legibility (project-lead, mobile device review,
+     2026-09-16: "text size is too small and light") — was #7C7488, a
+     lighter gray that read as washed-out on a real phone screen. */
+  --muted-foreground: #5C5468;
   --accent: #F5F1F8;
   --accent-foreground: #1A1621;
   --destructive: #B3261E;
@@ -130,7 +138,9 @@
   --warning-foreground: #FFFFFF;
   --info: #2A5B8C;
   --info-foreground: #FFFFFF;
-  --gold: #C1AC75;
+  /* Corrected to match beeliv.co's actual live gold accent (was #C1AC75,
+     a muted tan) — same source as --primary above. */
+  --gold: #E3A93F;
   --gold-foreground: #1A1621;
   /* HR's nav/hero tone — single source of truth so the sidebar and the
      gradient hero card use the exact same base color instead of drifting
@@ -202,6 +212,17 @@
   }
   html {
     @apply font-sans;
+    /* Stops mobile browsers (Android Chrome especially) from silently
+       auto-boosting text size based on their own content-density
+       heuristic — project-lead: "the page is not fixed"/"looks
+       zoomable," a real page reloaded twice rendering at two different
+       effective scales. Confirmed not a device zoom setting (checked at
+       100%) and not our own viewport meta (already width=device-width,
+       initial-scale=1). This only disables the BROWSER's own automatic
+       rescaling of content; it does not disable pinch-zoom/user
+       scaling, which stays available per accessibility guidelines. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 }
 
@@ -440,6 +461,16 @@
      (gold/gradient reserved for at most one emphasized moment per screen,
      never flooding the interface). Three call sites, not a general-purpose
      gradient system. */
+
+  /* Applicant-only card drop shadow (project-lead, 2026-09-16: "add some
+     dropshadows to the cards / for applicant only") — scoped via the
+     .applicant-scope wrapper in app/applicant/layout.tsx rather than
+     changing the shared Card component, which every other role's
+     dashboards also use and were deliberately kept shadow-less
+     (design-system.md §7: static summary cards don't lift). */
+  .applicant-scope [data-slot="card"] {
+    box-shadow: 0 2px 8px rgba(26, 22, 33, 0.08);
+  }
 
   /* Dashboard welcome band — a soft two-corner wash, not a hard fill. */
   .bg-brand-wash {

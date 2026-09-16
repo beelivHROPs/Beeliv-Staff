@@ -9,7 +9,7 @@ export function StepNextOfKin() {
     <Card>
       <CardContent>
         <h2 className="mb-1 text-sm font-semibold text-foreground">Next of Kin</h2>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-sm font-medium text-muted-foreground">
           Someone we can contact on your behalf in an emergency.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">

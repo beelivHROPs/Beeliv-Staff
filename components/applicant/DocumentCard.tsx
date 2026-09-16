@@ -79,7 +79,7 @@ export function DocumentCard({ document }: { document: DocumentEntry }) {
             <div className="mt-2.5 flex flex-wrap items-center gap-2">
               <StatusBadge label={config.label} tone={config.tone} />
               {provenanceNote ? (
-                <span className="rounded bg-warning/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-warning uppercase">
+                <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-warning uppercase">
                   {provenanceNote}
                 </span>
               ) : null}

@@ -28,7 +28,7 @@ export function ActivityTimeline({ items }: { items: ActivityItem[] }) {
           <span
             className={`absolute top-1 -left-[7px] h-2.5 w-2.5 rounded-full border-2 border-card ${DOT_TONE[item.tone]}`}
           />
-          <span className="font-mono text-[10.5px] text-muted-foreground">{item.date}</span>
+          <span className="text-[10.5px] font-medium text-muted-foreground">{item.date}</span>
           <div className="text-sm font-semibold text-foreground">{item.title}</div>
           <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>
         </li>

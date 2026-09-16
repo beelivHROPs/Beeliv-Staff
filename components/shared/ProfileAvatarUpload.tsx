@@ -23,11 +23,26 @@ const OPTION_BUTTON_CLASS =
  * input — "Take a Photo" uses a separate input with `capture` so mobile
  * browsers open the camera directly instead of the general OS chooser.
  */
-export function ProfileAvatarUpload({ name }: { name: string }) {
+// Matches Avatar's own SIZE_CLASSES (components/shared/Avatar.tsx) exactly,
+// so the wrapper div and the Avatar it contains are pixel-identical.
+const TRIGGER_SIZE = { lg: 60, xl: 84 } as const;
+
+export function ProfileAvatarUpload({
+  name,
+  size = "lg",
+}: {
+  name: string;
+  /** "lg" (60px, the original/default — every existing call site keeps
+   *  this unchanged) or "xl" (96px, for the GloCafé-reference mobile
+   *  profile hero) — the edit/camera badge scales with it rather than
+   *  leaving a tiny badge on a big circle. */
+  size?: "lg" | "xl";
+}) {
   const [preview, setPreview] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const px = TRIGGER_SIZE[size];
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -45,7 +60,10 @@ export function ProfileAvatarUpload({ name }: { name: string }) {
   }
 
   const previewImg = preview ? (
-    <span className="shadow-[0_0_0_2px_var(--card),0_0_0_3.5px_var(--gold),0_2px_6px_rgb(193_172_117_/_0.35)] inline-block h-[60px] w-[60px] overflow-hidden rounded-full">
+    <span
+      style={{ height: px, width: px }}
+      className="shadow-[0_0_0_2px_var(--card),0_0_0_3.5px_var(--gold),0_2px_6px_rgb(193_172_117_/_0.35)] inline-block overflow-hidden rounded-full"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- a locally
           generated blob: URL, not a static/remote asset next/image can
           optimize or size ahead of time. */}
@@ -55,16 +73,18 @@ export function ProfileAvatarUpload({ name }: { name: string }) {
 
   return (
     <>
-      <div className="relative inline-block h-[60px] w-[60px] shrink-0">
-        {previewImg ?? <Avatar name={name} size="lg" ring />}
+      <div style={{ height: px, width: px }} className="relative inline-block shrink-0">
+        {previewImg ?? <Avatar name={name} size={size} ring />}
         <button
           type="button"
           onClick={() => setOpen(true)}
           title={preview ? "Change photo" : "Upload photo"}
           aria-label={preview ? "Change photo" : "Upload photo"}
-          className="absolute -right-1 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          className={`absolute -right-1 -bottom-1 flex items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 ${
+            size === "xl" ? "h-9 w-9" : "h-6 w-6"
+          }`}
         >
-          <Camera className="h-3 w-3" />
+          <Camera className={size === "xl" ? "h-4 w-4" : "h-3 w-3"} />
         </button>
       </div>
 

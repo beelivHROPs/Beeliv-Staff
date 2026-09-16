@@ -84,7 +84,10 @@ export function ProgressRing({
   const base = DASHBOARD_TONE_BASE[tone];
   const clamped = Math.max(0, Math.min(100, value));
   const targetFraction = clamped / 100;
-  const [animatedFraction, setAnimatedFraction] = useState(0);
+  // Starts at the real fraction, not 0 — the server render (and any tab
+  // where rAF never fires, e.g. a background tab) otherwise paints an empty
+  // ring reading "0%". The mount animation below still sweeps up from 0.
+  const [animatedFraction, setAnimatedFraction] = useState(targetFraction);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia(

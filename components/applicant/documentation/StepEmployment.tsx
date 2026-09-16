@@ -35,7 +35,7 @@ export function StepEmployment() {
     <Card>
       <CardContent>
         <h2 className="mb-1 text-sm font-semibold text-foreground">Employment History</h2>
-        <p className="mb-3 text-xs text-muted-foreground">
+        <p className="mb-3 text-sm font-medium text-muted-foreground">
           Tell us about your current job, or your most recent one if you&apos;re between jobs.
         </p>
 
@@ -83,7 +83,7 @@ export function StepEmployment() {
             <div className="pt-4">
               {isEmployed === true ? (
                 <>
-                  <h3 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <h3 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                     Current Employment
                   </h3>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -108,7 +108,7 @@ export function StepEmployment() {
                 </>
               ) : isEmployed === false ? (
                 <>
-                  <h3 className="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  <h3 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                     Previous Employment
                   </h3>
                   <div className="grid gap-4 sm:grid-cols-2">

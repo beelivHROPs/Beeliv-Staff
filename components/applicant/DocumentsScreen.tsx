@@ -97,7 +97,7 @@ function DocumentsPopulated() {
       </div>
 
       <div className="mt-4 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-3.5">
-        <span className="rounded bg-warning/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-warning uppercase">
+        <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-warning uppercase">
           Note
         </span>
         <p className="mt-1.5 text-xs text-muted-foreground">

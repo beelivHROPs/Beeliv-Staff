@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { MetricCard } from "@/components/shared/MetricCard";
 import { CountUp } from "@/components/shared/CountUp";
+import { ProfileAvatarUpload } from "@/components/shared/ProfileAvatarUpload";
 import {
   SAMPLE_STAFF_PROFILE,
   SAMPLE_UPCOMING_SHIFTS,
@@ -55,16 +56,25 @@ export default function StaffDashboardPage() {
           tile — kept per that tile's own 1:1 capability mapping, not
           removed. */}
       <div className="bg-brand-wash mb-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl px-4 py-5 sm:px-6">
-        <div>
-          <p className="mb-0.5 text-sm font-semibold tracking-wide text-warning uppercase">
-            Assigned Staff
-          </p>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">
-            Good afternoon, {firstName} 👋
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {position} · {outlet}
-          </p>
+        {/* Avatar next to the greeting — project-lead: "look at the
+            profile pic added to that good morning" (GloCafé's own
+            greeting header). Reuses ProfileAvatarUpload, the real
+            photo-upload control (edit-pencil badge included), not a
+            plain decorative avatar — same component the profile pages
+            already use. */}
+        <div className="flex items-center gap-3">
+          <ProfileAvatarUpload name={name} />
+          <div>
+            <p className="mb-0.5 text-sm font-semibold tracking-wide text-warning uppercase">
+              Assigned Staff
+            </p>
+            <h1 className="font-heading text-2xl font-semibold text-foreground">
+              Good afternoon, {firstName} 👋
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {position} · {outlet}
+            </p>
+          </div>
         </div>
 
         {nextShift ? (
@@ -79,19 +89,22 @@ export default function StaffDashboardPage() {
               <p className="text-sm font-semibold text-foreground">
                 {nextShift.label} · {nextShift.date}
               </p>
-              <p className="font-mono text-sm text-muted-foreground">{nextShift.time}</p>
+              <p className="text-sm font-medium text-muted-foreground">{nextShift.time}</p>
             </div>
           </div>
         ) : null}
       </div>
 
       {/* Key metrics — one tile per wireframe widget, staggered entrance
-          (~70ms/tile, design-system.md §15). */}
+          (~70ms/tile, design-system.md §15). Plain icon tiles (project-lead:
+          revert the solid-colored surface pass, keep only the profile
+          avatar added to the greeting header above). */}
       <div className="mb-4 grid grid-cols-2 gap-3 duo:grid-cols-3 sm:grid-cols-4">
         {[
           <MetricCard
             key="profile"
             icon={Briefcase}
+            iconTone="lavender-solid"
             label="My Profile"
             value={
               <div className="flex flex-wrap items-center gap-1.5">
@@ -104,6 +117,7 @@ export default function StaffDashboardPage() {
           <MetricCard
             key="shifts"
             icon={CalendarClock}
+            iconTone="lavender-solid"
             label="Upcoming Shifts"
             value={<CountUp value={SAMPLE_UPCOMING_SHIFTS.length} />}
             caption={nextShift ? `Next: ${nextShift.date} · ${nextShift.time}` : "No shifts scheduled"}
@@ -111,6 +125,7 @@ export default function StaffDashboardPage() {
           <MetricCard
             key="documentation"
             icon={FileStack}
+            iconTone="lavender-solid"
             label="Documentation Status"
             value={
               <StatusBadge
@@ -123,6 +138,7 @@ export default function StaffDashboardPage() {
           <MetricCard
             key="notices"
             icon={Bell}
+            iconTone="lavender-solid"
             label="Notices"
             value={<CountUp value={SAMPLE_STAFF_NOTICES.length} />}
             caption={latestNotice ? latestNotice.title : "No new notices"}
@@ -144,12 +160,32 @@ export default function StaffDashboardPage() {
               Documentation Status detail. */}
           <Card>
             <CardContent>
-              <h2 className="mb-2.5 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+              <h2 className="mb-2.5 text-sm font-semibold tracking-wide text-primary uppercase">
                 Quick Actions
               </h2>
+
+              {/* Mobile: horizontal icon-grid actions (same pattern as
+                  HR/Ops's — project-lead's synthesized mobile reference,
+                  the "banking/wallet app"'s icon-row). Desktop keeps the
+                  stacked buttons. */}
+              <div className="flex gap-6 sm:hidden">
+                <Link href="/staff/documentation" className="flex flex-1 flex-col items-center gap-1.5">
+                  <span className="flex size-12 items-center justify-center rounded-full bg-[color:var(--chart-2)] text-white shadow-[2px_2px_5px_rgba(0,0,0,0.18),-1px_-1px_4px_rgba(255,255,255,0.25)]">
+                    <FileStack className="h-5 w-5" strokeWidth={2.25} />
+                  </span>
+                  <span className="text-xs font-medium text-foreground">Documentation</span>
+                </Link>
+                <Link href="/staff/sops" className="flex flex-1 flex-col items-center gap-1.5">
+                  <span className="flex size-12 items-center justify-center rounded-full bg-muted text-foreground shadow-[2px_2px_5px_rgba(0,0,0,0.1),-1px_-1px_4px_rgba(255,255,255,0.7)]">
+                    <BookOpen className="h-5 w-5" strokeWidth={2.25} />
+                  </span>
+                  <span className="text-xs font-medium text-foreground">SOPs</span>
+                </Link>
+              </div>
+
               {/* bg matches this dashboard's own nav color (navTone="lavender"
                   on AppShell, app/staff/layout.tsx). */}
-              <div className="flex flex-col gap-2">
+              <div className="hidden flex-col gap-2 sm:flex">
                 {documentationComplete ? (
                   <Link
                     href="/staff/documentation"
@@ -172,32 +208,6 @@ export default function StaffDashboardPage() {
                   View SOPs
                 </Link>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Documentation Status detail */}
-          <Card>
-            <CardContent>
-              <div className="mb-2.5 flex items-center justify-between">
-                <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-                  Documentation Status
-                </h2>
-                <StatusBadge
-                  label={documentationComplete ? "Complete" : "Incomplete"}
-                  tone={documentationComplete ? "success" : "warning"}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {documentationComplete
-                  ? "All required documentation is on file."
-                  : "Some required documentation is outstanding."}
-              </p>
-              <Link
-                href="/staff/documentation"
-                className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
-              >
-                View Documentation →
-              </Link>
             </CardContent>
           </Card>
         </div>
@@ -225,7 +235,7 @@ export default function StaffDashboardPage() {
                         <div className="text-sm font-medium text-foreground">{shift.label}</div>
                         <div className="text-sm text-muted-foreground">{shift.date}</div>
                       </div>
-                      <span className="font-mono text-sm text-muted-foreground">{shift.time}</span>
+                      <span className="text-sm font-medium text-muted-foreground">{shift.time}</span>
                     </li>
                   ))}
                 </ul>
