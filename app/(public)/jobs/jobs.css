@@ -1,0 +1,155 @@
+/*
+ * Find Jobs (/jobs). Values mirror the `.opt` `.fg` `.sel` `.sch` `.fchip`
+ * `.jc-t` rules in Jobs-Desktop.dc.html / Jobs-Filters-Mobile.dc.html.
+ * All colours come from the scoped tokens in ../public-site.css
+ * (.public-site).
+ *
+ * Motion here is CSS transitions on paint-only properties (border/background/
+ * colour). The filter sheet's open/close transform lives in FilterSheet.tsx
+ * (motion/react), same shared easing as the rest of the site.
+ */
+@layer theme, base, components, utilities;
+
+@layer components {
+  /* Job-card title (Karla bold, not the serif display face). */
+  .jb-title {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  /* Keyword / location field shell (`.sch`). */
+  .jb-sch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 52px;
+    border: 1px solid var(--soft-border);
+    border-radius: 14px;
+    padding: 0 14px;
+    background: #fff;
+    color: var(--muted-text);
+  }
+  .jb-sch:focus-within {
+    border-color: var(--beeliv-purple);
+    box-shadow: 0 0 0 3px rgba(91, 8, 123, 0.14);
+  }
+  .jb-sch input,
+  .jb-sch select {
+    border: 0;
+    outline: 0;
+    font: inherit;
+    font-size: 16px;
+    width: 100%;
+    background: transparent;
+    color: var(--ink);
+  }
+  .jb-sch select {
+    color: var(--muted-text);
+  }
+  .jb-sch input::placeholder {
+    color: #757575;
+    opacity: 1;
+  }
+
+  /* Plain select (`.sel`: sort, min/max salary). */
+  .jb-select {
+    height: 52px;
+    border: 1px solid var(--soft-border);
+    border-radius: 14px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--muted-text);
+    background: #fff;
+    width: 100%;
+    transition: border-color 0.25s var(--ps-ease);
+  }
+  .jb-select:focus {
+    outline: none;
+    border-color: var(--beeliv-purple);
+  }
+
+  /* Filter option pill (`.opt`). Toggle state is data-on, not aria-only, so
+     CSS never has to duplicate the ARIA truthy string. */
+  .jb-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1.5px solid transparent;
+    background: #f3f1f6;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    transition:
+      border-color 0.25s var(--ps-ease),
+      background-color 0.25s var(--ps-ease),
+      color 0.25s var(--ps-ease);
+  }
+  .jb-opt[data-on="true"] {
+    border-color: var(--beeliv-purple);
+    background: rgba(91, 8, 123, 0.05);
+    color: var(--beeliv-purple);
+  }
+  .jb-opt[data-on="true"]::after {
+    content: "✓";
+    position: absolute;
+    top: 3px;
+    right: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--beeliv-purple);
+  }
+  .jb-opt:focus-visible {
+    outline: 2px solid var(--beeliv-purple);
+    outline-offset: 2px;
+  }
+
+  /* Filter group (`.fg`): heading + option row, hairline underneath. */
+  .jb-fg {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--soft-border);
+  }
+  .jb-fg:last-child {
+    border-bottom: 0;
+  }
+  .jb-fg h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: var(--font-ui);
+  }
+
+  /* Active-filter chip (`.fchip`), with a remove (x) button. */
+  .jb-fchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(91, 8, 123, 0.08);
+    color: var(--beeliv-purple);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .jb-fchip button {
+    display: flex;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+  }
+}

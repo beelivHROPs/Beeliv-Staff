@@ -21,8 +21,9 @@ const KEEP: Record<DeployApp, readonly string[]> = {
   client: ["client"],
   // Talent (approved routing, docs/requirements/beeliv-talent-platform-architecture-2026-09-29.md): /login, /signup,
   // /verify, /forgot-password, /reset-password, /invite, /applicant, /staff, plus the account-state pages.
-  // Jobs and Job Detail live on beeliv.co with the public site, not here.
-  talent: ["staff", "applicant", "login", "signup", "verify-email", "forgot-password", "reset-password", "invite", "access-denied", "account-suspended"],
+  // Jobs: lead 2026-11-13, "we are using the admin, client and other repo": only these three repos are used, so the
+  // confirmed recruitment entry (truth doc 6B: browse jobs, job detail, apply, account) is served here.
+  talent: ["staff", "applicant", "login", "signup", "verify-email", "forgot-password", "reset-password", "invite", "access-denied", "account-suspended", "jobs"],
 };
 // Entry = each app's sign-in page: it always renders, and signed-in people are sent on to their workspace from there.
 const ENTRY: Record<DeployApp, string> = { admin: "/admin/login", client: "/client/login", talent: "/login" };
