@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminLiveSummary } from "./AdminLiveSummary";
 
 /**
  * Live-deployment Home (server component). The designed Home dashboards still read sample numbers, so on the
@@ -32,9 +33,10 @@ export function LiveHome({ variant }: { variant: "hr" | "ops" }) {
           Home
         </h1>
         <p className="mt-1 text-[15px]" style={{ color: "var(--ap-muted)" }}>
-          Start with one of these. Your summary numbers will appear here once they are connected.
+          Your live numbers, then the places to start.
         </p>
       </div>
+      <AdminLiveSummary />
       <ul className="flex flex-col gap-3">
         {items.map((i) => (
           <li key={i.href}>

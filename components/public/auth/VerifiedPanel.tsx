@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Reveal } from "@/components/public/kit";
 import { stagger } from "@/components/public/primitives";
 import {
   AUTH_BACKEND_CONNECTED,
