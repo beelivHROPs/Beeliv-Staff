@@ -2,6 +2,7 @@ import { CircleAlert, Clock3, LockKeyhole, Mail, ShieldCheck, UserRound } from "
 import { Store } from "./icons";
 import { StatusGate, type GateTone } from "@/components/staff/StatusGate";
 import type { ClientAccountState } from "@/lib/client/types";
+import { PUBLIC_SITE_HOME } from "@/lib/public-site/site-url";
 
 type Gate = { tone: GateTone; icon: typeof Mail; chip: string; title: string; lead: string; next: string; primary: { label: string; href: string }; secondary?: { label: string; href: string } };
 
@@ -21,7 +22,7 @@ const GATES: Record<Exclude<ClientAccountState, "active">, Gate> = {
     lead: "Client accounts are created by Beeliv. There is no public sign-up.",
     next: "Open the invitation email your Beeliv contact sent you. Once you accept it, a short account setup will guide you through your details, outlets and notifications. If you can't find the email, ask your Beeliv team to send it again.",
     primary: { label: "Sign in", href: "/login" },
-    secondary: { label: "Back to beeliv.co", href: "/" },
+    secondary: { label: "Back to beeliv.co", href: PUBLIC_SITE_HOME },
   },
   "invitation-expired": {
     tone: "warn",
@@ -31,7 +32,7 @@ const GATES: Record<Exclude<ClientAccountState, "active">, Gate> = {
     lead: "For your security, invitation links only work for a limited time.",
     next: "Ask your Beeliv contact to send you a new invitation. When you accept it, you'll be taken through account setup. Your business details are unchanged.",
     primary: { label: "Sign in", href: "/login" },
-    secondary: { label: "Back to beeliv.co", href: "/" },
+    secondary: { label: "Back to beeliv.co", href: PUBLIC_SITE_HOME },
   },
   "invitation-invalid": {
     tone: "critical",
@@ -40,7 +41,7 @@ const GATES: Record<Exclude<ClientAccountState, "active">, Gate> = {
     title: "We can't use this invitation",
     lead: "The link is invalid, or Beeliv has withdrawn it.",
     next: "Contact your Beeliv team to confirm your access and request a fresh invitation. Account setup starts once you accept it.",
-    primary: { label: "Back to beeliv.co", href: "/" },
+    primary: { label: "Back to beeliv.co", href: PUBLIC_SITE_HOME },
     secondary: { label: "Sign in", href: "/login" },
   },
   "invitation-used": {
@@ -59,7 +60,7 @@ const GATES: Record<Exclude<ClientAccountState, "active">, Gate> = {
     title: "Your Client account is suspended",
     lead: "You can't open your workspace while the suspension is in place.",
     next: "Contact your Beeliv team to find out why and how access can be restored.",
-    primary: { label: "Back to beeliv.co", href: "/" },
+    primary: { label: "Back to beeliv.co", href: PUBLIC_SITE_HOME },
   },
   "no-client-access": {
     tone: "neutral",
@@ -69,7 +70,7 @@ const GATES: Record<Exclude<ClientAccountState, "active">, Gate> = {
     lead: "It isn't linked to a client business at Beeliv.",
     next: "If you expected access, ask your Beeliv contact to check the invitation was sent to this email address.",
     primary: { label: "Sign in with another account", href: "/login" },
-    secondary: { label: "Back to beeliv.co", href: "/" },
+    secondary: { label: "Back to beeliv.co", href: PUBLIC_SITE_HOME },
   },
   "wrong-portal": {
     tone: "neutral",
@@ -79,7 +80,7 @@ const GATES: Record<Exclude<ClientAccountState, "active">, Gate> = {
     lead: "Your account belongs to a different Beeliv workspace.",
     next: "Sign in from the workspace you were invited to. Nothing on your account has changed.",
     primary: { label: "Go to sign in", href: "/login" },
-    secondary: { label: "Back to beeliv.co", href: "/" },
+    secondary: { label: "Back to beeliv.co", href: PUBLIC_SITE_HOME },
   },
   "no-outlets": {
     tone: "action",

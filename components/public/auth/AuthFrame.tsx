@@ -50,6 +50,7 @@ import { IMAGE_SLOTS } from "@/lib/public-site/assets";
 import { cn } from "@/lib/utils";
 import { authPaths } from "@/lib/auth/portals";
 import { ChevronLeftIcon } from "./AuthIcons";
+import { PUBLIC_SITE_HOME } from "@/lib/public-site/site-url";
 
 const MotionLink = motion.create(Link);
 
@@ -333,7 +334,7 @@ export function AuthFrame({
 
         <div className="au-backlink items-center">
           <MotionLink
-            href={AUTH_ROUTES.home}
+            href={PUBLIC_SITE_HOME}
             className="inline-flex items-center gap-1.5 text-sm !text-(--muted-text) hover:!text-(--beeliv-purple)"
             initial="rest"
             whileHover="hover"
