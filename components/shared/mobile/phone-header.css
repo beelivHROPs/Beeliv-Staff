@@ -1,0 +1,128 @@
+/* Flat phone header (components/shared/mobile/TopbarFrame.tsx). Phones only; every colour comes from the app's --ap-* tokens. */
+.bv-ph,
+.bv-ph-titlewrap {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* Sticky strip: transparent on the page colour until the page scrolls. No ancestor has overflow/transform/filter/contain. */
+  .bv-ph {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: max(12px, calc(env(safe-area-inset-top, 0px) + 8px)) 18px 8px;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  header.bv-ph.ap-topbar {
+    background: transparent;
+    border-color: transparent;
+  }
+  .bv-ph.ap-topbar[data-scrolled] {
+    background: color-mix(in srgb, var(--ap-bg, #faf6ee) 86%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom-color: var(--ap-line);
+  }
+  .bv-ph-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+  }
+  .bv-ph-avatar {
+    border: 3px solid var(--ap-surface, #fff);
+    box-shadow: 0 4px 12px rgba(91, 8, 123, 0.25);
+    background: linear-gradient(135deg, #d99ac9, #5b087b);
+  }
+  .bv-ph-avatar > * {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  /* The page title lives IN the header, always visible from the first paint (not on scroll). It sits between the back button
+     (left: 18 gutter + 42 button + 10 gap) and the search + bell buttons (right: 18 + 2 x 42 + 2 x 10), so a button can never cut it.
+     Long titles wrap to two lines instead of being cut. */
+  .bv-ph-mini {
+    position: absolute;
+    left: 70px;
+    right: 122px;
+    bottom: 8px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 17px;
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--ap-ink);
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+    pointer-events: none;
+  }
+  @media (max-width: 380px) {
+    .bv-ph-mini {
+      left: 64px;
+      right: 108px;
+      font-size: 16px;
+    }
+  }
+  /* The ONE large title (row to title 12px = 8px bar padding + 4px; subtitle 4px; first element 16px via the main padding rule below). */
+  .bv-ph-titlewrap.ap-topbar {
+    background: transparent;
+  }
+  /* The big in-page title is retired (project lead, 2026-10-27): the header title above is the only one. */
+  .bv-ph-titlewrap {
+    display: none;
+  }
+  .bv-ph-title {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--ap-ink);
+    overflow-wrap: anywhere;
+  }
+  .bv-ph-sub {
+    margin-top: 4px;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--ap-muted);
+  }
+  /* First element: 16px under the title block (8px bar padding + 8px on Home). */
+  body:not(:has([data-ap-status], [data-admin-nonav], [data-bv-status])):has(.bv-ph-titlewrap) main#applicant-view:not([class*="p-0!"]) {
+    padding-top: 12px !important;
+  }
+  body:not(:has([data-ap-status], [data-admin-nonav], [data-bv-status])):has(.bv-ph[data-ph="home"]) main#applicant-view:not([class*="p-0!"]) {
+    padding-top: 8px !important;
+  }
+  /* The header names the page, so the page's own title is kept for screen readers only (all four apps). */
+  body:not(:has([data-ap-status], [data-admin-nonav], [data-bv-status])):has(.bv-ph-titlewrap) .ap-pagehead-title {
+    position: absolute !important;
+    display: block !important;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@media (max-width: 380px) {
+  .bv-ph {
+    padding-inline: 14px;
+  }
+  .bv-ph-titlewrap {
+    padding-inline: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bv-ph,
+  .bv-ph-mini {
+    transition: none;
+  }
+}

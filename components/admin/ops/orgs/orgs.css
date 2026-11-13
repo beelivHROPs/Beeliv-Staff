@@ -1,0 +1,14 @@
+/*
+ * Operations "Clients & Outlets" and "Staff Assignments" only (no global tokens).
+ * The shared "More" button (ActionsMenu) is a rounded rectangle; here it takes the
+ * approved pill shape so it sits properly beside the main pill button.
+ */
+.opsorg-more .ap-btn {
+  height: 44px;
+  border-radius: 9999px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+.opsorg-more [role="menu"] {
+  max-width: calc(100vw - 32px);
+}

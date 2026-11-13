@@ -1,0 +1,459 @@
+/*
+ * Staff identity, applied BY TOKENS on top of the Applicant shell.
+ *
+ * The Applicant components read --ap-* custom properties. `.staff-theme`
+ * re-maps them to the Staff Indigo-Violet family, so every reused component
+ * turns Staff-coloured with no edits to Applicant files. Semantic colours
+ * (ok / warn / rose / info) and the gold accent stay shared.
+ *
+ * `html.staff-app .applicant-shell` covers layers portalled to <body>
+ * (confirm dialog, sheets, popovers), which sit outside the layout wrapper;
+ * StaffThemeFlag toggles that html class while /staff is mounted.
+ *
+ * Colours: brief section 2 (docs/requirements/beeliv-staff-app-brief-2026-09-29.md).
+ */
+.applicant-shell.staff-theme,
+html.staff-app .applicant-shell {
+  --ap-violet: #4f3aa8;
+  --ap-violet-2: #6954c8;
+  --ap-plum: #292052;
+  --ap-plum-2: #1d1640;
+  --ap-gradient: linear-gradient(135deg, #6954c8 0%, #4f3aa8 55%, #292052 100%);
+  --ap-ink: #0f0b18;
+  --ap-ink-2: #3a3546;
+  --ap-muted: #5f5968;
+  --ap-faint: #6f6a82;
+  --ap-bg: #f8f7fa;
+  --ap-tint: #f1eefa;
+  --ap-tint-soft: #f6f3ff;
+  --ap-tint-2: #e2dcf5;
+  --ap-lilac: #e9e4f7;
+  --ap-line: #e9e5ed;
+  --ap-line-2: #f3f0f6;
+  --ap-shadow: 0 1px 2px rgba(41, 32, 82, 0.04), 0 10px 30px rgba(41, 32, 82, 0.07);
+}
+
+/* Hard-coded applicant purples that tokens can't reach. */
+:is(.applicant-shell.staff-theme, html.staff-app .applicant-shell) {
+  & .ap-nav-pill {
+    background: linear-gradient(90deg, rgba(105, 84, 200, 0.62), rgba(105, 84, 200, 0.28));
+  }
+  & .ap-card-hover:hover,
+  & {
+    --ap-btn-2: var(--staff-fill, #5b45bf);
+  }
+  & .ap-btn-s:hover:not(:disabled) {
+    background: var(--staff-fill-hover, #6a54d0);
+    border-color: var(--staff-fill-hover, #6a54d0);
+  }
+  & .ap-btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(105, 84, 200, 0.28);
+  }
+  & .ap-input:focus {
+    box-shadow: 0 0 0 3px rgba(105, 84, 200, 0.18);
+  }
+  & .ap-btn-p:hover:not(:disabled) {
+    box-shadow: 0 10px 22px -10px rgba(79, 58, 168, 0.6);
+  }
+  & .ap-drop {
+    border-color: #cfc7ea;
+    background: #fbfaff;
+  }
+  /* Skeleton tiles: tokens for the one shared shimmer (app/globals.css .bv-sk). */
+  --sk-base: #e5e2ef;
+  --sk-hi: rgba(255, 255, 255, 0.55);
+}
+
+/* Staff-only helpers */
+.staff-dark-card {
+  background: linear-gradient(160deg, #35296a 0%, #292052 60%, #1d1640 100%);
+  color: #fff;
+}
+.staff-btn-bright {
+  background: linear-gradient(180deg, #7d6ad6, #6954c8);
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(105, 84, 200, 0.8);
+}
+.staff-btn-bright:hover:not(:disabled) {
+  background: linear-gradient(180deg, #8a78e0, #7560d0);
+}
+
+/* Sidebar promo card: the shared gradient ends on #292052 = the Staff sidebar
+   colour, so the card melted into it (project lead: "doesn't have a bg").
+   Staff gets its own lighter violet fill that stays distinct end to end. */
+:is(.applicant-shell.staff-theme, html.staff-app .applicant-shell) .ap-promo {
+  background: linear-gradient(160deg, #7c66dc 0%, #5b45bf 55%, #43329a 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 28px rgba(10, 6, 30, 0.35);
+}
+
+/* ==================================================================
+ * DARK MODE (Staff Settings > Display > Dark mode; lib/staff/theme.ts).
+ * <html data-staff-theme="dark"> while the Staff area is mounted.
+ * Contrast (WCAG): body text 7-15:1, captions >= 4.4:1, white on button
+ * fills >= 5.7:1. --ap-violet becomes a LIGHT violet for text/icons; solid
+ * fills that carry white text use --staff-fill instead.
+ * ================================================================== */
+html[data-staff-theme="dark"] {
+  color-scheme: dark;
+}
+/* Portalled menus/popovers (shadcn bg-card, bg-white!) outside the shell.
+   In a layer on purpose: Tailwind's `bg-white!` is an !important utility,
+   and a layered !important only loses to an EARLIER layer's !important. */
+@layer components {
+  html[data-staff-theme="dark"] :is([data-slot="popover-content"], [data-slot="select-content"], [role="menu"], [role="listbox"], .bg-card, [class~="bg-white!"]) {
+    background-color: #2c2649 !important;
+    border-color: #41396a !important;
+    color: #f8f6ff;
+  }
+}
+html[data-staff-theme="dark"] body {
+  background: #17132a;
+}
+html[data-staff-theme="dark"] .applicant-shell {
+  /* Brighter, finer dark (project lead 2026-10-19). Layers: page #17132a < card #221d3a < raised #2c2649.
+     Hairlines are visible (#41396a), headings near-white, muted text >= 7:1 on the card, accents glow. */
+  --staff-fill: #6a54d8;
+  --staff-fill-hover: #7a66e6;
+  --staff-deep: #4a3ca8;
+  --staff-raised: #2c2649;
+  /* Glass empty-state icons (components/shared/icons/GlassIcon.tsx): lower glass and glow on dark. */
+  --glass-front-a: 0.34;
+  --glass-front-b: 0.06;
+  --glass-glow-o: 0.18;
+  --ap-violet: #b9acff;
+  --ap-violet-2: #cbc1ff;
+  --ap-plum: #1b1636;
+  --ap-plum-2: #15112b;
+  --ap-gradient: linear-gradient(135deg, #7a66e6 0%, #5b45bf 55%, #3b2f8c 100%);
+  --ap-ink: #f8f6ff;
+  --ap-ink-2: #e0dbf0;
+  --ap-muted: #b9b2cf;
+  --ap-faint: #a39cbc;
+  --ap-bg: #17132a;
+  --ap-surface: #221d3a;
+  --ap-tint: #302a52;
+  --ap-tint-soft: #272244;
+  --ap-tint-2: #483f7a;
+  --ap-lilac: #373060;
+  --ap-line: #41396a;
+  --ap-line-2: #332c58;
+  --ap-ok: #6ee7a0;
+  --ap-ok-bg: #1b4634;
+  --ap-warn: #f6cf6e;
+  --ap-warn-bg: #4a3a1a;
+  --ap-rose: #ff8da1;
+  --ap-rose-bg: #4d2236;
+  --ap-info: #a8d0ff;
+  --ap-info-bg: #1f3563;
+  --ap-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: var(--ap-bg);
+  color: var(--ap-ink);
+
+  /* Choice chips (.ap-pick) hard-code a white fill. */
+  & .ap-pick {
+    background: var(--ap-surface);
+    border-color: var(--ap-line);
+    color: var(--ap-ink-2);
+  }
+  & .ap-pick[aria-pressed="true"] {
+    background: var(--ap-tint);
+    border-color: var(--ap-violet);
+    color: var(--ap-violet);
+  }
+  /* White surfaces written as utilities. */
+  & .bg-white,
+  & [class*="bg-white/9"],
+  & [class*="bg-white/8"],
+  & [class*="bg-[#fbfafc]"],
+  & [class*="bg-[#fbf8fd]"] {
+    background-color: var(--ap-surface) !important;
+  }
+  & [class*="bg-white/7"] {
+    background-color: rgba(28, 24, 41, 0.8) !important;
+  }
+  /* Soft light gradients (heroes, profile header) -> dark tints. */
+  & [class*="linear-gradient(100deg,#FFFFFF"] {
+    background-image: linear-gradient(100deg, #1c1829, #1f1a33 55%, #262040) !important;
+  }
+  & [class*="radial-gradient(circle_at_50%_38%,#FFFFFF"] {
+    background-image: radial-gradient(circle at 50% 38%, #2e2750 0, #262040 42%, #201b38 68%, rgba(32, 27, 56, 0) 70%) !important;
+  }
+  & [class*="var(--ap-tint-soft),#fff_50%"] {
+    background-image: linear-gradient(90deg, var(--ap-tint-soft), var(--ap-surface) 50%) !important;
+  }
+  /* Amber / rose notice boxes. */
+  & [class*="bg-[#fffbeb]"] {
+    background-color: var(--ap-warn-bg) !important;
+    border-color: #6b4e12 !important;
+  }
+  & [class*="bg-[#fff1f2]"] {
+    background-color: var(--ap-rose-bg) !important;
+    border-color: #6b2336 !important;
+  }
+  & [class*="text-[#0f0b18]"] {
+    color: var(--ap-ink) !important;
+  }
+  & [class*="text-[#5f5968]"] {
+    color: var(--ap-muted) !important;
+  }
+  & [class*="border-[#cfc8d8]"],
+  & [class*="border-[#d5c6e0]"] {
+    border-color: var(--ap-line) !important;
+  }
+
+  /* Solid violet fills carry white text: keep them deep. */
+  & .ap-btn-p,
+  & [class*="bg-(--ap-violet)"],
+  & .ap-switch[aria-checked="true"] {
+    background-color: var(--staff-fill) !important;
+  }
+  & .ap-btn-p:hover:not(:disabled) {
+    background-color: var(--staff-fill-hover) !important;
+  }
+  & .ap-btn-s {
+    border-color: var(--ap-tint-2);
+  }
+  & .ap-card-hover:hover {
+    border-color: var(--ap-tint-2);
+  }
+  & .ap-switch {
+    background: #3a3450;
+  }
+  /* Eyebrow gold, lifted for the dark ground. */
+  & .ap-eb {
+    color: #d8b56a;
+  }
+  /* Skeleton tiles: tokens for the one shared shimmer (app/globals.css .bv-sk). */
+  --sk-base: #2a2540;
+  --sk-hi: rgba(255, 255, 255, 0.06);
+  /* Dark cards stay distinct from the dark page. */
+  & .staff-dark-card {
+    background: linear-gradient(160deg, #3a2e78 0%, #2c2360 60%, #221b4c 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  /* White Beeliv logo on dark grounds. */
+  & .staff-logo-light {
+    display: none;
+  }
+  & .staff-logo-dark {
+    display: block;
+  }
+  /* Red unread dots were ringed in white for light mode. */
+  & [class*="shadow-[0_0_0_2px_#fff]"] {
+    box-shadow: 0 0 0 2px var(--ap-surface) !important;
+  }
+  /* Pastel icon tiles (IconTile / notification tiles) -> deep tints. */
+  & [class*="bg-[#F8F3FA]"],
+  & [class*="bg-[#f8f3fa]"] {
+    background-color: var(--ap-tint) !important;
+  }
+  & [class*="bg-[#DCFCE7]"],
+  & [class*="bg-[#dcfce7]"] {
+    background-color: var(--ap-ok-bg) !important;
+  }
+  & [class*="bg-[#FEF3C7]"],
+  & [class*="bg-[#fef3c7]"] {
+    background-color: var(--ap-warn-bg) !important;
+  }
+  & [class*="bg-[#FFE4E6]"],
+  & [class*="bg-[#ffe4e6]"],
+  & [class*="bg-[#FCE7F3]"] {
+    background-color: var(--ap-rose-bg) !important;
+  }
+  & [class*="bg-[#DBEAFE]"],
+  & [class*="bg-[#dbeafe]"] {
+    background-color: var(--ap-info-bg) !important;
+  }
+  & [class*="text-[#15803D]"],
+  & [class*="text-[#15803d]"] {
+    color: var(--ap-ok) !important;
+  }
+  & [class*="text-[#B45309]"],
+  & [class*="text-[#b45309]"] {
+    color: var(--ap-warn) !important;
+  }
+  & [class*="text-[#A63358]"],
+  & [class*="text-[#dc2626]"],
+  & [class*="text-[#be123c]"] {
+    color: var(--ap-rose) !important;
+  }
+  /* Status chips (applicant.css hard-codes their light colours). */
+  & .ap-chip-ok {
+    background: var(--ap-ok-bg);
+    color: var(--ap-ok);
+  }
+  & .ap-chip-warn {
+    background: var(--ap-warn-bg);
+    color: var(--ap-warn);
+  }
+  & .ap-chip-info {
+    background: var(--ap-info-bg);
+    color: var(--ap-info);
+  }
+  & .ap-chip-mute {
+    background: var(--ap-line-2);
+    color: var(--ap-muted);
+  }
+  & .ap-chip-violet {
+    background: var(--ap-tint);
+    color: var(--ap-violet);
+  }
+  /* Form fields. */
+  & .ap-input {
+    background: #1b1730;
+    border-color: var(--ap-line);
+    color: var(--ap-ink);
+  }
+  & input::placeholder,
+  & textarea::placeholder {
+    color: var(--ap-faint);
+  }
+  /* Image rooms (empty photo frames). */
+  & .staff-room {
+    background: radial-gradient(rgba(165, 148, 245, 0.16) 1px, transparent 1.2px) 0 0 / 9px 9px, linear-gradient(135deg, #221c3a, #2c2550) !important;
+  }
+  /* The prototype-state bar used --ap-ink as its fill (light in dark mode). */
+  & [class*="bg-(--ap-ink)"] {
+    background-color: #41396a !important;
+    color: #fff;
+  }
+  /* Bottom nav: deep solid bar with a violet rim glow (reference). */
+  --bnav-bg: #1e1938;
+  --bnav-top: #2c2649;
+  --bnav-fg: #c4bddb;
+  --bnav-fg-on: #ffffff;
+  --bnav-pill-bg: linear-gradient(160deg, #8a78e6, #6954c8);
+  --bnav-pill-fg: #fff;
+  --bnav-line: #b8aaf8;
+  --bnav-center-bg: linear-gradient(160deg, #8b78e6, #5b45bf);
+  --bnav-center-fg: #fff;
+  --bnav-border: rgba(165, 148, 245, 0.32);
+  & .ap-bnav {
+    filter: drop-shadow(0 0 12px rgba(125, 106, 214, 0.32)) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+  }
+  & .ap-bnav-pill {
+    background: linear-gradient(160deg, #8a78e6, #6954c8);
+    box-shadow: 0 0 18px -2px rgba(125, 106, 214, 0.65);
+  }
+  & .ap-bnav-line {
+    background: #b8aaf8;
+  }
+  & .ap-bnav-center {
+    background: linear-gradient(160deg, #8b78e6, #5b45bf);
+    box-shadow: 0 8px 24px rgba(79, 58, 168, 0.45);
+  }
+  & .ap-bnav-center-quiet {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  }
+  & .ap-sidebar {
+    background: #1b1636;
+    border-right: 1px solid var(--ap-line);
+  }
+  /* The one rich block stays rich in dark: the hero gradient is lifted, never flattened. */
+  & [class*="150deg,#2f2166"] {
+    background-image: linear-gradient(150deg, #43329f 0%, #6650d0 46%, #a897f2 100%);
+    box-shadow: 0 18px 36px -16px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  /* Soft two-layer lift becomes a hairline glow so cards read as layers, not holes. */
+  & [class*="shadow-[0_1px_2px_rgba(41,32,82,.05)"] {
+    box-shadow: 0 0 0 1px var(--ap-line), 0 14px 28px -16px rgba(0, 0, 0, 0.5);
+  }
+  /* Client initial discs on the hero stay light with dark text (the generic white override would turn them dark). */
+  & [class*="bg-white/92"][class*="rounded-full"] {
+    background-color: #f1eeff !important;
+    color: #1b1340;
+  }
+  /* Decorative circles inside tinted cards: a faint wash, not a bright blob. */
+  & [class*="-z-10"][class*="bg-white/"] {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+  /* Quiet cards: raised one step above the page. */
+  & .staff-raised {
+    background: var(--staff-raised);
+  }
+}
+
+/* Visual-only mini switch inside the sidebar dark-mode row. */
+.ap-sidebar .ap-switch-sm {
+  width: 36px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.ap-sidebar .ap-switch-sm::after {
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+}
+.ap-sidebar .ap-switch-sm[data-on] {
+  background: #7d6ad6;
+}
+.ap-sidebar .ap-switch-sm[data-on]::after {
+  transform: translateX(14px);
+}
+
+/* Staff preloader in dark mode (it renders outside the shell). */
+html[data-staff-theme="dark"] .staff-preloader {
+  background: radial-gradient(900px 500px at 50% 35%, #302a52 0%, #17132a 60%) !important;
+}
+html[data-staff-theme="dark"] .staff-preloader [class*="text-[#0f0b18]"] {
+  color: #f2f0f7 !important;
+}
+html[data-staff-theme="dark"] .staff-preloader [class*="text-[#5f5968]"] {
+  color: #aaa3bb !important;
+}
+html[data-staff-theme="dark"] .staff-preloader .bg-white {
+  background: #1c1829 !important;
+  box-shadow: 0 0 24px rgba(125, 106, 214, 0.35) !important;
+}
+html[data-staff-theme="dark"] .staff-preloader .staff-logo-light {
+  display: none;
+}
+html[data-staff-theme="dark"] .staff-preloader .staff-logo-dark {
+  display: block;
+}
+
+/* Staff dark mode: icon tiles are inverted (project lead): brand-colour tile, white icon,
+   instead of the pale lilac tile with a violet icon used in light mode. */
+html[data-staff-theme="dark"] .applicant-shell :is(.ap-duo, [class*="bg-[#F5EAF8]"]) {
+  background-color: var(--staff-fill);
+  color: #ffffff;
+}
+
+/* Same inversion for count badges (sidebar and menu counts) and the numbered step circles. */
+html[data-staff-theme="dark"] :is(
+    [class*="rounded-full"][class*="min-w-[22px]"],
+    [class*="rounded-full"][class*="min-w-5"],
+    [class*="rounded-full"][class*="bg-(--ap-tint)"][class*="size-6"]
+  ) {
+  background-color: var(--staff-fill, #5b45bf);
+  color: #ffffff;
+}
+
+/* Help and other pages: rounded-square icon boxes that use the tint token. */
+html[data-staff-theme="dark"] .applicant-shell [class*="rounded-xl"][class*="bg-(--ap-tint"][class*="size-1"]:has(> svg) {
+  background-color: var(--staff-fill);
+  color: #ffffff;
+}
+
+/* SOPs: the progress ring fills once when the page opens (the one calm animation on that screen). */
+@media (prefers-reduced-motion: no-preference) {
+  .sop-ring-arc {
+    animation: sop-ring-fill 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+@keyframes sop-ring-fill {
+  from {
+    stroke-dashoffset: var(--sop-c);
+  }
+}
+
+/* Shared schedule timeline (components/shared/schedule): its plum is the Admin colour. Inside Staff it follows the Staff violet. */
+html.staff-app .dt { --dt-plum: var(--ap-violet); --dt-plum-2: var(--ap-violet-2); --dt-halo: rgba(105, 84, 200, 0.2); --dt-rail: #e4def5; }
+html.staff-app .dt-day.on { box-shadow: 0 10px 20px rgba(79, 58, 168, 0.3); }
+html.staff-app .dt-card.tint { background: linear-gradient(135deg, #ece8fb, #e3ecfb); }
+html.staff-app[data-staff-theme="dark"] .dt { --dt-halo: rgba(185, 172, 255, 0.28); --dt-rail: var(--ap-line, #3a3550); }
+html.staff-app[data-staff-theme="dark"] .dt-day.on { color: #1c1740; box-shadow: none; }
+html.staff-app[data-staff-theme="dark"] .dt-day.on b { color: #1c1740; }
+html.staff-app[data-staff-theme="dark"] .dt-card.tint { background: rgba(185, 172, 255, 0.14); }

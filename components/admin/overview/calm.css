@@ -1,0 +1,64 @@
+/*
+ * Warm-neutral theme for the redesigned Admin Home ONLY (sample; no global
+ * tokens change). Scoped by the .calm-home wrapper rendered in OverviewBody;
+ * the page cream is applied through :has() so it goes away when you leave Home.
+ * One deep brand colour (existing primary) + sparing gold + one calm olive.
+ */
+.applicant-shell:has(.calm-home) {
+  --ap-bg: #faf6ee;
+}
+.calm-home {
+  --ap-surface: #fffdf8;
+  --ap-line: #e7dfce;
+  --ap-line-2: #f0e9da;
+  --ap-tint: #f4ecdc;
+  --ap-tint-soft: #f9f3e6;
+  --ap-tint-2: #e4d9c1;
+  --calm-olive: #5d6b3b;
+}
+html[data-admin-theme="dark"] .applicant-shell:has(.calm-home) {
+  --ap-bg: #15100e;
+}
+html[data-admin-theme="dark"] .calm-home {
+  --ap-surface: #1e1714;
+  --ap-line: #3a2e28;
+  --ap-line-2: #2d2420;
+  --ap-tint: #2b1d1f;
+  --ap-tint-soft: #231a19;
+  --ap-tint-2: #46372f;
+  --calm-olive: #a7b57c;
+}
+
+/* PHONE Home only (<768px): the approved mid-ground look. Pure white cards on the soft lavender page; desktop keeps the cream above. */
+@media (max-width: 767px) {
+  .applicant-shell:has(.calm-home) {
+    --ap-bg: #f5f1f9;
+  }
+  .calm-home {
+    --ap-surface: #fff;
+    --ap-line-2: #efeaf3;
+    --ap-tint: #f9e5ef;
+    --ap-tint-soft: #fbf3f8;
+  }
+  html[data-admin-theme="dark"] .applicant-shell:has(.calm-home) {
+    --ap-bg: #15100e;
+  }
+  html[data-admin-theme="dark"] .calm-home {
+    --ap-surface: #1e1714;
+    --ap-line-2: #2d2420;
+    --ap-tint: #2b1d1f;
+    --ap-tint-soft: #231a19;
+  }
+}
+
+/* DESKTOP/TABLET Home (>=768px), premium standard: white 12px hairline cards on the warm page; hero keeps its tint. Light mode only. */
+@media (min-width: 768px) {
+  html:not([data-admin-theme="dark"]) .calm-desktop {
+    --ap-surface: #fff;
+    --ap-line: #ebe4d6;
+    --ap-line-2: #f1ece1;
+  }
+  .calm-desktop [class*="rounded-[10px]"] {
+    border-radius: 12px;
+  }
+}

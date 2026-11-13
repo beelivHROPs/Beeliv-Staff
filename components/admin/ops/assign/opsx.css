@@ -1,0 +1,28 @@
+/*
+ * Small shared motion for the Operations "Clients & HR", Reports and Setup
+ * screens only (no global tokens). Phones: the sheet rises from the bottom
+ * (ap-sheet-up, applicant.css). Larger screens: a side sheet slides in.
+ */
+@keyframes opsx-slide-in {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+}
+.opsx-up {
+  animation: ap-sheet-up 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (min-width: 768px) {
+  .opsx-up {
+    animation: opsx-slide-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+.opsx-fade {
+  animation: ap-fade 180ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .opsx-up,
+  .opsx-fade {
+    animation: none;
+  }
+}

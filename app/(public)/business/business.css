@@ -1,0 +1,9 @@
+/*
+ * For Businesses (/business). This file previously held `.bz-line` /
+ * `.bz-step` / `.bz-pill` for the earlier connected-line "HOW IT WORKS ·
+ * TIMELINE" design. That was replaced by the "HOW IT WORKS · CARDS"
+ * revision (see components/public/business/Timeline.tsx), which is styled
+ * entirely with Tailwind utility classes and the shared tokens in
+ * ../public-site.css, so no page-specific rules remain here.
+ */
+@layer theme, base, components, utilities;

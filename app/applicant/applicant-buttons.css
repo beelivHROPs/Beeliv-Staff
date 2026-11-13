@@ -1,0 +1,200 @@
+/*
+ * ONE BUTTON LANGUAGE (project lead, 2026-10-19), Applicant app. Mirrors the Staff ActionPill
+ * (components/staff/kit.tsx) and the shared ActionButton (components/shared/ActionButton.tsx):
+ *   - full pill, 48px tall (sm = 40px with a 48px touch target), bold 700, same focus ring, same press (0.985)
+ *   - HERO / MAIN actions: add .ap-btn-hero to a filled .ap-btn: leading icon disc (first child <svg>),
+ *     bold label, trailing circular arrow (drawn by ::after, so never add an ArrowRight icon yourself)
+ *   - everything else (small, secondary, quiet): the plain pill, same shape / colours / ring
+ * Colours are unchanged (.ap-btn-p violet, .ap-btn-s lavender, .ap-btn-o outline, .ap-btn-q quiet).
+ * Scoped to the Applicant app: Admin, Client and Staff share applicant.css but keep their own buttons.
+ * Earlier version (2026-10-13) only set the pill radius; that rule is kept as is (unlayered).
+ */
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn {
+  border-radius: 999px;
+}
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn:not(.ap-btn-sm):not(.ap-btn-q) {
+  min-height: 48px;
+}
+
+@layer components {
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) {
+    /* Same ring as the Staff pill: 2px violet with a 2px page-coloured offset. */
+    --ap-btn-ring: 0 0 0 2px var(--ap-bg, #faf9f7), 0 0 0 4px var(--ap-violet);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn {
+    height: 48px;
+    padding: 0 22px;
+    font-weight: 700;
+    position: relative;
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-sm {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 999px;
+  }
+  /* Small buttons keep a 48px touch target without growing the visible pill. */
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-sm::before,
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-q::before {
+    content: "";
+    position: absolute;
+    inset: -4px 0;
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-q {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ap-btn-ring);
+  }
+  /* Outline = the Staff outline pill: white surface, hairline ring, ink label. */
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-o {
+    background: var(--ap-surface, #fff);
+    border: 1.5px solid var(--ap-line);
+    color: var(--ap-ink);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-o:hover:not(:disabled) {
+    background: var(--ap-tint);
+    border-color: color-mix(in srgb, var(--ap-violet) 40%, transparent);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn:disabled {
+    opacity: 0.6;
+  }
+
+}
+
+/* ---- Touch targets (Applicant only): small controls keep their look but get a 44px+ target ---- */
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-seg > button,
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-pick {
+  min-height: 44px;
+}
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-hit:not([class*="size-"]):not(.absolute):not(.fixed):not(.sticky) {
+  position: relative;
+}
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-hit:not([class*="size-"])::before {
+  content: "";
+  position: absolute;
+  inset: -12px -8px;
+}
+
+/* ---- Destructive confirm (Withdraw, Delete, Remove): rose filled pill, only inside confirmation dialogs ---- */
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-danger {
+  background: #c8283c;
+  border-color: #c8283c;
+  color: #fff;
+}
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-danger:hover:not(:disabled) {
+  background: #a81f31;
+  border-color: #a81f31;
+}
+.applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-danger:focus-visible {
+  box-shadow: 0 0 0 2px var(--ap-bg, #faf9f7), 0 0 0 4px #c8283c;
+}
+
+/* ---- Hero / main action: icon disc + label + arrow disc ----
+   Unlayered on purpose: the icon's own `size-5` utility must not shrink the disc. */
+@media all {
+  /* One focus ring everywhere (beats per-site `focus-visible:outline-*` utilities, so no double ring). */
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ap-btn-ring);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero {
+    /* Label hugs the icon disc (left-aligned); the arrow disc is pushed right by its auto margin. */
+    justify-content: flex-start;
+    gap: 12px;
+    height: 52px;
+    min-height: 52px;
+    padding: 0 8px 0 22px;
+    text-align: left;
+    font-size: 16px;
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero:has(> svg:first-child) {
+    padding-left: 8px;
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero > svg:first-child {
+    box-sizing: border-box;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.22);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero::after {
+    content: "";
+    margin-left: auto;
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E")
+        center / 18px 18px no-repeat,
+      rgba(255, 255, 255, 0.16);
+    transition: transform 300ms var(--ap-ease, ease);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero:hover:not(:disabled)::after {
+    transform: translateX(3px);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero.ap-btn-o > svg:first-child {
+    background: var(--ap-tint-2);
+    color: var(--ap-violet);
+  }
+  .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero.ap-btn-o::after {
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b087b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E")
+        center / 18px 18px no-repeat,
+      var(--ap-tint-2);
+  }
+  /* Desktop (project lead): same hero pill, 48px, content width (callers add w-full only on phones). */
+  @media (min-width: 768px) {
+    .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero {
+      height: 48px;
+      min-height: 48px;
+      font-size: 15px;
+      gap: 14px;
+    }
+    .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero > svg:first-child,
+    .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero::after {
+      width: 32px;
+      height: 32px;
+    }
+    .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero > svg:first-child {
+      padding: 7px;
+    }
+    .applicant-shell:not(.admin-theme):not(.client-theme):not(.staff-theme) .ap-btn-hero:has(> svg:first-child) {
+      padding-left: 8px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .applicant-shell .ap-btn-hero::after {
+      transition: none;
+    }
+    .applicant-shell .ap-btn-hero:hover:not(:disabled)::after {
+      transform: none;
+    }
+  }
+}
+
+/* Desktop top bar: a framed white card floating over the cream page (same frame as the phone top bar). */
+.ap-app .ap-topbar-desktop {
+  background: #fff;
+}
+.ap-app:has([data-ap-status]) .ap-topbar-wrap {
+  display: none !important;
+}
+
+/* ---- Status / gate pages show no app navigation (components/applicant/StatusChrome.tsx adds a logo + Help + Log out bar) ---- */
+.ap-app:has([data-ap-status]) .ap-sidebar,
+.ap-app:has([data-ap-status]) .ap-topbar,
+.ap-app:has([data-ap-status]) .ap-bnav {
+  display: none !important;
+}
+.ap-app:has([data-ap-status]) .ap-shell-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}

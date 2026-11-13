@@ -23,15 +23,15 @@
 // (every dashboard's primary action goes through it) picks that up
 // everywhere at once instead of overriding it dashboard-by-dashboard.
 //
-// shadow-[...] — subtle neumorphism (project-lead: "a subtle touch on a
-// few elements", not a full soft-UI rework): a soft dual light/dark shadow
-// so the button reads as gently raised off the page instead of perfectly
-// flat. Deliberately restrained (small offset/blur, low opacity) rather
-// than the classic pronounced neumorphic look, which also has real
-// accessibility downsides (very low contrast on interactive elements) —
-// this is a light touch, not the full aesthetic.
+// shadow-sm (2026-09-17, was a dual light/dark neumorphic shadow) — the
+// premium-SaaS flattening pass replaced that soft-UI touch everywhere else
+// (cards, icon chips) with flat shadow-sm, and the old dual shadow here now
+// read as inconsistent next to it. Matches components/ui/button.tsx, whose
+// own variants carry no shadow class at all (shadow lives only in this
+// BASE string, not in buttonVariants) — shadow-sm is the closest match to
+// "flat direction" without going fully shadowless on a solid-color button.
 const BASE =
-  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none h-10 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 shadow-[2px_2px_5px_rgba(0,0,0,0.18),-1px_-1px_4px_rgba(255,255,255,0.25)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px active:not-aria-[haspopup]:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none h-10 px-4 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 shadow-sm focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px active:not-aria-[haspopup]:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 export const DASHBOARD_ACCENT_BG: Record<"purple" | "gold" | "lavender" | "slate", string> = {
   purple: `${BASE} bg-primary text-primary-foreground hover:bg-primary/90`,

@@ -1,0 +1,141 @@
+/*
+ * Operations identity for the Admin app (Midnight Aubergine). PROTOTYPE layer,
+ * kept out of app/admin/admin.css so the HR file is untouched.
+ *
+ * How it works: admin.css maps every --ap-* token onto --admin-*. Here the
+ * --admin-* palette (and the few hard-coded mulberry rgba values in admin.css)
+ * are re-pointed when <html> carries `admin-role-ops` (set by AdminThemeFlag).
+ * The selectors start with `html.admin-role-ops` so they out-rank the static
+ * `.admin-role-hr` class the Admin layout puts on its wrapper and on portalled
+ * dialogs (ADMIN_THEME), with no edit to those files.
+ *
+ * Palette (project lead): Midnight Aubergine #31204F, deep #191126, soft #F3F0F7.
+ * Every supporting tint and the dark-mode values are DERIVED and need design
+ * sign-off.
+ */
+
+/* ---------- Light ---------- */
+html.admin-role-ops,
+html.admin-role-ops .admin-role-hr {
+  --admin-primary: #31204f;
+  --admin-primary-hover: #281a41;
+  --admin-deep: #191126;
+  --admin-deep-2: #120c1c;
+  --admin-soft: #f3f0f7;
+  --admin-soft-2: #f8f6fb;
+  --admin-tint: #e3dcee;
+  --admin-support: #4a3375;
+  --admin-bg: #f8f7fa;
+}
+
+html.admin-role-ops :is(.applicant-shell.admin-theme, .applicant-shell) {
+  --ap-shadow: 0 1px 2px rgba(25, 17, 38, 0.04), 0 10px 30px rgba(25, 17, 38, 0.06);
+  --bnav-border: rgba(49, 32, 79, 0.16);
+}
+html.admin-role-ops .applicant-shell .ap-nav-pill {
+  background: linear-gradient(90deg, rgba(74, 51, 117, 0.78), rgba(49, 32, 79, 0.5));
+}
+html.admin-role-ops .applicant-shell .ap-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(49, 32, 79, 0.3);
+}
+html.admin-role-ops .applicant-shell .ap-input:focus {
+  box-shadow: 0 0 0 3px rgba(49, 32, 79, 0.18);
+}
+
+/* ---------- Dark ---------- */
+html.admin-role-ops[data-admin-theme="dark"] body {
+  background: #0f0b16;
+}
+html.admin-role-ops[data-admin-theme="dark"] .applicant-shell {
+  --admin-fill: #4a3375;
+  --admin-fill-hover: #5b4088;
+  --admin-d-c1: #cdbdf0;
+  --admin-d-c2: #9f86d4;
+  --admin-d-c3: #4a3375;
+  --ap-violet: #cdbdf0;
+  --ap-violet-2: #ddd0f5;
+  --ap-plum: #08060c;
+  --ap-plum-2: #060509;
+  --ap-gradient: linear-gradient(135deg, #4a3375 0%, #3b2861 55%, #191126 100%);
+  --ap-bg: #0f0b16;
+  --ap-surface: #17121f;
+  --ap-tint: #231a33;
+  --ap-tint-soft: #1b1428;
+  --ap-tint-2: #3a2f4d;
+  --ap-lilac: #2b2140;
+  --ap-line: #2b2338;
+  --ap-line-2: #221b2d;
+  --ap-ink: #f1eef6;
+  --ap-ink-2: #d6d0e0;
+  --ap-muted: #b0a7c0;
+  --ap-faint: #9a90ac;
+  --ap-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+@layer components {
+  html.admin-role-ops[data-admin-theme="dark"] :is([data-slot="popover-content"], [data-slot="select-content"], [role="menu"], [role="listbox"], [data-slot="dialog-content"], .bg-card, [class~="bg-white!"]) {
+    background-color: #17121f !important;
+    border-color: #2b2338 !important;
+    color: #f1eef6;
+  }
+}
+
+/* ---------- Calm Operations screens (Home, Approvals, Activity) ----------
+   Same calm direction as the HR Home (hairline containers, one deep colour, one
+   calm olive) but on a cool aubergine-tinted neutral instead of cream, so it
+   belongs to the Operations identity. Scoped by the .ops-calm wrapper. Light
+   values are applied only outside dark mode (dark keeps the palette above). */
+html.admin-role-ops:not([data-admin-theme="dark"]) .ops-calm {
+  --ap-surface: #ffffff;
+  --ap-line: #e3deea;
+  --ap-line-2: #eeeaf3;
+  --ap-tint: #f0ecf6;
+  --ap-tint-soft: #f7f5fa;
+  --ap-tint-2: #ddd5e9;
+  --calm-olive: #5d6b3b;
+}
+html.admin-role-ops[data-admin-theme="dark"] .ops-calm {
+  --calm-olive: #a7b57c;
+}
+
+/* The shared Admin file hard-codes the HR mulberry on the active nav pill (same specificity, loaded later),
+   so raise ours with the .admin-app class the shell also sets on <html>. */
+html.admin-role-ops.admin-app .applicant-shell .ap-nav-pill {
+  background: linear-gradient(90deg, rgba(74, 51, 117, 0.78), rgba(49, 32, 79, 0.5));
+}
+html.admin-role-ops.admin-app[data-admin-theme="dark"] .applicant-shell {
+  --bnav-pill-bg: linear-gradient(160deg, #5b4088, #3b2861);
+  --bnav-center-bg: linear-gradient(160deg, #5b4088, #3b2861);
+  --bnav-border: rgba(205, 189, 240, 0.28);
+}
+html.admin-role-ops.admin-app[data-admin-theme="dark"] .applicant-shell :is(.ap-bnav-pill, .ap-bnav-center) {
+  background: linear-gradient(160deg, #5b4088, #3b2861);
+  box-shadow: none;
+}
+
+/* One main action per screen: in the Operations identity the secondary button is an outline, not a second
+   filled button (the shared Admin rule fills both). Also reaches dialogs and sheets, which are portalled. */
+html.admin-role-ops .ap-btn-s {
+  background: transparent;
+  color: var(--ap-ink, #191126);
+  border-color: var(--ap-line, #e3deea);
+}
+html.admin-role-ops .ap-btn-s:hover:not(:disabled) {
+  background: var(--ap-tint-soft, #f7f5fa);
+  border-color: var(--ap-tint-2, #ddd5e9);
+  color: var(--ap-ink, #191126);
+}
+html.admin-role-ops[data-admin-theme="dark"] .ap-btn-s {
+  color: #f1eef6;
+  border-color: #3a2f4d;
+}
+html.admin-role-ops[data-admin-theme="dark"] .ap-btn-s:hover:not(:disabled) {
+  background: #231a33 !important;
+  color: #f1eef6;
+}
+
+/* DESKTOP/TABLET Operations Home (>=768px), premium standard: 12px card radius. */
+@media (min-width: 768px) {
+  .ops-calm [class*="rounded-[10px]"] {
+    border-radius: 12px;
+  }
+}

@@ -1,0 +1,75 @@
+/*
+ * The dashboard's own dropdown (SelectMenu) and calendar (DatePicker), reused
+ * on the public site so the brand's approved control design is identical
+ * everywhere. Those components read the dashboard's --ap-* tokens and a few
+ * .ap-* classes, which only exist inside the dashboard's stylesheet - so the
+ * same values are provided here, scoped to the public site (and to the
+ * phone date sheet, which is portalled outside .public-site as
+ * .applicant-shell). Keep in sync with app/applicant/applicant.css.
+ */
+.public-site,
+.applicant-shell {
+  --ap-violet: #5b087b;
+  --ap-violet-2: #8a0aa3;
+  --ap-ink: #11111b;
+  --ap-ink-2: #3a3845;
+  --ap-muted: #686672;
+  --ap-faint: #6f6d7a;
+  --ap-tint: #f6effa;
+  --ap-tint-2: #ecdff4;
+  --ap-line: #eae2f1;
+  --ap-line-2: #f3f0f6;
+  --ap-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ap-ease-std: cubic-bezier(0.4, 0, 0.2, 1);
+  --ap-t-micro: 120ms;
+  --ap-t-quick: 180ms;
+}
+.public-site .ap-input,
+.applicant-shell .ap-input {
+  height: 48px;
+  border: 1px solid var(--ap-line);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--ap-ink);
+  background: #fff;
+  width: 100%;
+  transition:
+    border-color var(--ap-t-micro) var(--ap-ease-std),
+    box-shadow var(--ap-t-quick) var(--ap-ease-std);
+}
+.public-site .ap-input:focus {
+  outline: none;
+  border-color: var(--ap-violet);
+  box-shadow: 0 0 0 3px rgba(138, 10, 163, 0.14);
+}
+.public-site .ap-input[aria-invalid="true"] {
+  border-color: #be123c;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .public-site .ap-pop-in,
+  .applicant-shell .ap-pop-in {
+    animation: ap-menu-in var(--ap-t-quick) var(--ap-ease) backwards;
+    transform-origin: top center;
+  }
+  .public-site .ap-pop-in.ap-pop-up,
+  .applicant-shell .ap-pop-in.ap-pop-up {
+    transform-origin: bottom center;
+  }
+}
+@keyframes ap-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+.public-site .ap-serif,
+.applicant-shell .ap-serif {
+  font-family: var(--font-newsreader), system-ui, "Segoe UI", sans-serif;
+  font-weight: 500;
+  font-size-adjust: 0.5;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+  text-wrap: balance;
+}

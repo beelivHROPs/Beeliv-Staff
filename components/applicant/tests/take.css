@@ -1,0 +1,19 @@
+/* Quiet step transition for the form / test taking flow (200ms slide + fade; off for reduced motion). */
+@keyframes take-in-fwd {
+  from { opacity: 0; transform: translateX(22px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes take-in-back {
+  from { opacity: 0; transform: translateX(-22px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes take-pop {
+  from { opacity: 0; transform: scale(.85); }
+  to { opacity: 1; transform: none; }
+}
+.take-step[data-dir="fwd"] { animation: take-in-fwd 200ms ease-out both; }
+.take-step[data-dir="back"] { animation: take-in-back 200ms ease-out both; }
+.take-pop { animation: take-pop 320ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .take-step[data-dir], .take-pop { animation: none; }
+}

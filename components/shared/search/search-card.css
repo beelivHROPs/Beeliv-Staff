@@ -1,0 +1,12 @@
+/*
+ * While a SearchBar is "Searching", hide the results next to it so the spinner stands in for them.
+ * Put data-search-scope on the element that holds the search bar AND the results.
+ * The branch that contains the busy search bar stays; its siblings (the stale list) are hidden.
+ */
+/* Simpler variant for a search bar whose results are its following siblings: <SearchBar hideAfter />. */
+[data-search-after][data-search-busy="true"] ~ * {
+  display: none;
+}
+[data-search-scope]:has([data-search-busy="true"]) > :not(:has([data-search-busy="true"])) {
+  display: none;
+}

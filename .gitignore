@@ -39,6 +39,27 @@ yarn-error.log*
 # claude code local settings (contains secrets)
 .claude/settings.local.json
 
+# bundled AI-tooling skill/agent docs — local dev tooling, not project code
+.agents/
+.claude/skills/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Original full-size images (backup before compression, 2026-09-29) — not served, not committed
+design-assets/
+
+# local AI-tool config (holds access tokens) and scratch files
+/.codex/
+/.tmp-wfimg/
+
+# dev-only sample files for the in-app SOP reader (real HR policy copy: never commit or deploy)
+/public/dev-samples/
+
+# local fast preview build (NEXT_DIST_DIR=.next-prod)
+/.next-prod/
+/.next-preview/
+
+# Local live-mode test build output
+/.next-live-test/

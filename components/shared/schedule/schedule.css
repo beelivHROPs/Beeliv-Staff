@@ -1,0 +1,40 @@
+/* Shared DayTimeline (agenda timeline). Phone design from docs/design-references/admin-home-options-2026-10-26.html (option D).
+   Colours come from the --ap-* tokens of whichever app wraps it, so dark mode follows automatically. */
+.dt { --dt-plum: #8b2252; --dt-plum-2: #c24a86; --dt-card: var(--ap-surface, #fff); --dt-rail: #e8dff0; --dt-halo: #f6dde9; --dt-shadow: 0 6px 18px rgba(60, 30, 80, 0.07); }
+:is(.dark, [data-admin-theme="dark"]) .dt { --dt-rail: var(--ap-line, #3a2a33); --dt-halo: rgba(194, 74, 134, 0.28); --dt-shadow: none; }
+
+.dt-strip { display: flex; gap: 8px; touch-action: pan-y; }
+.dt-day { flex: 1; min-height: 66px; text-align: center; background: var(--dt-card); border-radius: 18px; padding: 9px 0; font-size: 13px; font-weight: 700; color: var(--ap-muted); box-shadow: 0 6px 16px rgba(60, 30, 80, 0.05); border: 0; cursor: pointer; transition: transform 0.15s; }
+.dt-day:active { transform: scale(0.96); }
+.dt-day b { display: block; font-size: 18px; color: var(--ap-ink); margin-top: 2px; }
+.dt-day i { display: block; width: 5px; height: 5px; border-radius: 50%; background: var(--dt-plum); margin: 5px auto 0; }
+:is(.dark, [data-admin-theme="dark"]) .dt-day i { background: var(--dt-plum-2); }
+.dt-day.on { background: linear-gradient(160deg, var(--dt-plum), var(--dt-plum-2)); color: #fff; box-shadow: 0 10px 20px rgba(139, 34, 82, 0.3); }
+.dt-day.on b { color: #fff; }
+.dt-day.on i { background: #fff; }
+
+.dt-tl { position: relative; margin: 6px 0 0; padding: 0 0 0 62px; list-style: none; }
+.dt-tl::before { content: ""; position: absolute; left: 50px; top: 6px; bottom: 6px; width: 2px; background: var(--dt-rail); }
+.dt-ev { position: relative; margin-bottom: 12px; }
+.dt-ev time { position: absolute; left: -62px; top: 14px; width: 44px; text-align: right; font-size: 12.5px; font-weight: 800; color: var(--ap-muted); font-variant-numeric: tabular-nums; }
+.dt-ev::before { content: ""; position: absolute; left: -17px; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--dt-plum); border: 2px solid var(--dt-card); box-shadow: 0 0 0 3px var(--dt-halo); }
+.dt-card { display: flex; align-items: center; gap: 10px; min-height: 64px; background: var(--dt-card); border-radius: 20px; padding: 12px 14px; box-shadow: var(--dt-shadow); color: inherit; text-decoration: none; }
+.dt-card.tint { background: linear-gradient(135deg, #fbe3ee, #ece6fb); }
+:is(.dark, [data-admin-theme="dark"]) .dt-card.tint { background: linear-gradient(135deg, rgba(194, 74, 134, 0.22), rgba(108, 92, 231, 0.18)); }
+.dt-card:active { opacity: 0.85; }
+.dt-face { width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; border: 2px solid var(--dt-card); }
+.dt-body { min-width: 0; flex: 1; }
+.dt-body b { display: block; font-size: 15px; font-weight: 700; color: var(--ap-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-body span { display: block; font-size: 13px; color: var(--ap-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-pill { flex: none; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+.dt-pill.ok { background: #e3f6ea; color: #17803d; }
+.dt-pill.wait { background: #fdf0d8; color: #9a5a06; }
+.dt-pill.bad { background: #fde8ea; color: #b4232c; }
+:is(.dark, [data-admin-theme="dark"]) .dt-pill.bad { background: rgba(180, 35, 44, 0.28); color: #f5a3a8; }
+.dt-btn { width: 100%; border: 0; text-align: left; cursor: pointer; font: inherit; }
+/* wrap: names and titles may take two lines (no ellipsis); phone type scale. */
+.dt-wrap .dt-body b { white-space: normal; overflow: visible; text-overflow: clip; font-size: 16px; overflow-wrap: anywhere; }
+.dt-wrap .dt-body span { white-space: normal; overflow: visible; text-overflow: clip; font-size: 13.5px; overflow-wrap: anywhere; }
+.dt-wrap .dt-ev time { font-size: 13px; }
+:is(.dark, [data-admin-theme="dark"]) .dt-pill.ok { background: rgba(23, 128, 61, 0.25); color: #8fe0ad; }
+:is(.dark, [data-admin-theme="dark"]) .dt-pill.wait { background: rgba(154, 90, 6, 0.3); color: #f5c778; }

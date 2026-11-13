@@ -1,35 +1,47 @@
-import { AppShell } from "@/components/layout/AppShell";
-import { NAV_ITEMS, ROLE_LABELS } from "@/lib/nav-config";
-import { SAMPLE_APPLICATION_ACTIVITY } from "@/lib/placeholder-data";
+import type { Metadata, Viewport } from "next";
+import { AppShell } from "@/components/applicant/AppShell";
+import { newsreader } from "@/components/applicant/fonts";
+import "./applicant.css";
+import "./applicant-buttons.css";
+import { areaOpen, publicSiteUrl } from "@/lib/env/sample-data";
+import { AreaNotOpen } from "@/components/shared/AreaGate";
+import { demoAttr } from "@/lib/dev-demo-flag";
+import { ShareSheetHost } from "@/components/shared/ShareSheet";
+import { ScreenScale } from "@/components/shared/ScreenScale";
+import {publicJobsEnabled} from '@/lib/server/public-jobs/runtime';
 
-// Same list app/applicant/notifications renders — the bell badge is this
-// array's length (3), not the previously-hardcoded, disconnected 2.
-const notifications = SAMPLE_APPLICATION_ACTIVITY.map((item, i) => ({
-  id: `activity-${i}`,
-  title: item.title,
-  date: item.date,
-}));
+// Applicant dashboard only: Newsreader (serif display headings), matching
+// the delivered wireframe (C:\Users\USER\Documents\beeliv-website\applicant\
+// index.html), same next/font pattern as app/(public)/layout.tsx (which this
+// route tree does NOT import from — this is its own scope). Karla (body) is
+// already loaded globally as --font-sans in app/layout.tsx.
+//
+// Note: CLAUDE.md records a project-lead instruction that the (other four)
+// role dashboards use Inter headings only. This dashboard is a deliberate,
+// scoped exception: it was handed over as its own locked wireframe (task
+// instructions: "Fonts: Karla + Newsreader... reuse, don't re-import") and
+// sits functionally closer to the public recruitment flow (job listings,
+// apply) than to the internal HR/ops dashboards. Flagged for visibility, not
+// silently applied — if Beeliv wants Inter here instead, this is the one
+// line to change.
+export const metadata: Metadata = {
+  title: { default: "Applicant dashboard", template: "%s | Beeliv Applicant" },
+  robots: { index: false, follow: false },
+};
 
-export default function ApplicantLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Phone browser bars take the same cream as the page (the one Applicant page colour).
+export const viewport: Viewport = { themeColor: "#faf6ee", colorScheme: "only light" };
+
+export default function ApplicantLayout({ children }: LayoutProps<"/">) {
   return (
-    <AppShell
-      roleLabel={ROLE_LABELS.applicant}
-      navItems={NAV_ITEMS.applicant}
-      userName="Amaka Okoye"
-      showSearch
-      notifications={notifications}
-    >
-      {/* applicant-scope — lets globals.css add a drop shadow to every Card
-          on the applicant side only (project-lead, 2026-09-16: "add some
-          dropshadows to the cards / for applicant only"), without touching
-          the shared Card component (used by every other role/dashboard) or
-          editing each individual call site across app/applicant + components/
-          applicant. */}
-      <div className="applicant-scope contents">{children}</div>
-    </AppShell>
+    <div {...demoAttr()} className={`ap-app ap-screen-zoom applicant-shell ${newsreader.variable}`}>
+      <ScreenScale />
+      <ShareSheetHost />
+      {/* Scroll reveals start hidden in the server HTML (motion.tsx Reveal/Unveil); without JS, show them. Same pattern as app/(public)/layout.tsx. */}
+      <noscript>
+        <style>{`.applicant-shell [data-ap-reveal]{opacity:1!important;transform:none!important;clip-path:none!important}`}</style>
+      </noscript>
+      {areaOpen("applicant") ? <AppShell liveVacancies={publicJobsEnabled()}>{children}</AppShell> : <AreaNotOpen siteUrl={publicSiteUrl()} />}
+    </div>
   );
 }

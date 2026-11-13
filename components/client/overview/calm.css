@@ -1,0 +1,102 @@
+/*
+ * Warm-neutral, flatter look for the Client Overview ONLY (sample; global
+ * tokens untouched). Everything is scoped by the .calm-client wrapper that
+ * OverviewBody renders. The cream page comes from :has() so it ends when you
+ * leave Overview. Unlayered rules here win over Tailwind's layered utilities.
+ */
+.applicant-shell:has(.calm-client) {
+  --ap-bg: #faf6ee;
+}
+.calm-client {
+  --ap-surface: #fffdf8;
+  --ap-line: #e7dfce;
+  --ap-line-2: #f0e9da;
+  --ap-tint: #f4ecdc;
+  --ap-tint-soft: #f9f3e6;
+  --ap-tint-2: #e4d9c1;
+  --calm-olive: #5d6b3b;
+}
+html[data-client-theme="dark"] .applicant-shell:has(.calm-client) {
+  --ap-bg: #15100e;
+}
+html[data-client-theme="dark"] .calm-client {
+  --ap-surface: #1e1714;
+  --ap-line: #3a2e28;
+  --ap-line-2: #2d2420;
+  --ap-tint: #2b1d1f;
+  --ap-tint-soft: #231a19;
+  --ap-tint-2: #46372f;
+  --calm-olive: #a7b57c;
+}
+/* Cards: thin border, 10px radius, no shadow, tighter padding. */
+.calm-client .ap-card {
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 16px;
+}
+.calm-client .ap-card-hover:hover {
+  box-shadow: none;
+  border-color: var(--ap-tint-2);
+}
+/* Phone: no boxes. A hairline above each section instead. */
+@media (max-width: 767px) {
+  .calm-client .ap-card {
+    background: transparent;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    padding: 14px 0 4px;
+  }
+  .calm-client .ap-card h2 {
+    font-size: 14px;
+  }
+}
+
+/*
+ * ---- Rolled out to every Client screen (ClientShell wraps the page in .calm-client) ----
+ * The top bars sit on the same cream as the page; sheets use the cream surface.
+ */
+.applicant-shell:has(.calm-client) .cc-topbar,
+.applicant-shell:has(.calm-client) header.sticky {
+  background-color: color-mix(in srgb, var(--ap-bg) 94%, transparent);
+}
+.cc-sheet {
+  background: #fffdf8 !important;
+  box-shadow: 0 -8px 28px rgba(40, 24, 8, 0.12) !important;
+}
+html[data-client-theme="dark"] .cc-sheet {
+  background: #1e1714 !important;
+}
+.calm-client .ap-btn {
+  box-shadow: none;
+}
+@media (max-width: 767px) {
+  /* Inner screens: the top bar already says where you are, so the big page title goes. */
+  .calm-client[data-inner] .ap-pagehead-title {
+    display: none;
+  }
+  .calm-client .ap-pagehead-title {
+    font-size: 24px;
+  }
+  /* Detail pages (staff, candidate, request): every section is its own 20px card. */
+  .calm-client[data-detail] .ap-card {
+    background: var(--ap-surface);
+    border: 1px solid var(--ap-line);
+    border-radius: 20px;
+    padding: 16px;
+  }
+  /* One hairline above each section (no boxes), tighter rhythm. */
+  .calm-client .ap-card {
+    min-width: 0;
+  }
+  /* Calm form controls on phones. */
+  .calm-client .ap-input {
+    border-radius: 10px;
+  }
+}
+/* Rounded grouped container (Settings menu, small lists). */
+.cc-group {
+  border: 1px solid var(--ap-line);
+  border-radius: 12px;
+  background: var(--ap-surface);
+  overflow: hidden;
+}

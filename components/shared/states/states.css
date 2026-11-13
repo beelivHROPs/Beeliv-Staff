@@ -1,0 +1,202 @@
+/*
+ * Shared state components (ServiceError, RateLimitNotice, OfflineBanner,
+ * ConflictNotice, UnsavedChangesGuard, PermissionState, SessionExpiredDialog).
+ *
+ * Colours come from `--st-*` custom properties. Defaults are neutral light
+ * values; each app can override them (a surrounding element or the portal's
+ * theme) and the dark variants below follow the apps' own theme attributes.
+ * Accent falls back to the surrounding app's primary when present.
+ */
+.st {
+  --st-surface: #ffffff;
+  --st-ink: #1c1a24;
+  --st-muted: #5f5b6e;
+  --st-border: #d9d5e3;
+  --st-danger: #b42318;
+  --st-danger-tint: rgba(180, 35, 24, 0.07);
+  --st-warn: #8a5a00;
+  --st-warn-tint: rgba(196, 130, 0, 0.1);
+  --st-info-tint: rgba(91, 8, 123, 0.06);
+  --st-accent: var(--beeliv-purple, #5b087b);
+  --st-accent-hover: var(--deep-plum, #250044);
+  --st-on-accent: #ffffff;
+}
+html[data-client-theme="dark"] .st,
+html[data-staff-theme="dark"] .st,
+html[data-admin-theme="dark"] .st {
+  --st-surface: #1d1a25;
+  --st-ink: #f1eef7;
+  --st-muted: #b7b1c6;
+  --st-border: #3a3547;
+  --st-danger: #ff9b8f;
+  --st-danger-tint: rgba(255, 120, 100, 0.12);
+  --st-warn: #f2c26b;
+  --st-warn-tint: rgba(242, 194, 107, 0.12);
+  --st-info-tint: rgba(255, 255, 255, 0.06);
+}
+
+.st-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--st-border);
+  background: var(--st-surface);
+  color: var(--st-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.st-card[data-tone="danger"] {
+  border-color: color-mix(in srgb, var(--st-danger) 40%, transparent);
+  background: var(--st-danger-tint);
+}
+.st-card[data-tone="warn"] {
+  border-color: color-mix(in srgb, var(--st-warn) 45%, transparent);
+  background: var(--st-warn-tint);
+}
+.st-card[data-tone="info"] {
+  background: var(--st-info-tint);
+}
+.st-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--st-ink);
+}
+.st-text {
+  margin: 0;
+  color: var(--st-ink);
+}
+.st-muted {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--st-muted);
+}
+.st-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.st-ref {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Buttons: solid (primary) and outlined (secondary), 44px touch target. */
+.st-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--st-accent);
+  background: var(--st-accent);
+  color: var(--st-on-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.st-btn:hover {
+  background: var(--st-accent-hover);
+  border-color: var(--st-accent-hover);
+}
+.st-btn:focus-visible {
+  outline: 2px solid var(--st-accent);
+  outline-offset: 3px;
+}
+.st-btn[data-variant="secondary"] {
+  background: transparent;
+  color: var(--st-accent);
+}
+.st-btn[data-variant="secondary"]:hover {
+  background: var(--st-info-tint);
+}
+html[data-client-theme="dark"] .st-btn[data-variant="secondary"],
+html[data-staff-theme="dark"] .st-btn[data-variant="secondary"],
+html[data-admin-theme="dark"] .st-btn[data-variant="secondary"] {
+  color: var(--st-ink);
+  border-color: var(--st-border);
+}
+.st-btn[aria-disabled="true"],
+.st-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Offline banner: pinned to the top, never covers the page's own heading focus. */
+.st-offline {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px;
+  background: var(--st-warn-tint);
+  background-color: color-mix(in srgb, var(--st-surface) 88%, var(--st-warn));
+  border-bottom: 1px solid color-mix(in srgb, var(--st-warn) 50%, transparent);
+  color: var(--st-ink);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Native <dialog> modals (session expired, leave without saving). */
+.st-dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 24px;
+  border: 1px solid var(--st-border);
+  border-radius: 20px;
+  background: var(--st-surface);
+  color: var(--st-ink);
+  box-shadow: 0 20px 60px rgba(17, 17, 27, 0.25);
+}
+.st-dialog::backdrop {
+  background: rgba(17, 12, 27, 0.55);
+}
+.st-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.st-dialog p {
+  margin: 0 0 18px;
+  color: var(--st-muted);
+  line-height: 1.55;
+}
+.st-dialog .st-row {
+  justify-content: flex-end;
+}
+@media (max-width: 480px) {
+  .st-dialog .st-row {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
+
+/* Neutral "This page isn't available" panel. */
+.st-perm {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 520px;
+  padding: 28px 24px;
+  color: var(--st-ink);
+}
+.st-perm h1,
+.st-perm h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+.st-perm p {
+  margin: 0;
+  color: var(--st-muted);
+  line-height: 1.55;
+}

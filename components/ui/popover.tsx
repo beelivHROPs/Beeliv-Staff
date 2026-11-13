@@ -19,15 +19,19 @@ function PopoverContent({
   className,
   sideOffset = 8,
   align = "center",
+  collisionPadding,
   children,
   ...props
 }: PopoverPrimitive.Popup.Props & {
   sideOffset?: number
   align?: "start" | "center" | "end"
+  /** Keep the popup this far from the viewport edges (e.g. clear of a sticky top bar). Unset = library default. */
+  collisionPadding?: PopoverPrimitive.Positioner.Props["collisionPadding"]
 }) {
   return (
     <PopoverPrimitive.Portal>
-      <PopoverPrimitive.Positioner sideOffset={sideOffset} align={align}>
+      {/* z-[150]: above the app's own sheets/dialogs (z-[130]) and the agreement reader (z-[140]) so pickers opened inside them are never hidden behind. */}
+      <PopoverPrimitive.Positioner className="z-[150]" sideOffset={sideOffset} align={align} collisionPadding={collisionPadding}>
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(

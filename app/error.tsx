@@ -1,90 +1,34 @@
 "use client"; // Error boundaries must be Client Components
 
 import { useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { StatusMascot } from "@/components/shared/StatusMascot";
+import localFont from "next/font/local";
+import { Error500Body } from "@/components/public/Error500Body";
+import { MotionRoot } from "@/components/public/MotionRoot";
+import "./(public)/public-site.css";
 
 /**
- * Note: as of Next.js 16.3, the stable recovery prop on this file is `retry`
- * (not the older `reset`) — see node_modules/next/dist/docs/01-app/03-api-
- * reference/03-file-conventions/error.md, "Version History".
+ * Root error boundary — shows the APPROVED 500 design (Error500-Desktop/Mobile,
+ * components/public/Error500Body.tsx), the same screen app/(public)/error.tsx
+ * renders. This one catches errors that happen above the route groups (e.g.
+ * in a group's layout, or while the dev server is restarting), where
+ * (public)/layout.tsx isn't mounted — so it recreates that layout's scope
+ * here: the `.public-site` token wrapper, the Newsreader font variable and
+ * MotionRoot. (Previously this file had its own unapproved purple design.)
  *
- * Redesigned alongside not-found.tsx (same project-lead direction) — same
- * bg-auth-glow purple-page treatment, white logo badge, and StatusMascot,
- * with an "error" mood (glitched X eyes / jagged mouth) instead of "lost".
+ * As of Next.js 16.3 the stable recovery prop is `retry`.
  */
-export default function Error({
-  error,
-  retry,
-}: {
-  error: Error & { digest?: string };
-  retry: () => void;
-}) {
+const newsreader = localFont({ src: [{ path: "./fonts/noto-sans-latin.woff2", weight: "100 900", style: "normal" }], variable: "--font-newsreader", display: "swap", adjustFontFallback: "Arial" });
+
+export default function Error({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <div className="bg-auth-glow relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-16 text-center sm:px-6">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute -top-20 -left-20 h-72 w-72 rounded-full blur-[70px]"
-          style={{ background: "radial-gradient(circle, var(--gold) 0%, transparent 70%)", opacity: 0.3 }}
-        />
-        <div
-          className="absolute -right-16 -bottom-24 h-80 w-80 rounded-full blur-[80px]"
-          style={{ background: "radial-gradient(circle, var(--gold) 0%, transparent 70%)", opacity: 0.28 }}
-        />
-      </div>
-
-      <div className="relative z-10 mb-8 flex items-center justify-center rounded-2xl bg-white p-3 shadow-md">
-        <Image
-          src="/beeliv-logo-mark-hd.png"
-          alt="Beeliv Hospitality"
-          width={314}
-          height={342}
-          className="h-14 w-auto object-contain"
-        />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center">
-        <StatusMascot mood="error" />
-
-        <h1 className="font-heading mt-5 text-2xl font-semibold text-white sm:text-3xl">
-          Something went sideways.
-        </h1>
-        <p className="mt-2 max-w-sm text-sm text-white/80">
-          An unexpected error occurred while loading this page. You can try again, or head
-          back to safety.
-        </p>
-
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-          {/* Plain <button> with explicit classes, not the Button component
-              — same reason as not-found.tsx's Link: buttonVariants'
-              default variant bakes in text-primary-foreground (white),
-              which tailwind-merge doesn't reliably dedupe against an
-              override className, so the label rendered invisible. */}
-          <button
-            type="button"
-            onClick={() => retry()}
-            className="inline-flex h-13 items-center justify-center gap-2 rounded-xl bg-white px-8 text-base font-medium text-primary shadow-sm transition-all duration-150 hover:scale-[1.02] hover:bg-white/90 hover:shadow-lg active:scale-[0.98]"
-          >
-            Try again
-          </button>
-          <Link
-            href="/"
-            className={buttonVariants({
-              variant: "outline",
-              size: "lg",
-              className: "border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white",
-            })}
-          >
-            Back to Home
-          </Link>
-        </div>
-      </div>
+    <div className={`public-site ${newsreader.variable}`}>
+      <MotionRoot>
+        <Error500Body retry={retry} digest={error.digest} />
+      </MotionRoot>
     </div>
   );
 }

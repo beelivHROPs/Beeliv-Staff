@@ -1,0 +1,481 @@
+/*
+ * Auth screens (Log in / Sign up / Forgot password / Check your email).
+ * Class names and values mirror the `.au-*` rules in the Auth-*.dc.html
+ * wireframes so the fields, buttons and switch match them exactly. All colours
+ * come from the scoped tokens in ../public-site.css (.public-site); the only
+ * additions are the two error colours below (COPY/tokens define no error
+ * colour: an approval item, flagged in the handoff).
+ *
+ * Motion here is CSS transitions on paint-only properties (border colour,
+ * box-shadow, background). Nothing animates size or position.
+ */
+@layer theme, base, components, utilities;
+
+.au-shell {
+  --au-error: #b42318;
+  --au-error-tint: rgba(180, 35, 24, 0.06);
+  --au-label: #3b3750;
+}
+
+@layer components {
+  .au-f {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--au-label);
+  }
+  .au-in {
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: #686672;
+  }
+  .au-in > .au-ico {
+    position: absolute;
+    left: 16px;
+    display: flex;
+    pointer-events: none;
+    transition: color 0.25s var(--ps-ease);
+  }
+  .au-in:focus-within > .au-ico {
+    color: var(--beeliv-purple);
+  }
+  .au-in input {
+    height: 54px;
+    width: 100%;
+    border: 1.5px solid var(--soft-border);
+    border-radius: 14px;
+    padding: 0 16px 0 46px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ink);
+    background: #fff;
+    transition:
+      border-color 0.25s var(--ps-ease),
+      box-shadow 0.25s var(--ps-ease);
+  }
+  .au-in input::placeholder {
+    color: #757575;
+    opacity: 1;
+  }
+  .au-in input.au-pw {
+    padding-right: 56px;
+  }
+  .au-in input:focus {
+    outline: none;
+    border-color: var(--beeliv-purple);
+    box-shadow: 0 0 0 3px rgba(91, 8, 123, 0.14);
+  }
+  .au-in input[aria-invalid="true"] {
+    border-color: var(--au-error);
+  }
+  .au-in input[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.16);
+  }
+
+  /* Eye: the wireframe's own rule (`.au-in svg{left:16px}`) also lands on the
+     eye's svg, placing it 16px in from the left of its 44px button. Kept. */
+  .au-eye {
+    position: absolute;
+    right: 6px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    padding-left: 16px;
+    cursor: pointer;
+    color: #686672;
+    border-radius: 999px;
+    transition: color 0.25s var(--ps-ease);
+  }
+  .au-eye:hover {
+    color: var(--beeliv-purple);
+  }
+  .au-eye:focus-visible {
+    outline: 2px solid var(--beeliv-purple);
+    outline-offset: -2px;
+  }
+
+  .au-btn {
+    height: 54px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--beeliv-purple);
+    color: #fff;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.25s var(--ps-ease);
+  }
+  .au-btn:hover {
+    background: var(--deep-plum);
+    color: #fff;
+  }
+  .au-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--warm-white, #faf9f7), 0 0 0 4px var(--beeliv-purple);
+  }
+  /* One button language: hero pill = optional icon disc + label + arrow disc (Staff ActionPill). */
+  .au-btn-hero {
+    height: 48px;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 24px;
+    margin-top: 8px;
+    font-weight: 700;
+    text-align: center;
+  }
+  /* Phones: a plain compact pill, no icon / arrow discs (spinner disc stays while pending). */
+  .au-btn-hero .au-disc {
+    display: none;
+  }
+  .au-btn-hero[aria-busy="true"] .au-disc:first-child {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+  }
+  .au-btn-hero.au-has-icon {
+    padding-left: 8px;
+  }
+  .au-btn-hero .au-btn-label {
+    flex: 1;
+  }
+  .au-disc {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .au-disc svg {
+    width: 18px;
+    height: 18px;
+  }
+  @media (min-width: 768px) {
+    .au-btn-hero {
+      justify-content: space-between;
+      padding: 0 8px 0 24px;
+      text-align: left;
+    }
+    .au-btn-hero .au-disc {
+      display: inline-flex;
+      width: 32px;
+      height: 32px;
+    }
+    .au-btn-hero[aria-busy="true"] .au-disc:first-child {
+      background: rgba(255, 255, 255, 0.2);
+      width: 32px;
+      height: 32px;
+    }
+  }
+  .au-btn[aria-disabled="true"] {
+    cursor: progress;
+    background: var(--beeliv-purple);
+    opacity: 0.85;
+  }
+
+  .au-foot {
+    text-align: center;
+    font-size: 15px;
+    color: var(--muted-text);
+    margin-top: auto;
+  }
+  .au-foot a {
+    font-weight: 500;
+  }
+
+  .au-chk {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--muted-text);
+    cursor: pointer;
+  }
+  .au-chk input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--beeliv-purple);
+    margin: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .au-chk input:focus-visible {
+    outline: 2px solid var(--beeliv-purple);
+    outline-offset: 2px;
+  }
+
+  /* Find work / Hire talent switch */
+  .au-seg {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    background: rgba(91, 8, 123, 0.06);
+    border-radius: 16px;
+    padding: 5px;
+    border: 0;
+    margin: 0;
+    min-width: 0;
+  }
+  .au-seg label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted-text);
+    cursor: pointer;
+    text-align: center;
+    transition: color 0.25s var(--ps-ease);
+  }
+  .au-seg input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .au-seg label.on {
+    color: var(--beeliv-purple);
+  }
+  .au-seg label:has(input:focus-visible) {
+    outline: 2px solid var(--beeliv-purple);
+    outline-offset: 1px;
+  }
+  .au-seg-pill {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(17, 17, 27, 0.08);
+  }
+
+  .au-hint {
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--muted-text);
+  }
+  .au-err {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--au-error);
+  }
+  .au-err svg {
+    margin-top: 1.5px;
+    flex-shrink: 0;
+  }
+
+  /* "Hire talent" state: explanation shown instead of the applicant form. */
+  .au-note {
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: rgba(91, 8, 123, 0.06);
+  }
+
+  /* Form-level alert (failure) and the temporary "flow test" note. */
+  .au-alert {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--au-error);
+    background: var(--au-error-tint);
+    border: 1px solid rgba(180, 35, 24, 0.25);
+  }
+  .au-alert svg {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  /* Same dashed treatment the wireframe uses for its own annotations. */
+  .au-flow {
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--au-label);
+    border: 1.5px dashed #8e86a8;
+    background: rgba(236, 234, 242, 0.6);
+  }
+}
+
+/*
+ * Loading state. The auth loading.tsx files render the real screens inside
+ * `.skel` (rules in ../public-site.css: text -> soft shimmer blocks, logo /
+ * media -> flat tiles, svg -> faint). These add the auth-only parts of the
+ * prototype's skeleton (index.html `.skel .au-btn`, `.skel input`).
+ */
+@layer components {
+  .skel .au-btn,
+  .skel .au-seg-pill {
+    -webkit-text-fill-color: transparent;
+    background: #e8e5ee !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    animation: ps-skp 1.6s ease-in-out infinite;
+  }
+  .skel .au-btn .ps-sk {
+    background: none;
+  }
+  .skel input,
+  .skel select,
+  .skel textarea {
+    -webkit-text-fill-color: transparent;
+    background: #f3f1f6 !important;
+    border-color: var(--soft-border) !important;
+  }
+  .skel input::placeholder {
+    color: transparent !important;
+  }
+  .skel .au-flow,
+  .skel .au-note {
+    display: none;
+  }
+}
+
+/*
+ * Portal sign-in accents (Client / Staff / Admin). Reuses each app's existing
+ * primary + deep tones; only re-points the public-site purple tokens inside
+ * this frame. `--au-scrim-*` feed the brand panel's overlay.
+ */
+.au-shell {
+  --au-scrim-a: 91, 8, 123;
+  --au-scrim-b: 37, 0, 68;
+}
+.au-shell[data-portal="client"] {
+  --beeliv-purple: #8a3d68;
+  --beeliv-bright-purple: #a85283;
+  --deep-plum: #321824;
+  --au-scrim-a: 138, 61, 104;
+  --au-scrim-b: 50, 24, 36;
+}
+.au-shell[data-portal="staff"] {
+  --beeliv-purple: #5b45bf;
+  --beeliv-bright-purple: #7a64dd;
+  --deep-plum: #241a5c;
+  --au-scrim-a: 91, 69, 191;
+  --au-scrim-b: 36, 26, 92;
+}
+.au-shell[data-portal="admin"] {
+  --beeliv-purple: #8b2252;
+  --beeliv-bright-purple: #a8386a;
+  --deep-plum: #49152f;
+  --au-scrim-a: 139, 34, 82;
+  --au-scrim-b: 73, 21, 47;
+}
+.au-scrim {
+  background: linear-gradient(
+    200deg,
+    rgba(var(--au-scrim-a), 0.15) 0%,
+    rgba(var(--au-scrim-a), 0.78) 62%,
+    rgba(var(--au-scrim-b), 0.95) 100%
+  );
+}
+
+@layer components {
+  /* Rate limited / otherwise blocked submit: visibly unavailable, not "busy". */
+  .au-btn[data-blocked] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .au-btn[data-blocked]:hover {
+    background: var(--beeliv-purple);
+  }
+
+  /* Status panels (unverified email, invite context, summaries). */
+  .au-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: rgba(91, 8, 123, 0.06);
+    border: 1px solid var(--soft-border);
+  }
+  .au-shell[data-portal] .au-panel {
+    background: color-mix(in srgb, var(--beeliv-purple) 7%, #fff);
+  }
+  .au-panel b {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  /* Error summary: focusable, lists each problem with a link to its field. */
+  .au-summary {
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--au-error);
+    background: var(--au-error-tint);
+    border: 1px solid rgba(180, 35, 24, 0.25);
+    outline: none;
+  }
+  .au-summary:focus-visible {
+    box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.2);
+  }
+  .au-summary ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+  }
+  .au-summary a {
+    color: inherit;
+    text-decoration: underline;
+  }
+  .au-linkbtn {
+    display: inline;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    font: inherit;
+    font-weight: 500;
+    color: var(--beeliv-purple);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .au-linkbtn[aria-disabled="true"] {
+    color: var(--muted-text);
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+  .au-linkbtn:focus-visible {
+    outline: 2px solid var(--beeliv-purple);
+    outline-offset: 2px;
+  }
+  .au-ok {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--beeliv-purple);
+  }
+}

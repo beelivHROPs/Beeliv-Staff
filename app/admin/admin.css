@@ -1,0 +1,1247 @@
+/*
+ * Admin identity, applied BY TOKENS on top of the Applicant shell (same
+ * technique as app/client/client.css and app/staff/staff.css).
+ *
+ * Two layers:
+ *   1. ROLE class (`.admin-role-hr`, later `.admin-role-ops`) sets only the
+ *      --admin-* palette. A second role is one more block of those variables.
+ *   2. `.admin-theme` maps the shared --ap-* tokens onto --admin-*, so every
+ *      reused component turns role-coloured with no edits to shared files.
+ *
+ * AdminThemeFlag puts `admin-app` + the role class on <html> so layers
+ * portalled to <body> (confirm dialog, sheets, popovers) get the same tokens.
+ * Semantic colours (green / amber / red / blue) stay shared: the role colour
+ * identifies the workspace, semantic colours communicate meaning.
+ *
+ * HR palette (project lead): Mulberry #8B2252, deep #49152F, soft #FCF1F5,
+ * neutral background #F8F7FA. The supporting tints below are DERIVED from the
+ * primary and need design sign-off. Dark mode: section 3 at the end of this file.
+ */
+
+/* ---------- 1. Role palettes ---------- */
+.admin-role-hr {
+  --admin-primary: #8b2252;
+  --admin-primary-hover: #721b43;
+  --admin-deep: #49152f;
+  --admin-deep-2: #3a1026;
+  --admin-soft: #fcf1f5;
+  --admin-soft-2: #fdf7f9;
+  --admin-tint: #f3dce5;
+  --admin-support: #a8386a;
+  --admin-bg: #f8f7fa;
+}
+
+/* Operations (Midnight Aubergine #31204F / #191126 / #F3F0F7): to be filled in when the Ops identity is built.
+.admin-role-ops { --admin-primary: #31204f; --admin-deep: #191126; --admin-soft: #f3f0f7; ... } */
+
+/* ---------- 2. Token mapping ---------- */
+.applicant-shell.admin-theme,
+html.admin-app .applicant-shell {
+  --ap-violet: var(--admin-primary);
+  --ap-violet-2: var(--admin-support);
+  --ap-plum: var(--admin-deep);
+  --ap-plum-2: var(--admin-deep-2);
+  --ap-gradient: linear-gradient(135deg, var(--admin-support) 0%, var(--admin-primary) 55%, var(--admin-deep) 100%);
+  --ap-ink: #1f1a20;
+  --ap-ink-2: #3f3740;
+  --ap-muted: #625a64;
+  --ap-faint: #6e6570;
+  --ap-bg: var(--admin-bg);
+  --ap-tint: var(--admin-soft);
+  --ap-tint-soft: var(--admin-soft-2);
+  --ap-tint-2: var(--admin-tint);
+  --ap-lilac: var(--admin-tint);
+  --ap-line: #e8e4ea;
+  --ap-line-2: #f2eff4;
+  --ap-gold: #c1ac75;
+  --ap-shadow: 0 1px 2px rgba(73, 21, 47, 0.04), 0 10px 30px rgba(73, 21, 47, 0.06);
+  --ap-btn-2: var(--admin-primary);
+
+  /* Phone bottom nav: clean white bar, primary accents. */
+  --bnav-bg: #fff;
+  --bnav-top: #fff;
+  --bnav-border: rgba(139, 34, 82, 0.16);
+  --bnav-fg: #6b6270;
+  --bnav-fg-on: var(--admin-primary);
+  --bnav-pill-bg: var(--admin-primary);
+  --bnav-pill-fg: #fff;
+  --bnav-line: var(--admin-support);
+  --bnav-center-bg: linear-gradient(160deg, var(--admin-support), var(--admin-primary));
+  --bnav-center-fg: #fff;
+}
+
+/* Hard-coded applicant purples that tokens can't reach. */
+:is(.applicant-shell.admin-theme, html.admin-app .applicant-shell) {
+  & .ap-nav-pill {
+    background: linear-gradient(90deg, rgba(168, 56, 106, 0.72), rgba(139, 34, 82, 0.45));
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  & .ap-navitem[aria-current="page"] svg {
+    color: #fff;
+  }
+  & .ap-navitem[aria-current="page"] svg :is(path, rect, circle) {
+    fill-opacity: 0.16;
+  }
+  & .ap-card-hover:hover {
+    border-color: var(--admin-tint);
+  }
+  & .ap-btn-s:hover:not(:disabled),
+  & .ap-btn-p:hover:not(:disabled) {
+    background: var(--admin-primary-hover);
+    border-color: var(--admin-primary-hover);
+  }
+  & .ap-btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(139, 34, 82, 0.3);
+  }
+  & .ap-input:focus {
+    box-shadow: 0 0 0 3px rgba(139, 34, 82, 0.18);
+  }
+  /* Skeleton tiles: tokens for the one shared shimmer (app/globals.css .bv-sk). */
+  --sk-base: #ebe7ee;
+  --sk-hi: rgba(255, 255, 255, 0.55);
+}
+
+/* ---------- Admin-only helpers ---------- */
+
+/* Sidebar cards / dividers on the deep ground. */
+.admin-side-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/*
+ * Collapsed sidebar ("rail"): below 1101px it is always a rail (same as the
+ * Client app); on wide screens the user can collapse it. The shell sets
+ * data-collapsed="true" and swaps the grid column; these rules reshape the content.
+ */
+@media (min-width: 768px) {
+  .ad-sidebar[data-collapsed="true"] {
+    padding-inline: 12px;
+  }
+  .ad-sidebar[data-collapsed="true"] .ad-rail-hide {
+    display: none;
+  }
+  .ad-sidebar[data-collapsed="true"] .ad-rail-show {
+    display: block;
+  }
+  .ad-sidebar[data-collapsed="true"] .ad-rail-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ad-sidebar[data-collapsed="true"] .ad-item {
+    justify-content: center;
+    min-height: 48px;
+    padding: 0;
+  }
+  .ad-sidebar[data-collapsed="true"] .ad-badge {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    height: 18px;
+    min-width: 18px;
+    padding: 0 4px;
+    font-size: 10px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .ad-sidebar {
+    padding-inline: 12px;
+  }
+  .ad-sidebar .ad-rail-hide {
+    display: none;
+  }
+  .ad-sidebar .ad-rail-show {
+    display: block;
+  }
+  .ad-sidebar .ad-rail-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ad-sidebar .ad-item {
+    justify-content: center;
+    min-height: 48px;
+    padding: 0;
+  }
+  .ad-sidebar .ad-badge {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    height: 18px;
+    min-width: 18px;
+    padding: 0 4px;
+    font-size: 10px;
+  }
+}
+.ad-rail-show {
+  display: none;
+}
+
+/* ---------- 3. Dark mode (Mulberry, derived from the Client dark layer; needs design sign-off) ----------
+ * Contrast (WCAG): body text >= 12:1, muted >= 7:1, faint >= 4.5:1, white on
+ * button fills (--admin-fill #8b2252) 7.5:1. --ap-violet becomes a LIGHT
+ * plum for text and icons; solid fills that carry white text use
+ * --admin-fill instead. Semantic colours are the same light variants Staff uses.
+ * ================================================================== */
+html[data-admin-theme="dark"] {
+  color-scheme: dark;
+}
+/* "No profile photo" tile in the photo preview: a deep plum panel with a soft inner ring in dark mode. */
+html[data-admin-theme="dark"] .ps-nophoto {
+  background: radial-gradient(circle at 50% 38%, #3a2631 0%, #22131b 70%) !important;
+  box-shadow: inset 0 0 0 1px #4a3540;
+}
+html[data-admin-theme="dark"] .ps-nophoto p {
+  color: #d9c9d1 !important;
+}
+html[data-admin-theme="dark"] [data-slot="dialog-content"] [data-slot="dialog-close"] {
+  color: #f4eef1;
+  background: rgba(255, 255, 255, 0.1);
+}
+/* Portalled menus/popovers (shadcn bg-card, bg-white!) outside the shell.
+   In a layer on purpose: Tailwind's `bg-white!` is an !important utility,
+   and a layered !important only loses to an EARLIER layer's !important. */
+@layer components {
+  html[data-admin-theme="dark"] :is([data-slot="popover-content"], [data-slot="select-content"], [role="menu"], [role="listbox"], [data-slot="dialog-content"], .bg-card, [class~="bg-white!"]) {
+    background-color: #1c1217 !important;
+    border-color: #36212b !important;
+    color: #f4eef1;
+  }
+}
+html[data-admin-theme="dark"] body {
+  background: #130c10;
+}
+html[data-admin-theme="dark"] .applicant-shell {
+  --admin-fill: #8b2252;
+  --admin-fill-hover: #a4306a;
+  --admin-d-champagne: #c1ac75;
+  --admin-d-champagne-soft: #2a2119;
+  --admin-d-c1: #f0a6c4;
+  --admin-d-c2: #b86e97;
+  --admin-d-c3: #8b2252;
+  --admin-d-c4: #c1ac75;
+  --admin-d-c5: #8f7f88;
+  --ap-violet: #f0a6c4;
+  --ap-violet-2: #f6c4d8;
+  --ap-plum: #0c0709;
+  --ap-plum-2: #0a0708;
+  --ap-gradient: linear-gradient(135deg, #8b2252 0%, #7a1f47 55%, #321824 100%);
+  --ap-ink: #f4eef1;
+  --ap-ink-2: #d8ccd2;
+  --ap-muted: #b3a3ac;
+  --ap-faint: #9d8e96;
+  --ap-bg: #130c10;
+  --ap-surface: #1c1217;
+  --ap-tint: #2a1620;
+  --ap-tint-soft: #211019;
+  --ap-tint-2: #40303a;
+  --ap-lilac: #33242d;
+  --ap-line: #36212b;
+  --ap-line-2: #2a2026;
+  --ap-ok: #4ade80;
+  --ap-ok-bg: #12301f;
+  --ap-warn: #fbbf24;
+  --ap-warn-bg: #35270b;
+  --ap-rose: #fb7185;
+  --ap-rose-bg: #3a1420;
+  --ap-info: #93c5fd;
+  --ap-info-bg: #162447;
+  --ap-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: var(--ap-bg);
+  color: var(--ap-ink);
+
+  /* White surfaces written as utilities. */
+  /* Choice chips (.ap-pick) hard-code a white fill. */
+  & .ap-pick {
+    background: var(--ap-surface);
+    border-color: var(--ap-line);
+    color: var(--ap-ink-2);
+  }
+  & .ap-pick[aria-pressed="true"] {
+    background: var(--ap-tint);
+    border-color: var(--ap-violet);
+    color: var(--ap-violet);
+  }
+  & .bg-white,
+  & [class*="bg-white/9"],
+  & [class*="bg-white/8"],
+  & [class*="bg-[#fbfafc]"],
+  & [class*="bg-[#fbf8fd]"] {
+    background-color: var(--ap-surface) !important;
+  }
+  & [class*="bg-white/7"] {
+    background-color: rgba(30, 23, 27, 0.8) !important;
+  }
+  /* Soft light gradients (heroes, profile header) -> dark tints. */
+  & [class*="linear-gradient(100deg,#FFFFFF"] {
+    background-image: linear-gradient(100deg, #1c1217, #211019 55%, #2a1620) !important;
+  }
+  & [class*="var(--ap-tint-soft),#fff_50%"] {
+    background-image: linear-gradient(90deg, var(--ap-tint-soft), var(--ap-surface) 50%) !important;
+  }
+  /* Amber / rose notice boxes. */
+  & [class*="bg-[#fffbeb]"] {
+    background-color: var(--ap-warn-bg) !important;
+    border-color: #6b4e12 !important;
+  }
+  & [class*="bg-[#fff1f2]"] {
+    background-color: var(--ap-rose-bg) !important;
+    border-color: #6b2336 !important;
+  }
+  & [class*="text-[#0f0b18]"] {
+    color: var(--ap-ink) !important;
+  }
+  & [class*="text-[#5f5968]"] {
+    color: var(--ap-muted) !important;
+  }
+  & [class*="border-[#cfc8d8]"],
+  & [class*="border-[#d5c6e0]"] {
+    border-color: var(--ap-line) !important;
+  }
+
+  /* Base link hover uses --ap-plum (near-black here): keep hovered links readable. */
+  & a:hover:not([class*="text-"]) {
+    color: var(--ap-violet-2);
+  }
+
+  /* Solid plum fills carry white text: keep them deep. */
+  & .ap-btn-p,
+  & [class*="bg-(--ap-violet)"],
+  & .ap-switch[aria-checked="true"] {
+    background-color: var(--admin-fill) !important;
+  }
+  & .ap-btn-p:hover:not(:disabled) {
+    background-color: var(--admin-fill-hover) !important;
+  }
+  & .ap-btn-s {
+    border-color: var(--ap-tint-2);
+  }
+  & .ap-card-hover:hover {
+    border-color: var(--ap-tint-2);
+  }
+  & .ap-switch {
+    background: #4a3a44;
+  }
+  /* Eyebrow gold, lifted for the dark ground. */
+  & .ap-eb {
+    color: #d1b48c;
+  }
+  /* Skeleton tiles: tokens for the one shared shimmer (app/globals.css .bv-sk). */
+  --sk-base: #2b2227;
+  --sk-hi: rgba(255, 255, 255, 0.06);
+  /* White Beeliv logo on dark grounds. */
+  & .client-logo-light {
+    display: none;
+  }
+  & .client-logo-dark {
+    display: block;
+  }
+  /* Red unread dots were ringed in white for light mode. */
+  & [class*="shadow-[0_0_0_2px_#fff]"] {
+    box-shadow: 0 0 0 2px var(--ap-surface) !important;
+  }
+  /* Pastel icon tiles (IconTile / notification tiles) -> deep tints. */
+  & [class*="bg-[#F8F3FA]"],
+  & [class*="bg-[#f8f3fa]"] {
+    background-color: var(--ap-tint) !important;
+  }
+  & [class*="bg-[#DCFCE7]"],
+  & [class*="bg-[#dcfce7]"] {
+    background-color: var(--ap-ok-bg) !important;
+  }
+  & [class*="bg-[#FEF3C7]"],
+  & [class*="bg-[#fef3c7]"] {
+    background-color: var(--ap-warn-bg) !important;
+  }
+  & [class*="bg-[#FFE4E6]"],
+  & [class*="bg-[#ffe4e6]"],
+  & [class*="bg-[#FCE7F3]"] {
+    background-color: var(--ap-rose-bg) !important;
+  }
+  & [class*="bg-[#DBEAFE]"],
+  & [class*="bg-[#dbeafe]"] {
+    background-color: var(--ap-info-bg) !important;
+  }
+  & [class*="text-[#15803D]"],
+  & [class*="text-[#15803d]"] {
+    color: var(--ap-ok) !important;
+  }
+  & [class*="text-[#B45309]"],
+  & [class*="text-[#b45309]"] {
+    color: var(--ap-warn) !important;
+  }
+  & [class*="text-[#A63358]"],
+  & [class*="text-[#dc2626]"],
+  & [class*="text-[#be123c]"] {
+    color: var(--ap-rose) !important;
+  }
+  /* Status chips (applicant.css hard-codes their light colours). */
+  & .ap-chip-ok {
+    background: var(--ap-ok-bg);
+    color: var(--ap-ok);
+  }
+  & .ap-chip-warn {
+    background: var(--ap-warn-bg);
+    color: var(--ap-warn);
+  }
+  & .ap-chip-info {
+    background: var(--ap-info-bg);
+    color: var(--ap-info);
+  }
+  & .ap-chip-mute {
+    background: var(--ap-line-2);
+    color: var(--ap-muted);
+  }
+  & .ap-chip-violet {
+    background: var(--ap-tint);
+    color: var(--ap-violet);
+  }
+  /* Form fields. */
+  & .ap-input {
+    background: #171114;
+    border-color: var(--ap-line);
+    color: var(--ap-ink);
+  }
+  & input::placeholder,
+  & textarea::placeholder {
+    color: var(--ap-faint);
+  }
+  /* The prototype-state bar used --ap-ink as its fill (light in dark mode). */
+  & [class*="bg-(--ap-ink)"] {
+    background-color: #3a2c34 !important;
+    color: #fff;
+  }
+  /* Frosted banner card in dark. */
+  & .client-glass {
+    background: rgba(30, 23, 27, 0.9);
+    color: #f4eef1;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  /* Bottom nav: deep solid bar with a soft plum rim glow. */
+  --bnav-bg: #171013;
+  --bnav-top: #22131b;
+  --bnav-fg: #b3a3ac;
+  --bnav-fg-on: #f4eef1;
+  --bnav-pill-bg: linear-gradient(160deg, #a4306a, #7a1f47);
+  --bnav-pill-fg: #fff;
+  --bnav-line: #c1ac75;
+  --bnav-center-bg: linear-gradient(160deg, #a4306a, #7a1f47);
+  --bnav-center-fg: #fff;
+  --bnav-border: rgba(240, 166, 196, 0.28);
+  & .ap-bnav {
+    filter: drop-shadow(0 0 12px rgba(139, 34, 82, 0.3)) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+  }
+  & .ap-bnav-pill {
+    background: linear-gradient(160deg, #a4306a, #7a1f47);
+    box-shadow: 0 0 18px -2px rgba(139, 34, 82, 0.6);
+  }
+  & .ap-bnav-line {
+    background: #c1ac75;
+  }
+  & .ap-bnav-center {
+    background: linear-gradient(160deg, #a4306a, #7a1f47);
+    box-shadow: 0 8px 24px rgba(50, 24, 36, 0.5);
+  }
+  & .ap-bnav-center-quiet {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  }
+  & .ap-sidebar {
+    background: #0c0709;
+    border-right: 1px solid var(--ap-line-2);
+  }
+}
+
+/* Light mode: a clean white bottom bar (the plum-black bar above is the dark-mode look). */
+html:not([data-admin-theme="dark"]) .applicant-shell.client-theme {
+  --bnav-bg: #fff;
+  --bnav-top: #fff;
+  --bnav-border: rgba(122, 31, 71, 0.16);
+  --bnav-fg: #6b6270;
+  --bnav-fg-on: #7a1f47;
+  --bnav-line: #8b2252;
+}
+
+/* Client dark mode: icon tiles and count badges are inverted (project lead): brand-colour fill, white icon or number. */
+html[data-admin-theme="dark"] .applicant-shell :is(.ap-duo, [class*="bg-[#F5EAF8]"]) {
+  background-color: var(--admin-fill);
+  color: #ffffff;
+}
+html[data-admin-theme="dark"] :is(
+    [class*="rounded-full"][class*="min-w-[22px]"],
+    [class*="rounded-full"][class*="min-w-5"],
+    [class*="rounded-full"][class*="bg-(--ap-tint)"][class*="size-6"]
+  ) {
+  background-color: var(--admin-fill, #8b2252);
+  color: #ffffff;
+}
+html[data-admin-theme="dark"] .applicant-shell [class*="rounded-xl"][class*="bg-(--ap-tint"][class*="size-1"]:has(> svg) {
+  background-color: var(--admin-fill);
+  color: #ffffff;
+}
+
+/* Sidebar dark-mode switch: visual-only mini switch that moves and fills when on (the row button carries aria-checked). */
+.admin-theme .ap-sidebar .ap-switch-sm {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.22);
+  transition: background-color 0.18s ease;
+}
+.admin-theme .ap-sidebar .ap-switch-sm::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #ffffff;
+  transition: transform 0.18s ease;
+}
+.admin-theme .ap-sidebar .ap-switch-sm[data-on] {
+  background: #d9a3bb;
+}
+.admin-theme .ap-sidebar .ap-switch-sm[data-on]::after {
+  transform: translateX(14px);
+}
+
+/* Collapsible sidebar groups: a closed group hides its items, except on the icon-only rail, which always lists them. */
+.ad-sidebar .ad-group-shut {
+  display: none;
+}
+@media (min-width: 768px) {
+  .ad-sidebar[data-collapsed="true"] .ad-group-shut {
+    display: flex;
+  }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .ad-sidebar .ad-group-shut {
+    display: flex;
+  }
+}
+
+/* Calendar accent: Beeliv gold marks the selected day (the brand pairs mulberry with gold). */
+.admin-theme {
+  --cal-gold: #c1ac75;
+  --cal-gold-ink: #49152f;
+}
+html[data-admin-theme="dark"] .admin-theme {
+  --cal-gold: #d6c18a;
+  --cal-gold-ink: #2a1019;
+}
+
+/* Whole rows open on click when they contain a link (see components/admin/RowClick.tsx). */
+.ad-clickrow:has(a[href^="/admin"]):not([aria-selected]) {
+  cursor: pointer;
+}
+
+/* Dark mode: plain (non-filled) buttons, tabs and menu items must NOT hover to near-black. Their hover colours
+   (--ap-line-2, --ap-tint) are almost the page colour in dark, so use one clearly lighter mauve instead. */
+html[data-admin-theme="dark"] .applicant-shell :is([class*="hover:bg-(--ap-line-2)"], [class*="hover:bg-(--ap-tint"], [class*="hover:bg-(--ap-lilac)"]):hover:not(:disabled) {
+  background-color: #3e2a33 !important;
+  color: #fbeef3;
+}
+html[data-admin-theme="dark"] .applicant-shell [role="menuitem"]:hover,
+html[data-admin-theme="dark"] .applicant-shell [role="option"]:hover {
+  background-color: #3e2a33 !important;
+}
+
+/* ======================================================================
+ * PHONE DENSITY LAYER (<= 767px only; desktop and tablet unchanged).
+ * Admin font scale 11/12/13/14/15/17px: phones use the lower end.
+ * ONE container spec: 1px border, 14px radius, surface colour, 14px padding,
+ * no shadow, no nested boxes (an inner card becomes a plain hairline block).
+ * ====================================================================== */
+@media (max-width: 767px) {
+  /* Page frame: 18px sides, the same as the Applicant, Staff and Client phone apps. */
+  .admin-theme main#applicant-view {
+    padding-inline: 18px;
+    padding-top: 8px;
+  }
+
+  /* Headings: title ~22px; the row that holds it is tighter. */
+  .admin-theme h1.ap-pagehead-title,
+  .admin-theme main h1.ap-serif {
+    font-size: var(--ap-text-title) !important;
+    line-height: 1.15 !important;
+  }
+  /* Status pages ("not available to your account") show no navigation on phones: the shell reads the [data-bv-status] marker. */
+  html:has(main [data-bv-status]) .ap-bnav,
+  html:has(main [data-bv-status]) header.ap-topbar {
+    display: none !important;
+  }
+  /* The phone top bar already names the page, so the big title goes (the page's actions and summary stay). */
+  .admin-theme main h1.ap-pagehead-title {
+    display: none;
+  }
+  .admin-theme div:has(> div > h1.ap-pagehead-title) {
+    padding-top: 4px;
+    padding-bottom: 10px;
+    gap: 10px;
+  }
+
+  /* Containers. */
+  .admin-theme .ap-card {
+    border-radius: 14px !important;
+    box-shadow: none !important;
+  }
+  .admin-theme .ap-card:is([class*="p-4.5"], [class*="p-5"], [class*="p-6"], [class*="p-7"], [class*="p-8"], [class*="py-5"]):not([class*="max-[767px]:p-0"]) {
+    padding: 14px !important;
+  }
+  /* No box inside a box: the inner one turns into a plain block. */
+  .admin-theme .ap-card .ap-card {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+  .admin-theme .ap-card-hover:hover {
+    transform: none;
+  }
+
+  /* Section headings inside containers: small and quiet. */
+  .admin-theme main h2.ap-serif {
+    font-family: inherit;
+    font-size: var(--ap-text-heading) !important;
+    font-weight: var(--ap-weight-heading);
+    line-height: var(--ap-lh-heading);
+    letter-spacing: 0.01em;
+    color: var(--ap-muted);
+  }
+  /* Type floor (phone audit 2026-10-26): no text under 13px; the odd 11.5px / 12.5px utility sizes round up. */
+  .admin-theme main :is([class*="text-[11.5px]"], [class*="text-[12.5px]"]) {
+    font-size: 13px !important;
+  }
+  .admin-theme main .ap-card :is(h2, h3).ap-serif {
+    margin: 0;
+  }
+
+  /* Buttons: primary 44px, secondary 40px, text 14px. */
+  .admin-theme .ap-btn {
+    font-size: var(--ap-text-button);
+    padding-inline: 16px;
+  }
+  .admin-theme .ap-btn-s {
+    height: 40px;
+  }
+  .admin-theme .ap-btn-sm {
+    height: 36px;
+    font-size: var(--ap-text-button);
+    padding-inline: 12px;
+  }
+  /* Phone type standard = Applicant/Staff (docs/design-system/PHONE-TYPE-AUDIT-2026-10-26.md): 13.5 -> 14, 14.5 -> 15. */
+  .admin-theme main [class*="text-[13.5px]"] {
+    font-size: 14px !important;
+  }
+  .admin-theme main [class*="text-[14.5px]"] {
+    font-size: 15px !important;
+  }
+
+  /* Form fields: 44px, 16px text (no iOS zoom). */
+  .admin-theme .ap-input {
+    height: 44px;
+    font-size: var(--ap-text-input);
+    border-radius: 10px;
+  }
+  .admin-theme textarea.ap-input {
+    height: auto;
+    min-height: 84px;
+  }
+
+  /* List rows (CARD_ITEM): reference numbers and progress bars are noise on a phone. */
+  .admin-theme .ad-card [class*="text-(--ap-faint)"] {
+    display: none;
+  }
+  .admin-theme .ad-card .ap-bar {
+    display: none;
+  }
+  /* Only menus that merely repeat the row's own link are hidden; menus with real actions stay. */
+  .admin-theme .ad-card .ad-rowmenu-nav {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .admin-theme .ap-chip {
+    height: 24px;
+    font-size: 12px;
+    padding-inline: 9px;
+    gap: 4px;
+  }
+}
+
+/* ======================================================================
+ * 4. BUTTON STANDARD (docs/PREMIUM-UI-REVIEW-ADMIN-2026-10-19.md).
+ * One set for every Admin screen, dialog and sheet (html.admin-app also
+ * reaches portalled layers):
+ *   .ap-btn-p  primary   = filled brand pill (ONE per screen / sheet footer)
+ *   .ap-btn-s  secondary = outline pill (was a second filled button)
+ *   .ap-btn-q  quiet     = text link style
+ *   .ap-btn-o  outline   = same as secondary (kept for the Applicant row actions)
+ * Desktop: 44px primary, 40px secondary, 36px small (dense tables).
+ * Phone: every button is a 44px target. Focus ring is the brand colour.
+ * ====================================================================== */
+html.admin-app .ap-btn {
+  border-radius: 999px;
+}
+html.admin-app .ap-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ap-violet) 35%, transparent);
+}
+html.admin-app .ap-btn-s,
+html.admin-app .ap-btn-o {
+  background: transparent;
+  color: var(--ap-violet);
+  border-color: color-mix(in srgb, var(--ap-violet) 45%, transparent);
+}
+html.admin-app .ap-btn-s:hover:not(:disabled),
+html.admin-app .ap-btn-o:hover:not(:disabled),
+html.admin-app .applicant-shell .ap-btn-s:hover:not(:disabled),
+html.admin-app .applicant-shell .ap-btn-o:hover:not(:disabled) {
+  background: var(--ap-tint);
+  border-color: var(--ap-violet);
+  color: var(--ap-violet);
+}
+/* Destructive = outline red (the confirmation step is the sheet it sits in). One red for all of Admin. */
+html.admin-app .ap-btn-danger {
+  background: transparent;
+  color: #c8102e;
+  border-color: #c8102e;
+}
+html.admin-app .ap-btn-danger:hover:not(:disabled) {
+  background: #fdecef;
+}
+html[data-admin-theme="dark"] .ap-btn-danger {
+  color: #fb7185;
+  border-color: #fb7185;
+}
+html[data-admin-theme="dark"] .ap-btn-danger:hover:not(:disabled) {
+  background: #3a1420;
+}
+html.admin-app .ap-btn-s:disabled,
+html.admin-app .ap-btn-o:disabled {
+  background: transparent;
+}
+@media (min-width: 768px) {
+  html.admin-app .ap-btn-s {
+    height: 40px;
+  }
+}
+@media (max-width: 767px) {
+  html.admin-app .ap-btn,
+  html.admin-app .admin-theme .ap-btn-s,
+  html.admin-app .admin-theme .ap-btn-sm {
+    min-height: 44px;
+    height: auto;
+  }
+}
+
+/* ---- Phones: Admin status/guard panels show no navigation; detail pages with a sticky action bar hide the tab bar.
+   Markers: [data-admin-nonav] / [data-admin-detail] inside <main>. .ap-topbar and .ap-bnav are phone-only classes, so desktop is untouched. ---- */
+body:has(main [data-admin-nonav]) .ap-topbar,
+body:has(main [data-admin-nonav]) .ap-bnav {
+  display: none !important;
+}
+body:has(main [data-admin-detail]) .ap-bnav {
+  display: none !important;
+  pointer-events: none;
+}
+
+/* ======================================================================
+ * MID-GROUND LISTS (phones <= 767px only; spec: docs/design-references/admin-midground-2026-10-26.html, phone 2).
+ * Search card + round funnel on ONE row, pastel pills, one white card of rows, plum-gradient actions.
+ * Hooks: [data-search-card] / [data-search-form] / [data-search-actions] (components/shared/search/SearchCard.tsx), .ad-grad.
+ * ====================================================================== */
+@media (max-width: 767px) {
+  html.admin-app .ad-grad {
+    background-image: linear-gradient(90deg, #8b2252, #c24a86);
+    color: #fff;
+  }
+  html.admin-app .ad-grad b {
+    color: inherit;
+  }
+  /* Phone list surface: pure white cards on the lavender page (light mode only). */
+  html.admin-app:not([data-admin-theme="dark"]) .applicant-shell {
+    --ap-surface: #fff;
+    --ap-bg: #f5f1f9;
+    --ap-hero-to: #fbeaf3;
+  }
+  html.admin-app:not([data-admin-theme="dark"]) .applicant-shell,
+  html.admin-app:not([data-admin-theme="dark"]) body {
+    background-color: #f5f1f9;
+  }
+  /* Status = one pastel pill (mint / sand / rose), 12px bold. */
+  html.admin-app .ad-mark {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    gap: 0;
+  }
+  html.admin-app .ad-mark-dot {
+    display: none;
+  }
+  html.admin-app .ad-mark[data-tone="ok"] { background: #e3f6ea; color: #17803d; }
+  html.admin-app .ad-mark[data-tone="warn"] { background: #fdf0d8; color: #9a5a06; }
+  html.admin-app .ad-mark[data-tone="bad"] { background: #fde8ea; color: #b4232c; }
+  html.admin-app .ad-mark[data-tone="info"],
+  html.admin-app .ad-mark[data-tone="plum"] { background: #efe8f6; color: #5b3f86; }
+  html.admin-app .ad-mark[data-tone="mute"] { background: #f0edf2; color: #6b6270; }
+  html[data-admin-theme="dark"].admin-app .ad-mark[data-tone="ok"] { background: #12302a; color: #7fdcb6; }
+  html[data-admin-theme="dark"].admin-app .ad-mark[data-tone="warn"] { background: #33261a; color: #f0c27a; }
+  html[data-admin-theme="dark"].admin-app .ad-mark[data-tone="bad"] { background: #36172a; color: #f4a9c6; }
+  html[data-admin-theme="dark"].admin-app .ad-mark[data-tone="info"],
+  html[data-admin-theme="dark"].admin-app .ad-mark[data-tone="plum"],
+  html[data-admin-theme="dark"].admin-app .ad-mark[data-tone="mute"] { background: #2a1d27; color: #cdbfd0; }
+  /* Pastel count cards (CountCards in components/admin/PhoneHero.tsx). */
+  html.admin-app .ad-count-mint {
+    background: #dff5ec;
+    color: #14664a;
+  }
+  html.admin-app .ad-count-sand {
+    background: #fbebd6;
+    color: #8a4d05;
+  }
+  html.admin-app .ad-count-rose {
+    background: #fbe3ee;
+    color: #8c1d3d;
+  }
+  html[data-admin-theme="dark"].admin-app .ad-count-mint {
+    background: #12302a;
+    color: #7fdcb6;
+  }
+  html[data-admin-theme="dark"].admin-app .ad-count-sand {
+    background: #33261a;
+    color: #f0c27a;
+  }
+  html[data-admin-theme="dark"].admin-app .ad-count-rose {
+    background: #36172a;
+    color: #f4a9c6;
+  }
+  html.admin-app [data-search-card]:not([data-has-pills]) {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  html.admin-app [data-search-form] {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 10px 28px rgba(139, 34, 82, 0.1);
+  }
+  html.admin-app [data-search-form] label {
+    height: 54px;
+  }
+  html.admin-app [data-search-form] svg:first-child {
+    color: var(--ap-violet);
+  }
+  html.admin-app [data-search-actions] {
+    flex: none;
+    padding: 0;
+    margin: 0;
+  }
+  html.admin-app [data-search-actions] button[title="Filters"] {
+    width: 50px;
+    height: 50px;
+    border: 0;
+    color: var(--ap-violet);
+    box-shadow: 0 8px 20px rgba(139, 34, 82, 0.12);
+  }
+  html.admin-app [data-search-actions] button[title="Filters"] > span {
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    background-color: var(--admin-primary);
+    border: 2px solid var(--ap-bg);
+    color: #fff;
+  }
+}
+@media (max-width: 767px) {
+  html[data-admin-theme="dark"].admin-app .ad-grad {
+    background-image: linear-gradient(90deg, var(--admin-fill, #8b2252), var(--admin-fill-hover, #a4306a));
+  }
+  html[data-admin-theme="dark"].admin-app [data-search-form],
+  html[data-admin-theme="dark"].admin-app [data-search-actions] button[title="Filters"] {
+    box-shadow: none;
+  }
+}
+
+/* ---- Phone detail pages (approved mid-ground, docs/design-references/admin-midground-2026-10-26.html, third phone).
+   Everything is phone-only (<768px); components/admin/PhoneDetail.tsx. Light mode uses the spec's exact colours, dark mode keeps the tokens. ---- */
+@media (max-width: 767px) {
+  html:not([data-admin-theme="dark"]) body:has(.pd-cover) .applicant-shell {
+    --ap-surface: #fff;
+    --ap-bg: #f5f1f9;
+    background: #f5f1f9;
+  }
+  .pd-cover {
+    background: linear-gradient(160deg, #e9b5cd, #c9b8f1);
+  }
+  html[data-admin-theme="dark"] .pd-cover {
+    background: linear-gradient(160deg, #4a2236, #33283f);
+  }
+  .pd-pic {
+    background: linear-gradient(180deg, var(--admin-fill, #8b2252), #5c1237);
+  }
+  .pd-panel {
+    background: var(--ap-surface);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -10px 30px rgba(60, 30, 80, 0.1);
+  }
+  .pd-act {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 46px;
+    border-radius: 23px;
+    border: 0;
+    background: #fbe9f1;
+    color: #8b2252;
+    font-weight: 800;
+    font-size: 14.5px;
+  }
+  html[data-admin-theme="dark"] .pd-act {
+    background: var(--ap-tint);
+    color: var(--ap-violet);
+  }
+  .pd-act:disabled {
+    opacity: 0.5;
+  }
+  .pd-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 54px;
+    border-radius: 27px;
+    border: 0;
+    background: linear-gradient(90deg, #8b2252, #c24a86);
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    box-shadow: 0 12px 24px rgba(139, 34, 82, 0.3);
+  }
+  .pd-cta:disabled {
+    opacity: 0.55;
+  }
+  .pd-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .pd-pill[data-tone="ok"] { background: #e3f6ea; color: #17803d; }
+  .pd-pill[data-tone="wt"] { background: #fdf0d8; color: #9a5a06; }
+  .pd-pill[data-tone="bad"] { background: #fde8ea; color: #b4232c; }
+  html[data-admin-theme="dark"] .pd-pill[data-tone="ok"] { background: var(--ap-ok-bg); color: var(--ap-ok); }
+  html[data-admin-theme="dark"] .pd-pill[data-tone="wt"] { background: var(--ap-warn-bg); color: var(--ap-warn); }
+  html[data-admin-theme="dark"] .pd-pill[data-tone="bad"] { background: var(--ap-rose-bg); color: var(--ap-rose); }
+}
+
+/* Avatar colours, phones only: initials circles use ONE consistent palette (same name = same colour everywhere in Admin),
+   white initials, soft white ring. Desktop keeps the original soft tint. Slots come from avatarSlot() in AdminAvatar.tsx. */
+@media (max-width: 767px) {
+  .admin-theme [data-av] {
+    color: #fff !important;
+    box-shadow: 0 0 0 2px #fff;
+  }
+  .admin-theme [data-av="0"] { background: #c0678d !important; }
+  .admin-theme [data-av="1"] { background: #8a7ab5 !important; }
+  .admin-theme [data-av="2"] { background: #5fa58a !important; }
+  .admin-theme [data-av="3"] { background: #d08a5b !important; }
+  .admin-theme [data-av="4"] { background: #5b8fd0 !important; }
+  .admin-theme [data-av="5"] { background: #b36bb0 !important; }
+}
+
+/* ======================================================================
+ * MID-GROUND CARDS (phones <= 767px only): every list item is its own white card; nothing is cut off.
+ * Hooks: .ad-itemcard (CARD_ITEM in components/admin/listKit.tsx), .ad-vcard (vacancy card), [data-av] (AdminAvatar initials).
+ * ====================================================================== */
+@media (max-width: 767px) {
+  /* No ellipsis: names, titles and muted lines wrap (pills and badges keep their own nowrap). */
+  html.admin-app :is(.ad-itemcard, .ad-vcard) :is(.truncate, [class*="line-clamp"], [class*="text-ellipsis"]) {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  html.admin-app :is(.ad-itemcard, .ad-vcard) :is(a, span, p, div):not(.ad-mark, .ap-chip) {
+    overflow-wrap: anywhere;
+  }
+  /* The name never gets squeezed by the pill: when narrow the pill wraps under the name. */
+  html.admin-app .ad-itemcard > .flex {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  html.admin-app .ad-itemcard > .flex > :is(.min-w-0.flex-1, .relative.min-w-0) {
+    flex: 1 1 11rem;
+  }
+  /* Type standard on cards: name 16 (1.25), secondary 14, facts 13, pills 12. */
+  html.admin-app .ad-itemcard [class*="text-[15px]"],
+  html.admin-app .ad-itemcard [class*="text-[14px]"].font-bold {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  html.admin-app .ad-itemcard :is([class*="text-[13px]"], [class*="text-[12.5px]"]):not(.ad-mark, .ap-chip) {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  html.admin-app .ad-itemcard [class*="text-[12px]"]:not(.ad-mark, .ap-chip) {
+    font-size: 13px;
+  }
+  /* Person avatars: 48px palette circles with white 800 initials. */
+  html.admin-app [data-search-scope] [data-av] {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 16px !important;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 0 0 3px #fff;
+  }
+  html[data-admin-theme="dark"].admin-app [data-search-scope] [data-av] { box-shadow: 0 0 0 3px var(--ap-surface); }
+  html[data-admin-theme="dark"].admin-app .ad-vcard [class*="border-[#efeaf3]"] { border-color: var(--ap-line-2); }
+}
+
+/* Phone detail pages: flat cards, no box inside a box (spec: white card, soft shadow, no border). */
+@media (max-width: 767px) {
+  body:has(.pd-cover) main .ap-card {
+    border: 0;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(60, 30, 80, 0.07);
+  }
+  body:has(.pd-cover) main .ap-card .ap-card {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+  }
+}
+
+/* ======================================================================
+ * PHONE EDITORS (phones <= 767px only; components/admin/PhoneForm.tsx). Desktop forms are untouched.
+ * One section open at a time as a pure-white card with a counted title, 52px fields, pill choices,
+ * and the form's button row (.pf-bar) as ONE sticky bar: a plum primary plus quiet text buttons.
+ * ====================================================================== */
+@media (max-width: 767px) {
+  html:not([data-admin-theme="dark"]) body:has([data-pform]) .applicant-shell {
+    --ap-surface: #fff;
+    --ap-bg: #f5f1f9;
+    background: #f5f1f9;
+  }
+  body:has([data-pform]) main .ap-card {
+    border: 0 !important;
+    border-radius: 22px !important;
+    box-shadow: 0 8px 24px rgba(60, 30, 80, 0.07) !important;
+  }
+  body:has([data-pform]) main .ap-card .ap-card {
+    box-shadow: none !important;
+  }
+  body:has([data-pform]) main [data-pform-body] { counter-reset: pf; }
+  body:has([data-pform]) main [data-pf-sec] { counter-increment: pf; }
+  .pf-sechead { min-height: 64px; padding: 14px 16px; }
+  .pf-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fbe9f1;
+    color: #8b2252;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .pf-num::before { content: counter(pf); }
+  html[data-admin-theme="dark"] .pf-num { background: var(--ap-tint); color: var(--ap-violet); }
+
+  /* Fields: label 14/600 above, 16px input, 52px tall, 14px radius, soft fill. */
+  body:has([data-pform]) main :is(input.ap-input, button.ap-input, select.ap-input) {
+    height: 52px;
+    min-height: 52px;
+    border-radius: 14px;
+    font-size: 16px;
+  }
+  body:has([data-pform]) main textarea.ap-input {
+    min-height: 112px;
+    border-radius: 14px;
+    font-size: 16px;
+  }
+  html:not([data-admin-theme="dark"]) body:has([data-pform]) main .ap-input {
+    background: #f6f2fa;
+    border: 1px solid transparent;
+  }
+  html:not([data-admin-theme="dark"]) body:has([data-pform]) main .ap-input:focus {
+    background: #fff;
+    border-color: #8b2252;
+    box-shadow: none;
+  }
+  body:has([data-pform]) main .ap-input[aria-invalid="true"] {
+    border-color: #b4232c;
+  }
+  body:has([data-pform]) main p[id$="-err"] { color: #b4232c; font-size: 13px; }
+
+  /* Pill choices. */
+  .pf-pill {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 22px;
+    border: 0;
+    background: #f6f2fa;
+    color: var(--ap-ink-2);
+    font-size: 15px;
+    font-weight: 700;
+    max-width: 100%;
+    text-align: center;
+  }
+  .pf-pill[data-on] {
+    background-image: linear-gradient(90deg, #8b2252, #c24a86);
+    color: #fff;
+  }
+  html[data-admin-theme="dark"] .pf-pill { background-color: var(--ap-tint); }
+  .pf-more { padding: 0 4px; }
+
+  /* The ONE sticky bar: plum primary, quiet text secondary; Cancel is the round back button. */
+  .pf-bar {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    padding: 12px 18px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--ap-surface);
+    box-shadow: 0 -8px 24px rgba(60, 30, 80, 0.1);
+  }
+  .pf-bar > :is(.ap-btn-p, button:last-child) {
+    order: 1;
+    width: 100%;
+    height: 54px;
+    border-radius: 27px;
+    border: 0;
+    background: linear-gradient(90deg, #8b2252, #c24a86) !important;
+    color: #fff !important;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .pf-bar > :not(.ap-btn-p, button:last-child) {
+    order: 2;
+    width: 100%;
+    height: 42px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #8b2252 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+  }
+  html[data-admin-theme="dark"] .pf-bar > :not(.ap-btn-p, button:last-child) { color: var(--ap-violet) !important; }
+  .pf-bar > [data-pf-cancel] { display: none !important; }
+  .pf-bar > :disabled { opacity: 0.55; }
+
+  /* Audience / filter pills inside editors: comfortable 44px targets. */
+  body:has([data-pform]) main fieldset button[aria-pressed] { min-height: 44px; padding: 0 16px; font-size: 15px; }
+
+  /* Sheets (invitations, interview scheduling, outlet, settings, notes): same field standard, plum primary
+     plus a quiet secondary in a sticky footer. Desktop dialogs are untouched (this block is phones only). */
+  html.admin-app [role="dialog"] :is(input, textarea).ap-input,
+  html.admin-app [role="dialog"] button.ap-input {
+    border-radius: 14px;
+    font-size: 16px;
+  }
+  html.admin-app [role="dialog"] :is(input, button).ap-input { height: 52px; min-height: 52px; }
+  html.admin-app [role="dialog"] textarea.ap-input { min-height: 112px; }
+  html:not([data-admin-theme="dark"]).admin-app [role="dialog"] .ap-input {
+    background: #f6f2fa;
+    border: 1px solid transparent;
+  }
+  html.admin-app [role="dialog"] div:has(> button.ap-btn-p):has(> button.ap-btn-s) {
+    position: sticky;
+    bottom: calc(-20px - env(safe-area-inset-bottom, 0px));
+    margin-inline: -20px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+    gap: 2px !important;
+    background: #fff;
+    z-index: 2;
+  }
+  html[data-admin-theme="dark"].admin-app [role="dialog"] div:has(> button.ap-btn-p):has(> button.ap-btn-s) { background: var(--ap-surface); }
+  html.admin-app [role="dialog"] div:has(> button.ap-btn-p):has(> button.ap-btn-s) > button.ap-btn-p {
+    height: 54px;
+    border-radius: 27px;
+    border: 0;
+    background-image: linear-gradient(90deg, #8b2252, #c24a86);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  html.admin-app [role="dialog"] div:has(> button.ap-btn-p) > button.ap-btn-s {
+    height: 42px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #8b2252;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  html[data-admin-theme="dark"].admin-app [role="dialog"] div:has(> button.ap-btn-p) > button.ap-btn-s { color: var(--ap-violet); }
+}
+
+/* ---- Phone Scheduling (components/admin/workforce/PhoneScheduling.tsx): pure white cards on the lavender page, 16px card padding, 12px gaps. Phones only. ---- */
+@media (max-width: 767px) {
+  html:not([data-admin-theme="dark"]) body:has([data-sched-phone]) .applicant-shell {
+    --ap-surface: #fff;
+    --ap-bg: #f5f1f9;
+    background: #f5f1f9;
+  }
+  html:not([data-admin-theme="dark"]) [data-sched-phone] .dt { --dt-shadow: 0 8px 24px rgba(60, 30, 80, 0.07); }
+  [data-sched-phone] .dt-card { padding: 16px; border-radius: 22px; }
+  [data-sched-phone] .dt-ev { margin-bottom: 12px; }
+}
+
+/* ---- Desktop/tablet premium lists (>= 768px): inside .ad-dtable a status mark becomes the one status pill (mint / sand / rose / lavender / grey). Phones untouched. ---- */
+@media (min-width: 768px) {
+  .ad-dtable .ad-mark { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; gap: 0; }
+  .ad-dtable .ad-mark-dot { display: none; }
+  .ad-dtable .ad-mark[data-tone="ok"] { background: #e3f6ea; color: #17803d; }
+  .ad-dtable .ad-mark[data-tone="warn"] { background: #fdf0d8; color: #9a5a06; }
+  .ad-dtable .ad-mark[data-tone="bad"] { background: #fde8ea; color: #b4232c; }
+  .ad-dtable .ad-mark[data-tone="info"],
+  .ad-dtable .ad-mark[data-tone="plum"] { background: #efe8f6; color: #5b3f86; }
+  .ad-dtable .ad-mark[data-tone="mute"] { background: #f0edf2; color: #6b6270; }
+  html[data-admin-theme="dark"] .ad-dtable .ad-mark[data-tone="ok"] { background: #12302a; color: #7fdcb6; }
+  html[data-admin-theme="dark"] .ad-dtable .ad-mark[data-tone="warn"] { background: #33261a; color: #f0c27a; }
+  html[data-admin-theme="dark"] .ad-dtable .ad-mark[data-tone="bad"] { background: #36172a; color: #f4a9c6; }
+  html[data-admin-theme="dark"] .ad-dtable .ad-mark[data-tone="info"],
+  html[data-admin-theme="dark"] .ad-dtable .ad-mark[data-tone="plum"],
+  html[data-admin-theme="dark"] .ad-dtable .ad-mark[data-tone="mute"] { background: #2a1d27; color: #cdbfd0; }
+}
+
+/* ---- Desktop/tablet premium list card (>= 768px): header row sticky in small caps, 56px rows with 16px side padding, names and titles wrap (no ellipsis). Phones untouched. ---- */
+@media (min-width: 768px) {
+  .ad-dtable [role="row"] { padding-inline: 16px; min-height: 56px; padding-block: 10px; }
+  .ad-dtable > [role="row"]:first-child { position: sticky; top: 72px; z-index: 10; min-height: 0; padding-block: 12px; background: var(--ap-surface); border-bottom: 1px solid var(--ap-line-2); border-radius: 12px 12px 0 0; }
+  .ad-dtable > [role="row"]:nth-child(2) { border-top: 0; }
+  .ad-dtable [role="row"] .truncate { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+}

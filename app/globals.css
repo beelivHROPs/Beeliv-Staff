@@ -79,6 +79,23 @@
      (890px) and the outer cover display (466px) already land correctly in
      the existing tiers without this. */
   --breakpoint-duo: 620px;
+
+  /* Public marketing site's mobile/desktop composition switch (components/
+     public/** and app/(public)/**) — matches the reference wireframe
+     (C:\Users\USER\Documents\beeliv-website\index.html `view()`, mode
+     "auto": `innerWidth<820?"m":"d"`) exactly. This build previously reused
+     Tailwind's stock `xl:` (1280px) for this switch everywhere, which is
+     wrong: a phone's browser "Desktop site" mode typically reports ~980-
+     1030px — above the wireframe's real 820px switch (correctly desktop
+     there) but below 1280px (incorrectly still mobile here). A real
+     `--breakpoint-*` theme key (same pattern as --breakpoint-duo above)
+     gives both `wf-d:` (min-width: 820px) and `max-wf-d:` (the existing
+     `max-xl:` usages) for free, unlike a plain @custom-variant. Deliberately
+     a NEW, purpose-named token, not a redefinition of the shared
+     `--breakpoint-xl` — a future Stage 2B dashboard rebuild may still want
+     Tailwind's standard 1280px `xl:` for its own admin-UI purposes,
+     unrelated to this specific wireframe's two board sizes. */
+  --breakpoint-wf-d: 820px;
 }
 
 :root {
@@ -91,7 +108,9 @@
      is the common case) invert this whole light canvas, crushing light-gray
      skeleton shimmer down to near-black-on-black and making loading states
      look broken/stuck rather than loading. */
-  color-scheme: light;
+  /* `only light` also opts out of the "Force Dark" modes that ignore a plain `light` (Samsung Internet, Opera, MIUI,
+     Chrome's auto dark). The Staff, Client and Admin dark themes set their own `color-scheme: dark` below this. */
+  color-scheme: only light;
   --background: #FAFAF8;
   --foreground: #1A1621;
   --card: #FFFFFF;
@@ -227,42 +246,10 @@
 }
 
 @layer utilities {
-  /* Shimmer-sweep loading treatment (docs/architecture/design-system.md §12) —
-     a diagonal-reading gradient sweep rather than a flat pulse. Respects
-     prefers-reduced-motion via the motion-reduce:animate-none pairing used
-     wherever this class is applied. */
-  @keyframes shimmer-sweep {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
-  }
-  .animate-shimmer {
-    background-image: linear-gradient(
-      90deg,
-      var(--muted) 25%,
-      var(--border) 50%,
-      var(--muted) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer-sweep 1.6s ease-in-out infinite;
-  }
-
-  /* Same sweep, white/translucent instead of --muted/--border — for skeleton
-     blocks sitting on a solid brand-color surface (the purple job-listing
-     cards) where the default gray shimmer would read as a mismatched plain
-     card rather than "this purple card is loading". */
+  /* Same sweep on a brand-colour surface: white tint instead of the grey base. */
   .animate-shimmer-inverse {
-    background-image: linear-gradient(
-      90deg,
-      color-mix(in srgb, white 30%, transparent) 25%,
-      color-mix(in srgb, white 50%, transparent) 50%,
-      color-mix(in srgb, white 30%, transparent) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer-sweep 1.6s ease-in-out infinite;
+    --sk-base: color-mix(in srgb, white 30%, transparent);
+    --sk-hi: color-mix(in srgb, white 50%, transparent);
   }
 
   /* Application-journey current-stage pulse — gentle, not a hard flash. */
@@ -436,8 +423,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .animate-shimmer,
-    .animate-shimmer-inverse,
     .animate-journey-breathe,
     .animate-fade-up,
     .animate-slide-in-right,
@@ -548,4 +533,176 @@
       color-mix(in srgb, var(--success) 6%, transparent) 70%
     );
   }
+}
+/* No rubber-band / pull-to-refresh past the top or bottom of a page: dragging past the edge used to pull the whole
+   app down and expose the empty background (project lead). Vertical only: left/right swipes (back and forward
+   between pages) must keep working, so overscroll-behavior-x is left at its default. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+/* Safety net for every page (public site and all apps): nothing may make the page itself slide sideways on a phone,
+   which also drags the fixed bars with it. `clip`, not `hidden`, so sticky elements keep working. Wide rows (tables, chip
+   strips) scroll inside their own container. Body only: setting it on <html> breaks dialog scroll lock (see applicant.css). */
+body {
+  overflow-x: clip;
+}
+/* TEST SWITCH (?fix=body, see components/shared/ScrollDebug.tsx): the window never scrolls or bounces; the body scrolls inside it. */
+html.bv-body-scroll,
+html.bv-body-scroll body {
+  height: 100%;
+  overflow: hidden;
+}
+html.bv-body-scroll body {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Desktop and tablet (768px+) keep the original type: Newsreader headings (500) and Karla body.
+   Phones use Noto Sans headings and Inter body. :root:root out-ranks the font variable classes on <html>. */
+@media (min-width: 768px) {
+  :root:root {
+    --font-sans: var(--font-sans-d), "Karla", system-ui, sans-serif;
+  }
+  .ap-serif,
+  .ps-serif,
+  .public-site .ap-serif,
+  .applicant-shell .ap-serif {
+    font-family: var(--font-serif-d), Georgia, "Times New Roman", serif !important;
+    font-weight: 500 !important;
+    font-size-adjust: none !important;
+    line-height: 1.08;
+  }
+  .applicant-shell {
+    font-size-adjust: none;
+  }
+}
+
+/* ==========================================================================
+   PHONE TYPE TOKENS (<= 767px). Equal to the Applicant/Staff phone values
+   (docs/design-system/PHONE-TYPE-AUDIT-2026-10-26.md). Admin and Client read
+   these in their phone blocks; Applicant/Staff are not refactored to use them.
+   ========================================================================== */
+:root {
+  --ap-text-title: 28px;
+  --ap-text-heading: 17px;
+  --ap-text-card: 16px;
+  --ap-text-body: 15px;
+  --ap-text-meta: 13px;
+  --ap-text-button: 15px;
+  --ap-text-input: 16px;
+  --ap-text-chip: 12px;
+  --ap-text-nav: 11px;
+  --ap-weight-heading: 700;
+  --ap-weight-body: 400;
+  --ap-weight-label: 600;
+  --ap-lh-heading: 1.25;
+  --ap-lh-body: 1.45;
+}
+
+/* ==========================================================================
+   ONE shared skeleton shimmer (all apps + the public site).
+   A solid, low-contrast tile (--sk-base) with a slow 1.6s highlight sweep
+   (--sk-hi). Tokens are overridden per app/theme (admin.css, client.css,
+   staff.css; light and dark), so the same class works on the cream Applicant
+   page and in dark mode. Aliases: .ap-shimmer / .ap-sk-box (app skeletons),
+   .animate-shimmer (Skeleton primitive) and the public ".skel" boards.
+   prefers-reduced-motion: static blocks (no sweep).
+   ========================================================================== */
+:root {
+  --sk-base: #e8e5ee;
+  --sk-hi: rgba(255, 255, 255, 0.55);
+}
+@keyframes bv-sk {
+  0% {
+    background-position: 130% 0;
+  }
+  100% {
+    background-position: -130% 0;
+  }
+}
+.bv-sk,
+.ap-shimmer,
+.ap-sk-box,
+.animate-shimmer,
+.animate-shimmer-inverse,
+.skel .ps-sk,
+.skel .ps-img,
+.skel .ps-img-dash,
+.skel .ps-btn,
+.skel .ps-chip,
+.skel .ps-logo {
+  background-image: linear-gradient(100deg, transparent 25%, var(--sk-hi) 50%, transparent 75%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  background-position: 130% 0;
+  animation: bv-sk 1.6s ease-in-out infinite;
+}
+.bv-sk,
+.ap-shimmer,
+.ap-sk-box,
+.animate-shimmer,
+.animate-shimmer-inverse {
+  background-color: var(--sk-base);
+}
+.skel .ps-btn .ps-sk,
+.skel .ps-chip .ps-sk,
+.skel .ps-logo .ps-sk {
+  background-image: none;
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bv-sk,
+  .ap-shimmer,
+  .ap-sk-box,
+  .animate-shimmer,
+  .animate-shimmer-inverse,
+  .skel .ps-sk,
+  .skel .ps-img,
+  .skel .ps-img-dash,
+  .skel .ps-btn,
+  .skel .ps-chip,
+  .skel .ps-logo {
+    animation: none;
+    background-image: none;
+  }
+}
+
+/* ---- Number badges (one shared source for every app; docs/design-system/BEELIV-DESIGN-SYSTEM.md "Number badges") ----
+   Red with white digits on light (white on #DC2626 = 4.8:1); a brighter red with near-black digits on dark (about 7:1).
+   --bv-badge-ring is the 2px ring in the surface colour so the badge stays crisp on any surface. */
+:root {
+  --bv-badge-bg: #dc2626;
+  --bv-badge-fg: #ffffff;
+}
+.dark,
+html[data-staff-theme="dark"],
+html[data-client-theme="dark"],
+html[data-admin-theme="dark"] {
+  --bv-badge-bg: #ff5a5f;
+  --bv-badge-fg: #1a0505;
+}
+.bv-badge {
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 18px;
+  min-width: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bv-badge-bg);
+  color: var(--bv-badge-fg);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--bv-badge-ring, var(--ap-surface, #fff));
+}
+.bv-badge:empty,
+.bv-badge[data-count="0"] {
+  display: none;
 }

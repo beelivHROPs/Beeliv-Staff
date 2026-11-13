@@ -1,0 +1,572 @@
+/*
+ * Client identity ("Warm Plum"), applied BY TOKENS on top of the Applicant shell.
+ *
+ * Same technique as app/staff/staff.css: the shared components read --ap-*
+ * custom properties; `.client-theme` re-maps them to the locked Client palette
+ * (docs/requirements/beeliv-client-app-brief-2026-09-30.md section 4), so every
+ * reused component turns Client-coloured with no edits to shared files.
+ * Semantic colours (green / amber / red / blue) stay shared: the role colour
+ * identifies the workspace, semantic colours communicate meaning.
+ *
+ * `html.client-app .applicant-shell` covers layers portalled to <body>
+ * (confirm dialog, sheets, popovers); ClientThemeFlag toggles that html class
+ * while /client is mounted.
+ *
+ * Palette:  Primary Plum #6F294F - Supporting #8A3D68 - Deep Wine #321824 -
+ * Sidebar #1C171A - Soft Plum #F8F1F5 - Champagne #B79268 (sparingly) -
+ * Champagne Soft #F5EEE5 - Warm background #FAF8F6 - Surface #FFFFFF.
+ */
+.applicant-shell.client-theme,
+html.client-app .applicant-shell {
+  --ap-violet: #6f294f;
+  --ap-violet-2: #8a3d68;
+  --ap-plum: #1c171a; /* sidebar / bottom nav: warm plum-black */
+  --ap-plum-2: #141013;
+  --ap-gradient: linear-gradient(135deg, #8a3d68 0%, #6f294f 55%, #321824 100%);
+  --ap-ink: #1e1519;
+  --ap-ink-2: #3e3439;
+  --ap-muted: #635a60;
+  --ap-faint: #6e616a;
+  --ap-bg: #faf8f6;
+  --ap-tint: #f8f1f5;
+  --ap-tint-soft: #fbf7f9;
+  --ap-tint-2: #ebd9e3;
+  --ap-lilac: #f1e4eb;
+  --ap-line: #ebe4e0;
+  --ap-line-2: #f4efec;
+  --ap-gold: #b79268; /* champagne */
+  --ap-shadow: 0 1px 2px rgba(50, 24, 36, 0.04), 0 10px 30px rgba(50, 24, 36, 0.06);
+  --client-champagne: #b79268;
+  --client-champagne-soft: #f5eee5;
+  --client-wine: #321824;
+  --client-fill: #6f294f;
+  --client-fill-hover: #5c2141;
+  /* Categorical chart ramp: plum family + one champagne accent (no rainbow). */
+  --client-c1: #6f294f;
+  --client-c2: #a85c86;
+  --client-c3: #cfa3b9;
+  --client-c4: #b79268;
+  --client-c5: #8f8087;
+
+  /* Phone bottom nav (shared vars): warm plum-black bar, restrained plum
+     pill and centre button, a thin champagne underline. */
+  --bnav-bg: #1c171a;
+  --bnav-top: #2a2026;
+  --bnav-border: rgba(255, 255, 255, 0.12);
+  --bnav-fg: rgba(255, 255, 255, 0.72);
+  --bnav-fg-on: #fff;
+  --bnav-pill-bg: #8a3d68;
+  --bnav-pill-fg: #fff;
+  --bnav-line: #b79268;
+  --bnav-center-bg: linear-gradient(160deg, #8a3d68, #6f294f);
+  --bnav-center-fg: #fff;
+}
+
+/* Hard-coded applicant purples that tokens can't reach. */
+:is(.applicant-shell.client-theme, html.client-app .applicant-shell) {
+  & .ap-nav-pill {
+    background: linear-gradient(90deg, rgba(138, 61, 104, 0.7), rgba(111, 41, 79, 0.42));
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  /* Active sidebar icon: light, not gold (no glow). */
+  & .ap-navitem[aria-current="page"] svg {
+    color: #fff;
+  }
+  & .ap-navitem[aria-current="page"] svg :is(path, rect, circle) {
+    fill-opacity: 0.16;
+  }
+  & .ap-card-hover:hover {
+    border-color: #e2d0da;
+  }
+  & {
+    --ap-btn-2: var(--client-fill, #8a3d68);
+  }
+  & .ap-btn-s:hover:not(:disabled) {
+    background: var(--client-fill-hover, #9a4a77);
+    border-color: var(--client-fill-hover, #9a4a77);
+  }
+  & .ap-btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(138, 61, 104, 0.3);
+  }
+  & .ap-input:focus {
+    box-shadow: 0 0 0 3px rgba(138, 61, 104, 0.18);
+  }
+  & .ap-btn-p:hover:not(:disabled) {
+    background: var(--client-fill-hover);
+    box-shadow: 0 10px 22px -10px rgba(111, 41, 79, 0.6);
+  }
+  & .ap-drop {
+    border-color: #dcc7d3;
+    background: #fdfafb;
+  }
+  /* Skeleton tiles: tokens for the one shared shimmer (app/globals.css .bv-sk). */
+  --sk-base: #ece6e3;
+  --sk-hi: rgba(255, 255, 255, 0.55);
+}
+
+/* ------------------------------------------------------------------
+ * Client-only helpers
+ * ------------------------------------------------------------------ */
+
+/* Hospitality banner: the photo is always darkened by a wine wash, so white
+   text reads the same in light and dark mode. */
+.client-banner-shade {
+  background: linear-gradient(90deg, rgba(50, 24, 36, 0.94) 0%, rgba(50, 24, 36, 0.78) 42%, rgba(50, 24, 36, 0.3) 100%);
+}
+@media (max-width: 767px) {
+  /* Phones: no photo. A designed wine ground (champagne glow + a faint ring) keeps the hero light and compact. */
+  .client-banner-shade {
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgba(224, 201, 163, 0.28) 0%, rgba(224, 201, 163, 0) 55%),
+      radial-gradient(70% 60% at 0% 100%, rgba(150, 60, 95, 0.4) 0%, rgba(150, 60, 95, 0) 70%),
+      linear-gradient(160deg, #4a2336 0%, #321824 100%);
+  }
+  .client-banner-shade::after {
+    content: "";
+    position: absolute;
+    right: -46px;
+    top: -46px;
+    width: 150px;
+    height: 150px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(224, 201, 163, 0.22);
+    box-shadow: 0 0 0 22px rgba(224, 201, 163, 0.05);
+  }
+}
+/* Frosted card that floats on the banner photo. */
+.client-glass {
+  background: rgba(255, 255, 255, 0.94);
+  color: #1e1519;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+}
+/* Sidebar cards on the warm plum-black ground. */
+.client-side-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Champagne accent, used sparingly (eyebrows, hairlines) - never a status colour. */
+.client-hairline {
+  height: 1px;
+  background: linear-gradient(90deg, var(--client-champagne), transparent);
+}
+/* Focusable chart hit area keeps a visible ring. */
+.client-chart-focus:focus-visible {
+  outline: 2px solid var(--ap-violet);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Visual-only mini switch inside the sidebar dark-mode row. */
+.ap-sidebar .ap-switch-sm {
+  width: 36px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.ap-sidebar .ap-switch-sm::after {
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+}
+:is(.applicant-shell.client-theme, html.client-app .applicant-shell) .ap-sidebar .ap-switch-sm[data-on] {
+  background: #8a3d68;
+}
+.ap-sidebar .ap-switch-sm[data-on]::after {
+  transform: translateX(14px);
+}
+
+/* ==================================================================
+ * DARK MODE (Client Settings > Display, sidebar switch, phone More sheet;
+ * lib/client/theme.ts). <html data-client-theme="dark"> while /client is
+ * mounted. Warm plum-black grounds, never pure black.
+ * Contrast (WCAG): body text >= 12:1, muted >= 7:1, faint >= 4.5:1, white on
+ * button fills (--client-fill #8a3d68) 7.5:1. --ap-violet becomes a LIGHT
+ * plum for text and icons; solid fills that carry white text use
+ * --client-fill instead. Semantic colours are the same light variants Staff uses.
+ * ================================================================== */
+html[data-client-theme="dark"] {
+  color-scheme: dark;
+}
+/* "No profile photo" tile in the photo preview: a deep plum panel with a soft inner ring in dark mode. */
+html[data-client-theme="dark"] .ps-nophoto {
+  background: radial-gradient(circle at 50% 38%, #3a2631 0%, #251a20 70%) !important;
+  box-shadow: inset 0 0 0 1px #4a3540;
+}
+html[data-client-theme="dark"] .ps-nophoto p {
+  color: #d9c9d1 !important;
+}
+html[data-client-theme="dark"] [data-slot="dialog-content"] [data-slot="dialog-close"] {
+  color: #f4eef1;
+  background: rgba(255, 255, 255, 0.1);
+}
+/* Portalled menus/popovers (shadcn bg-card, bg-white!) outside the shell.
+   In a layer on purpose: Tailwind's `bg-white!` is an !important utility,
+   and a layered !important only loses to an EARLIER layer's !important. */
+@layer components {
+  html[data-client-theme="dark"] :is([data-slot="popover-content"], [data-slot="select-content"], [role="menu"], [role="listbox"], [data-slot="dialog-content"], .bg-card, [class~="bg-white!"]) {
+    background-color: #1e171b !important;
+    border-color: #362a31 !important;
+    color: #f4eef1;
+  }
+}
+html[data-client-theme="dark"] body {
+  background: #141013;
+}
+html[data-client-theme="dark"] .applicant-shell {
+  --client-fill: #8a3d68;
+  --client-fill-hover: #9a4a77;
+  --client-champagne: #c9a97f;
+  --client-champagne-soft: #2a2119;
+  --client-c1: #e2a6c8;
+  --client-c2: #b86e97;
+  --client-c3: #8a3d68;
+  --client-c4: #c9a97f;
+  --client-c5: #8f7f88;
+  --ap-violet: #e2a6c8;
+  --ap-violet-2: #edbbd6;
+  --ap-plum: #0f0b0d;
+  --ap-plum-2: #0a0708;
+  --ap-gradient: linear-gradient(135deg, #8a3d68 0%, #6f294f 55%, #321824 100%);
+  --ap-ink: #f4eef1;
+  --ap-ink-2: #d8ccd2;
+  --ap-muted: #b3a3ac;
+  --ap-faint: #9d8e96;
+  --ap-bg: #141013;
+  --ap-surface: #1e171b;
+  --ap-tint: #2b1e26;
+  --ap-tint-soft: #231a20;
+  --ap-tint-2: #40303a;
+  --ap-lilac: #33242d;
+  --ap-line: #362a31;
+  --ap-line-2: #2a2026;
+  --ap-ok: #4ade80;
+  --ap-ok-bg: #12301f;
+  --ap-warn: #fbbf24;
+  --ap-warn-bg: #35270b;
+  --ap-rose: #fb7185;
+  --ap-rose-bg: #3a1420;
+  --ap-info: #93c5fd;
+  --ap-info-bg: #162447;
+  --ap-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+  background: var(--ap-bg);
+  color: var(--ap-ink);
+
+  /* White surfaces written as utilities. */
+  /* Choice chips (.ap-pick) hard-code a white fill. */
+  & .ap-pick {
+    background: var(--ap-surface);
+    border-color: var(--ap-line);
+    color: var(--ap-ink-2);
+  }
+  & .ap-pick[aria-pressed="true"] {
+    background: var(--ap-tint);
+    border-color: var(--ap-violet);
+    color: var(--ap-violet);
+  }
+  & .bg-white,
+  & [class*="bg-white/9"],
+  & [class*="bg-white/8"],
+  & [class*="bg-[#fbfafc]"],
+  & [class*="bg-[#fbf8fd]"] {
+    background-color: var(--ap-surface) !important;
+  }
+  & [class*="bg-white/7"] {
+    background-color: rgba(30, 23, 27, 0.8) !important;
+  }
+  /* Soft light gradients (heroes, profile header) -> dark tints. */
+  & [class*="linear-gradient(100deg,#FFFFFF"] {
+    background-image: linear-gradient(100deg, #1e171b, #231a20 55%, #2b1e26) !important;
+  }
+  & [class*="var(--ap-tint-soft),#fff_50%"] {
+    background-image: linear-gradient(90deg, var(--ap-tint-soft), var(--ap-surface) 50%) !important;
+  }
+  /* Amber / rose notice boxes. */
+  & [class*="bg-[#fffbeb]"] {
+    background-color: var(--ap-warn-bg) !important;
+    border-color: #6b4e12 !important;
+  }
+  & [class*="bg-[#fff1f2]"] {
+    background-color: var(--ap-rose-bg) !important;
+    border-color: #6b2336 !important;
+  }
+  & [class*="text-[#0f0b18]"] {
+    color: var(--ap-ink) !important;
+  }
+  & [class*="text-[#5f5968]"] {
+    color: var(--ap-muted) !important;
+  }
+  & [class*="border-[#cfc8d8]"],
+  & [class*="border-[#d5c6e0]"] {
+    border-color: var(--ap-line) !important;
+  }
+
+  /* Base link hover uses --ap-plum (near-black here): keep hovered links readable. */
+  & a:hover:not([class*="text-"]) {
+    color: var(--ap-violet-2);
+  }
+
+  /* Solid plum fills carry white text: keep them deep. */
+  & .ap-btn-p,
+  & [class*="bg-(--ap-violet)"],
+  & .ap-switch[aria-checked="true"] {
+    background-color: var(--client-fill) !important;
+  }
+  & .ap-btn-p:hover:not(:disabled) {
+    background-color: var(--client-fill-hover) !important;
+  }
+  & .ap-btn-s {
+    border-color: var(--ap-tint-2);
+  }
+  & .ap-card-hover:hover {
+    border-color: var(--ap-tint-2);
+  }
+  & .ap-switch {
+    background: #4a3a44;
+  }
+  /* Eyebrow gold, lifted for the dark ground. */
+  & .ap-eb {
+    color: #d1b48c;
+  }
+  /* Skeleton tiles: tokens for the one shared shimmer (app/globals.css .bv-sk). */
+  --sk-base: #2b2227;
+  --sk-hi: rgba(255, 255, 255, 0.06);
+  /* White Beeliv logo on dark grounds. */
+  & .client-logo-light {
+    display: none;
+  }
+  & .client-logo-dark {
+    display: block;
+  }
+  /* Red unread dots were ringed in white for light mode. */
+  & [class*="shadow-[0_0_0_2px_#fff]"] {
+    box-shadow: 0 0 0 2px var(--ap-surface) !important;
+  }
+  /* Pastel icon tiles (IconTile / notification tiles) -> deep tints. */
+  & [class*="bg-[#F8F3FA]"],
+  & [class*="bg-[#f8f3fa]"] {
+    background-color: var(--ap-tint) !important;
+  }
+  & [class*="bg-[#DCFCE7]"],
+  & [class*="bg-[#dcfce7]"] {
+    background-color: var(--ap-ok-bg) !important;
+  }
+  & [class*="bg-[#FEF3C7]"],
+  & [class*="bg-[#fef3c7]"] {
+    background-color: var(--ap-warn-bg) !important;
+  }
+  & [class*="bg-[#FFE4E6]"],
+  & [class*="bg-[#ffe4e6]"],
+  & [class*="bg-[#FCE7F3]"] {
+    background-color: var(--ap-rose-bg) !important;
+  }
+  & [class*="bg-[#DBEAFE]"],
+  & [class*="bg-[#dbeafe]"] {
+    background-color: var(--ap-info-bg) !important;
+  }
+  & [class*="text-[#15803D]"],
+  & [class*="text-[#15803d]"] {
+    color: var(--ap-ok) !important;
+  }
+  & [class*="text-[#B45309]"],
+  & [class*="text-[#b45309]"] {
+    color: var(--ap-warn) !important;
+  }
+  & [class*="text-[#A63358]"],
+  & [class*="text-[#dc2626]"],
+  & [class*="text-[#be123c]"] {
+    color: var(--ap-rose) !important;
+  }
+  /* Status chips (applicant.css hard-codes their light colours). */
+  & .ap-chip-ok {
+    background: var(--ap-ok-bg);
+    color: var(--ap-ok);
+  }
+  & .ap-chip-warn {
+    background: var(--ap-warn-bg);
+    color: var(--ap-warn);
+  }
+  & .ap-chip-info {
+    background: var(--ap-info-bg);
+    color: var(--ap-info);
+  }
+  & .ap-chip-mute {
+    background: var(--ap-line-2);
+    color: var(--ap-muted);
+  }
+  & .ap-chip-violet {
+    background: var(--ap-tint);
+    color: var(--ap-violet);
+  }
+  /* Form fields. */
+  & .ap-input {
+    background: #171114;
+    border-color: var(--ap-line);
+    color: var(--ap-ink);
+  }
+  & input::placeholder,
+  & textarea::placeholder {
+    color: var(--ap-faint);
+  }
+  /* The prototype-state bar used --ap-ink as its fill (light in dark mode). */
+  & [class*="bg-(--ap-ink)"] {
+    background-color: #3a2c34 !important;
+    color: #fff;
+  }
+  /* Frosted banner card in dark. */
+  & .client-glass {
+    background: rgba(30, 23, 27, 0.9);
+    color: #f4eef1;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  /* Bottom nav: deep solid bar with a soft plum rim glow. */
+  --bnav-bg: #171013;
+  --bnav-top: #251a20;
+  --bnav-fg: #b3a3ac;
+  --bnav-fg-on: #f4eef1;
+  --bnav-pill-bg: linear-gradient(160deg, #9a4a77, #6f294f);
+  --bnav-pill-fg: #fff;
+  --bnav-line: #c9a97f;
+  --bnav-center-bg: linear-gradient(160deg, #9a4a77, #6f294f);
+  --bnav-center-fg: #fff;
+  --bnav-border: rgba(226, 166, 200, 0.28);
+  & .ap-bnav {
+    filter: drop-shadow(0 0 12px rgba(138, 61, 104, 0.3)) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55));
+  }
+  & .ap-bnav-pill {
+    background: linear-gradient(160deg, #9a4a77, #6f294f);
+    box-shadow: 0 0 18px -2px rgba(138, 61, 104, 0.6);
+  }
+  & .ap-bnav-line {
+    background: #c9a97f;
+  }
+  & .ap-bnav-center {
+    background: linear-gradient(160deg, #9a4a77, #6f294f);
+    box-shadow: 0 8px 24px rgba(50, 24, 36, 0.5);
+  }
+  & .ap-bnav-center-quiet {
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  }
+  & .ap-sidebar {
+    background: #0f0b0d;
+    border-right: 1px solid var(--ap-line-2);
+  }
+}
+
+/* Light mode: a clean white bottom bar (the plum-black bar above is the dark-mode look). */
+html:not([data-client-theme="dark"]) .applicant-shell.client-theme {
+  --bnav-bg: #fff;
+  --bnav-top: #fff;
+  --bnav-border: rgba(111, 41, 79, 0.16);
+  --bnav-fg: #6b6270;
+  --bnav-fg-on: #6f294f;
+  --bnav-line: #8a3d68;
+}
+
+/* Client dark mode: icon tiles and count badges are inverted (project lead): brand-colour fill, white icon or number. */
+html[data-client-theme="dark"] .applicant-shell :is(.ap-duo, [class*="bg-[#F5EAF8]"]) {
+  background-color: var(--client-fill);
+  color: #ffffff;
+}
+html[data-client-theme="dark"] :is(
+    [class*="rounded-full"][class*="min-w-[22px]"],
+    [class*="rounded-full"][class*="min-w-5"],
+    [class*="rounded-full"][class*="bg-(--ap-tint)"][class*="size-6"]
+  ) {
+  background-color: var(--client-fill, #8a3d68);
+  color: #ffffff;
+}
+html[data-client-theme="dark"] .applicant-shell [class*="rounded-xl"][class*="bg-(--ap-tint"][class*="size-1"]:has(> svg) {
+  background-color: var(--client-fill);
+  color: #ffffff;
+}
+
+/* ------------------------------------------------------------------
+ * Client BUTTON SYSTEM (one set everywhere, see
+ * docs/PREMIUM-UI-REVIEW-CLIENT-2026-10-19.md)
+ *   primary   .ap-btn-p  deep plum pill, white text
+ *   secondary .ap-btn-s  outline pill (plum text and hairline)
+ *   quiet     .ap-btn-q  text link, no fill
+ * Touch targets: 48px on phones, 40px on desktop (small variant 44 / 38).
+ * Icon-only buttons set their own square size (size-11) and aria-label.
+ * Colours come from the existing tokens, so dark mode follows automatically.
+ * ------------------------------------------------------------------ */
+:is(.applicant-shell.client-theme, html.client-app .applicant-shell) {
+  & .ap-btn {
+    border-radius: 9999px;
+    padding-inline: 20px;
+  }
+  & .ap-btn:not([class*="size-"]) {
+    min-height: 40px;
+  }
+  & .ap-btn-sm {
+    padding-inline: 16px;
+  }
+  & .ap-btn-s {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--ap-violet) 45%, transparent);
+    color: var(--ap-violet);
+  }
+  & .ap-btn-s:hover:not(:disabled) {
+    background: var(--ap-tint);
+    border-color: var(--ap-violet);
+    color: var(--ap-violet);
+  }
+  & .ap-btn-q {
+    border-radius: 9999px;
+  }
+  & .ap-btn:disabled {
+    opacity: 0.5;
+  }
+}
+@media (max-width: 767px) {
+  :is(.applicant-shell.client-theme, html.client-app .applicant-shell) {
+    & .ap-btn:not([class*="size-"]) {
+      min-height: 48px;
+    }
+    & .ap-btn-sm:not([class*="size-"]) {
+      min-height: 44px;
+    }
+    & .ap-btn-q:not([class*="size-"]) {
+      min-height: 44px;
+    }
+  }
+}
+
+/* ---- Phones: detail pages with one main action hide the tab bar and show the sticky action bar (project lead, 2026-10-24).
+   Status pages show no navigation at all. Markers: [data-bv-detail] / [data-bv-status] inside <main>. ---- */
+@media (max-width: 767px) {
+  html.client-app {
+    --mob-brand: #8a3d68;
+    --mob-on-brand: #fff;
+    --mob-bar-bg: var(--ap-bg, #faf7f0);
+    --mob-line: var(--ap-line, #e6ddcb);
+  }
+  html.client-app:has(main [data-bv-detail]) .ap-bnav,
+  html.client-app:has(main [data-bv-status]) .ap-bnav,
+  html.client-app:has(main [data-bv-status]) header.ap-topbar {
+    display: none !important;
+  }
+}
+
+/* ---- Phone type standard = Applicant/Staff (docs/design-system/PHONE-TYPE-AUDIT-2026-10-26.md). Phones only. ---- */
+@media (max-width: 767px) {
+  html.client-app main h2[class*="text-[16px]"] {
+    font-size: var(--ap-text-heading) !important;
+    font-weight: var(--ap-weight-heading);
+    line-height: var(--ap-lh-heading);
+  }
+  html.client-app main [class*="text-[13.5px]"] {
+    font-size: 14px !important;
+  }
+  html.client-app main [class*="text-[14.5px]"] {
+    font-size: 15px !important;
+  }
+  html.client-app .ap-btn,
+  html.client-app .ap-btn-sm {
+    font-size: var(--ap-text-button);
+  }
+  html.client-app .ap-input {
+    font-size: var(--ap-text-input);
+  }
+}
