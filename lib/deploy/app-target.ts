@@ -24,7 +24,8 @@ const KEEP: Record<DeployApp, readonly string[]> = {
   // Jobs and Job Detail live on beeliv.co with the public site, not here.
   talent: ["staff", "applicant", "login", "signup", "verify-email", "forgot-password", "reset-password", "invite", "access-denied", "account-suspended"],
 };
-const ENTRY: Record<DeployApp, string> = { admin: "/admin", client: "/client", talent: "/login" };
+// Entry = each app's sign-in page: it always renders, and signed-in people are sent on to their workspace from there.
+const ENTRY: Record<DeployApp, string> = { admin: "/admin/login", client: "/client/login", talent: "/login" };
 
 export function parseDeployApp(value: unknown): DeployApp | null {
   return value === "admin" || value === "client" || value === "talent" ? value : null;
