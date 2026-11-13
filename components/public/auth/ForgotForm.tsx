@@ -56,7 +56,7 @@ export function ForgotForm({
 
     setPending(true);
     const clean = normaliseEmail(email);
-    const res = await requestPasswordReset({ email: clean });
+    const res = await requestPasswordReset({ email: clean }, portal);
     if (res.ok) {
       // Stay in the loading state while the next screen opens. The address is
       // carried in the URL so /forgot-password/sent can show it.

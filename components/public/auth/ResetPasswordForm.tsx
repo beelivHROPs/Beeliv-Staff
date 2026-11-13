@@ -5,7 +5,6 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Reveal } from "@/components/public/kit";
 import { stagger } from "@/components/public/primitives";
 import {
-  AUTH_BACKEND_CONNECTED,
   FLOW_TEST_ONLY,
   checkResetLink,
   takeEmailLink,
@@ -25,6 +24,7 @@ import {
 } from "@/lib/public-site/auth-rules";
 import { authPaths } from "@/lib/auth/portals";
 import type { Portal } from "@/lib/auth/types";
+import { useAuthLive } from "@/lib/ui/auth-live";
 import { AuthBody, AuthFrame } from "./AuthFrame";
 import { AlertIcon, LockIcon } from "./AuthIcons";
 import {
@@ -69,13 +69,17 @@ export function ResetPasswordForm({
   skeleton?: boolean;
 }) {
   const router = useRouter();
+  const live = useAuthLive();
+  const [completionWarning, setCompletionWarning] = useState(false);
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
   const paths = authPaths(portal);
   const framePortal = portal === "talent" ? undefined : portal;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const linkRef = useRef<EmailLinkParams | null>(null);
   const checkedRef = useRef(false);
   const [status, setStatus] = useState<Status>(
-    skeleton ? "valid" : AUTH_BACKEND_CONNECTED ? "checking" : !FLOW_TEST_ONLY ? "invalid" : (previewState ?? (previewUsed ? "invalid" : "valid")),
+    skeleton ? "valid" : live ? "checking" : !FLOW_TEST_ONLY ? "invalid" : (previewState ?? (previewUsed ? "invalid" : "valid")),
   );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -92,10 +96,13 @@ export function ResetPasswordForm({
     if (skeleton) return;
     const link = takeEmailLink();
     if (link) linkRef.current = link;
-    if (!AUTH_BACKEND_CONNECTED || checkedRef.current) return;
+    if (!live || checkedRef.current) return;
     checkedRef.current = true; // a one-time code must be exchanged exactly once
-    void checkResetLink(linkRef.current).then(setStatus);
-  }, [skeleton]);
+    void checkResetLink(linkRef.current, portal).then(result => {
+      setNeedsMfa(result === "mfa-required");
+      setStatus(result === "mfa-required" ? "valid" : result);
+    });
+  }, [skeleton, live, portal]);
 
   // Move focus to the heading on arrival and whenever the state changes, so a
   // screen-reader user hears which state they are in.
@@ -138,12 +145,14 @@ export function ResetPasswordForm({
     }
 
     setPending(true);
-    const res = await updatePassword({ password });
+    const res = await updatePassword({ password, mfaCode }, portal);
     if (res.ok) {
       // Do not keep the password in memory once it has been handed over. Stay
       // in the loading state while the success screen opens.
       setPassword("");
       setConfirm("");
+      setMfaCode("");
+      if (res.signOutConfirmed === false) { setCompletionWarning(true); setPending(false); return; }
       router.push(paths.resetSuccessPath);
       return;
     }
@@ -154,6 +163,15 @@ export function ResetPasswordForm({
   }
 
   const strength = passwordStrength(password);
+
+  if (completionWarning) return (
+    <AuthFrame screen="reset" portal={framePortal}>
+      <AuthBody as="div" logo={false}>
+        <AuthHeading lead="Password " accent="changed." sub="We could not confirm sign-out on your other devices. Sign in with your new password. Contact Beeliv if you need help securing your other devices." />
+        <PillLink href={paths.loginPath} label="Sign in" />
+      </AuthBody>
+    </AuthFrame>
+  );
 
   // Expired / used / invalid: same frame, no form.
   if (status === "expired" || status === "invalid") {
@@ -230,6 +248,14 @@ export function ResetPasswordForm({
             }}
           />
         </Reveal>
+
+        {needsMfa && (
+          <label className="block space-y-2 text-sm">
+            <span>Authenticator code</span>
+            <input aria-label="Authenticator code" className="w-full rounded-xl border px-4 py-3" inputMode="numeric" autoComplete="one-time-code" maxLength={6} pattern="[0-9]{6}" required value={mfaCode} onChange={e => setMfaCode(e.target.value.replace(/\D/g,""))} />
+            <span className="block text-xs">Use the current six-digit code from your authenticator app.</span>
+          </label>
+        )}
 
         <Reveal when="mount" y={16} delay={stagger(5, 0.1)}>
           <PasswordField
