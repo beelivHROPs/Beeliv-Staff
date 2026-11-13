@@ -1,5 +1,17 @@
 import type { NextConfig } from "next";
+import { existsSync, readFileSync } from "node:fs";
 import { resolveEnvironment } from "./lib/env/resolve";
+import { parseDeployApp, redirectsFor } from "./lib/deploy/app-target";
+
+// Which ONE app this deployment serves (beeliv-deploy.json, committed only in the Admin / Client / Staff repos).
+// Absent here, so local development serves everything. See lib/deploy/app-target.ts.
+const deployApp = (() => {
+  try {
+    return existsSync("beeliv-deploy.json") ? parseDeployApp(JSON.parse(readFileSync("beeliv-deploy.json", "utf8")).app) : null;
+  } catch {
+    return null;
+  }
+})();
 
 // Non-production environments (local, staging) also say noindex in a response header, on top of the page metadata.
 const nonProduction = resolveEnvironment(process.env).env !== "production";
@@ -11,6 +23,9 @@ const nextConfig: NextConfig = {
   // project-lead direction: keep the tech stack from being fingerprinted
   // via a plain response-header check.
   poweredByHeader: false,
+  async redirects() {
+    return redirectsFor(deployApp);
+  },
   // Security headers on every route (security audit 2026-10-05). The inline theme-boot script in
   // app/layout.tsx means a full script CSP needs per-request nonces (dynamic rendering), so that is a
   // later step; frame-ancestors/X-Frame-Options stop the login and recovery pages being framed.

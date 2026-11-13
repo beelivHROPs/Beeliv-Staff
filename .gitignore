@@ -63,3 +63,4 @@ design-assets/
 
 # Local live-mode test build output
 /.next-live-test/
+/.next-deploy-test/
