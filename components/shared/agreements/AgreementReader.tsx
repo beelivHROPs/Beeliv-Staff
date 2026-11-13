@@ -127,13 +127,17 @@ export function AgreementReader({
  * has been opened and closed; the caller keeps the accept control disabled until then
  * (or while already accepted). Renders nothing when there is no wording to read.
  */
-export function ReadButton({ title, version, body, onRead, themeClass, className = "" }: { title: string; version?: string | null; body: string | null; onRead: () => void; themeClass?: string; className?: string }) {
+export function ReadButton({ title, version, body, onRead, themeClass, className = "", label = "Read the full text", asLink = false }: { title: string; version?: string | null; body: string | null; onRead: () => void; themeClass?: string; label?: string; asLink?: boolean; className?: string }) {
   const [open, setOpen] = useState(false);
   if (body === null) return null;
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={`ap-btn ap-btn-s h-10 rounded-full px-4 text-[14px] font-semibold ${className}`}>
-        Read the full text
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={asLink ? `inline-flex min-h-6 items-center font-semibold text-(--ap-violet) underline underline-offset-2 hover:no-underline ${className}` : `ap-btn ap-btn-s h-10 rounded-full px-4 text-[14px] font-semibold ${className}`}
+      >
+        {label}
       </button>
       {open ? (
         <AgreementReader

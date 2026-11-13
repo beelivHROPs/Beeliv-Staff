@@ -108,7 +108,7 @@ export function AccountSetup(props: AccountSetupProps) {
  * published its wording). Optional agreements are answered with Accept or "No thanks"; either answer completes the step,
  * so they never stop anyone getting in (the server does not require them at Finish).
  */
-type StepId = "details" | "secure" | `agree-${number}` | `opt-${number}`;
+type StepId = "details" | "secure" | "agreements";
 type Pending = { kind: "details"; name: string; phone: string } | { kind: "agreement"; id: string; accepted: boolean } | { kind: "finish" };
 
 const requiredOf = (d: AdminSetup) => d.agreements.filter((a) => a.required);
@@ -124,37 +124,35 @@ function buildSteps(d: AdminSetup, hasSecurity: boolean): StepId[] {
   const readable = d.contentReady && requiredOf(d).length > 0;
   return [
     "details",
-    ...(readable ? requiredOf(d).map((_, i) => `agree-${i}` as const) : []),
-    ...optionalOf(d).map((_, i) => `opt-${i}` as const),
+    // ONE page for every agreement (lead 2026-11-13): a link to read each in full and a tick box to agree.
+    ...(readable || optionalOf(d).length > 0 ? (["agreements"] as const) : []),
     ...(d.mfa.required && hasSecurity ? (["secure"] as const) : []),
   ];
 }
 
-function agreementOf(id: StepId, d: AdminSetup): SetupAgreement | undefined {
-  if (id.startsWith("agree-")) return requiredOf(d)[Number(id.slice(6))];
-  if (id.startsWith("opt-")) return optionalOf(d)[Number(id.slice(4))];
-  return undefined;
+/** Agreements shown on the one agreements page: required ones (when readable) first, then optional ones. */
+function pageAgreements(d: AdminSetup): SetupAgreement[] {
+  return [...(d.contentReady ? requiredOf(d) : []), ...optionalOf(d)];
 }
 
 function isDone(id: StepId, d: AdminSetup): boolean {
   if (id === "details") return detailsOk(d);
   if (id === "secure") return d.mfa.verified;
-  const a = agreementOf(id, d);
-  if (id.startsWith("opt-")) return a?.response === true || a?.response === false;
-  return a?.response === true;
+  // Required: accepted. Optional: answered either way (unticked on submit = "no thanks").
+  return pageAgreements(d).every((a) => (a.required ? a.response === true : a.response === true || a.response === false));
 }
 
 /** Title, one-line reason, tile glyph and the one-line summary once done. */
 function stepInfo(id: StepId, d: AdminSetup): { title: string; why: string; glyph: GlyphName; summary: string } {
   if (id === "details") return { title: "Your details", why: "So your Beeliv team knows who you are and can reach you.", glyph: "profile", summary: detailsOk(d) ? `${d.fullName} · ${d.phone}` : "About a minute" };
   if (id === "secure") return { title: "Secure your account", why: "Admin access needs a code from an authenticator app on your phone. It keeps your account and your team's records safe.", glyph: "shield", summary: d.mfa.verified ? "Authenticator added" : "Needed for admin access" };
-  const a = agreementOf(id, d);
-  const optional = id.startsWith("opt-");
+  const req = pageAgreements(d).filter((a) => a.required);
+  const accepted = req.filter((a) => a.response === true).length;
   return {
-    title: a?.title ?? "Agreement",
-    why: optional ? "Optional. Accept it or say no thanks; either way you can carry on." : "Beeliv needs your agreement before you start. Read the full text, then accept.",
+    title: "Agreements",
+    why: "Open any agreement to read it in full. Tick each one you agree to, then continue. Beeliv keeps a record of each agreement.",
     glyph: "clipboard",
-    summary: a?.response === true ? "Accepted" : a?.response === false ? "No thanks" : optional ? "Optional" : "Read, then accept",
+    summary: req.length ? `${accepted} of ${req.length} accepted` : "Optional only",
   };
 }
 
@@ -176,8 +174,9 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
   /** The ONE step on screen. null = follow the first unfinished step (or the finish card when all are done). */
   const [viewId, setViewId] = useState<StepId | null>(null);
   const [allOpen, setAllOpen] = useState(false);
-  const [readIds, setReadIds] = useState<string[]>([]);
-  const [readHint, setReadHint] = useState(false);
+  /** Tick boxes on the agreements page, keyed by agreement id. Starts from what the server already recorded. */
+  const [ticks, setTicks] = useState<Record<string, boolean>>(() => Object.fromEntries(data.agreements.map((a) => [a.id, a.response === true])));
+  const [tickHint, setTickHint] = useState(false);
   const [responding, setResponding] = useState(false);
   const [name, setName] = useState(data.fullName);
   const [phone, setPhone] = useState(data.phone);
@@ -204,7 +203,7 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
   /** Show a step, bring the card into view and move focus to its heading (keyboard and screen-reader users follow the move). */
   function goTo(id: StepId | null) {
     setViewId(id);
-    setReadHint(false);
+    setTickHint(false);
     setAllOpen(false);
     requestAnimationFrame(() => {
       const el = document.getElementById("su-step-title");
@@ -256,20 +255,32 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
     }
   }
 
-  async function respond(a: SetupAgreement, accepted: boolean) {
-    // Absent wording is never submitted.
-    if (a.body === null) return;
+  /**
+   * Records every agreement on the page, one server call each, so each keeps its own acceptance record. Only answers
+   * that change are sent. Required ones must be ticked; an unticked optional one is recorded as "no thanks".
+   */
+  async function respondAll() {
+    const list = pageAgreements(data).filter((a) => a.body !== null);
+    if (list.some((a) => a.required && !ticks[a.id])) {
+      setTickHint(true);
+      return;
+    }
     setFailure(null);
     setResponding(true);
+    let next = data;
+    let current: { id: string; accepted: boolean } | null = null;
     try {
-      const next = await service.respondAgreement(a.id, accepted);
-      setData(next);
-      if (accepted || !a.required) {
-        setSaved(`${a.title}: ${accepted ? "accepted" : "no thanks"}.`);
-        advanceFrom(next);
+      for (const a of list) {
+        const want = ticks[a.id] === true;
+        if (a.response === want || (a.required && a.response === true)) continue;
+        current = { id: a.id, accepted: want };
+        next = await service.respondAgreement(a.id, want);
+        setData(next);
       }
+      setSaved("Your agreements are recorded.");
+      advanceFrom(next);
     } catch (e) {
-      if (!fail(e, { kind: "agreement", id: a.id, accepted })) toast.add({ title: "We couldn't record that", description: "Please try again.", type: "error" });
+      if (!fail(e, { kind: "agreement", id: current?.id ?? "", accepted: current?.accepted ?? true })) toast.add({ title: "We couldn't record that", description: "Please try again.", type: "error" });
     } finally {
       setResponding(false);
     }
@@ -325,10 +336,8 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
     setUnknown(null);
     if (!p) return;
     if (p.kind === "details") void saveDetails();
-    else if (p.kind === "agreement") {
-      const a = data.agreements.find((x) => x.id === p.id);
-      if (a) void respond(a, p.accepted);
-    } else void finish();
+    else if (p.kind === "agreement") void respondAll(); // re-sends only answers that still differ from the server
+    else void finish();
   }
 
   // The last step is done (or there was nothing to do): finish by itself, once. The server still decides;
@@ -362,13 +371,12 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
       : `A few quick steps and ${what.charAt(0).toLowerCase() + what.slice(1)} is ready. ${minutes} We save as you go.`;
   const position = shown ? `Step ${shownIndex + 1} of ${steps.length}` : "All steps done";
   const info = shown ? stepInfo(shown, data) : null;
-  const optionalStep = Boolean(shown?.startsWith("opt-"));
   const nextOpen = steps.find((s) => !isDone(s, data) && s !== shown);
 
   const rows: RailRow[] = steps.map((id) => {
     const s = stepInfo(id, data);
     const done = isDone(id, data);
-    const opt = id.startsWith("opt-");
+    const opt = false;
     const here = id === shown;
     return {
       id,
@@ -525,25 +533,24 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
         bar: actionBar(null),
       };
     }
-    const a = agreementOf(shown, data);
-    if (!a) return { content: null, bar: actionBar(null) };
-    const read = readIds.includes(a.id) || a.response === true;
-    const acceptedRequired = a.response === true && !optionalStep;
+    // shown === "agreements"
+    const list = pageAgreements(data);
     return {
-      content: <AgreementCard a={a} themeClass={themeClass} read={read} hint={readHint && !read} onRead={() => setReadIds((r) => (r.includes(a.id) ? r : [...r, a.id]))} />,
-      bar: actionBar(
-        a.body === null ? null : acceptedRequired ? <SubmitButton label="Continue" pendingLabel="Continue" pending={false} /> : <SubmitButton label="Accept" pendingLabel="Saving..." pending={responding} blocked={!read} />,
-        optionalStep && a.body !== null ? (
-          <button type="button" disabled={responding} onClick={() => void respond(a, false)} className={`inline-flex h-12 shrink-0 items-center rounded-full px-4 text-[15px] font-semibold text-(--ap-ink) shadow-[inset_0_0_0_1.5px_var(--ap-line)] hover:shadow-[inset_0_0_0_1.5px_var(--ap-violet)] disabled:opacity-60 ${FOCUS}`}>
-            No thanks
-          </button>
-        ) : undefined,
+      content: (
+        <AgreementsList
+          list={list}
+          ticks={ticks}
+          hint={tickHint}
+          themeClass={themeClass}
+          onTick={(id, on) => {
+            setTicks((t) => ({ ...t, [id]: on }));
+            setTickHint(false);
+          }}
+        />
       ),
+      bar: actionBar(<SubmitButton label="Agree and continue" pendingLabel="Saving..." pending={responding} />),
       formSubmit: () => {
-        if (responding || a.body === null) return;
-        if (acceptedRequired) return advanceFrom(data);
-        if (!read) return setReadHint(true);
-        void respond(a, true);
+        if (!responding) void respondAll();
       },
     };
   }
@@ -688,34 +695,60 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
 }
 
 /**
- * One agreement. Real wording comes from the server; absent wording (body null) shows a notice only:
- * nothing to read, accept or submit. Reading is not acceptance: the explicit Accept in the action bar is.
- * The short summary is the first paragraph of Beeliv's own wording (nothing is written for them).
+ * Every agreement on one page (lead 2026-11-13). Each row: a tick box ("I have read and agree"), the title, and a link
+ * that opens Beeliv's full wording. Ticking is the explicit acceptance; each is recorded separately by the server.
+ * Absent wording (body null) is shown as pending and can't be ticked. Optional ones say so; unticked = no thanks.
  */
-function AgreementCard({ a, themeClass, read, hint, onRead }: { a: SetupAgreement; themeClass?: string; read: boolean; hint: boolean; onRead: () => void }) {
-  const summary = a.body ? a.body.trim().split(/\n\s*\n/)[0] : null;
-  if (a.body === null) return <p className="ap-bd rounded-xl bg-(--ap-tint-soft) px-3.5 py-3 text-(--ap-muted)">Beeliv will publish the wording soon. You will be able to read and accept it then.</p>;
+function AgreementsList({ list, ticks, hint, themeClass, onTick }: { list: SetupAgreement[]; ticks: Record<string, boolean>; hint: boolean; themeClass?: string; onTick: (id: string, on: boolean) => void }) {
   return (
-    <div data-ap-field className="flex flex-col gap-4">
-      {summary ? <p className="ap-bd line-clamp-6 rounded-2xl bg-(--ap-tint-soft) px-4 py-3.5 text-(--ap-ink-2)">{summary}</p> : null}
-      <div className="flex flex-wrap items-center gap-3">
-        <ReadButton title={a.title} version={a.version} body={a.body} themeClass={themeClass} onRead={onRead} />
-        {a.response === true ? (
-          <span className="ap-label inline-flex items-center gap-1 font-bold text-(--ap-ok)">
-            <Check className="size-3.5" aria-hidden="true" /> Accepted
-          </span>
-        ) : a.response === false ? (
-          <span className="ap-sm text-(--ap-muted)">You said no thanks. You can still accept.</span>
-        ) : read ? (
-          <span className="ap-sm inline-flex items-center gap-1 text-(--ap-ok)">
-            <Check className="size-3.5" aria-hidden="true" /> Read
-          </span>
-        ) : (
-          <span className={`ap-sm ${hint ? "font-semibold text-(--ap-rose)" : "text-(--ap-muted)"}`} role={hint ? "alert" : undefined}>
-            Read it first, then you can accept.
-          </span>
-        )}
-      </div>
+    <div data-ap-field className="flex flex-col gap-3">
+      <ul className="flex flex-col divide-y divide-(--ap-line) overflow-hidden rounded-2xl border border-(--ap-line)">
+        {list.map((a) => {
+          const locked = a.required && a.response === true;
+          const missing = hint && a.required && !ticks[a.id];
+          return (
+            <li key={a.id} className={`flex items-start gap-3 px-4 py-3.5 ${missing ? "bg-(--ap-tint-soft)" : ""}`}>
+              {/* Custom box: filled with the app's primary colour when ticked (also when already accepted), white tick. */}
+              <span className="relative mt-0.5 inline-flex size-5 shrink-0">
+                <input
+                  id={`agr-${a.id}`}
+                  type="checkbox"
+                  className="peer size-5 cursor-pointer appearance-none rounded-[6px] border-[1.5px] border-(--ap-line-2,#c9c3d6) bg-(--ap-surface,#fff) transition-colors checked:border-(--su-primary) checked:bg-(--su-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--su-primary) disabled:cursor-default"
+                  style={{ ["--su-primary" as string]: "var(--staff-fill, var(--client-fill, var(--admin-fill, var(--ap-violet, #5b087b))))" }}
+                  checked={ticks[a.id] === true}
+                  disabled={a.body === null || locked}
+                  onChange={(e) => onTick(a.id, e.target.checked)}
+                  aria-describedby={missing ? "agr-hint" : undefined}
+                />
+                <Check className="pointer-events-none absolute inset-0 m-auto size-3.5 text-white opacity-0 peer-checked:opacity-100" strokeWidth={2.2} aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <label htmlFor={`agr-${a.id}`} className="block cursor-pointer text-[15px] leading-snug text-(--ap-ink)">
+                  I have read and agree to the <b className="font-semibold">{a.title}</b>
+                  {a.required ? null : <span className="text-(--ap-muted)"> (optional)</span>}
+                </label>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+                  {a.body === null ? (
+                    <span className="text-(--ap-muted)">Beeliv will publish this wording soon.</span>
+                  ) : (
+                    <ReadButton title={a.title} version={a.version} body={a.body} themeClass={themeClass} onRead={() => {}} label="Read the full text" asLink />
+                  )}
+                  {locked ? (
+                    <span className="inline-flex items-center gap-1 font-semibold text-(--ap-ok)">
+                      <Check className="size-3.5" aria-hidden="true" /> Accepted
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {hint ? (
+        <p id="agr-hint" role="alert" className="ap-sm font-semibold text-(--ap-rose)">
+          Tick each required agreement to continue.
+        </p>
+      ) : null}
     </div>
   );
 }
