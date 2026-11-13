@@ -32,14 +32,38 @@ export function parseDeployApp(value: unknown): DeployApp | null {
   return value === "admin" || value === "client" || value === "talent" ? value : null;
 }
 
+/**
+ * The public site (Home, About, For Businesses, Training, Contact, Request, Jobs) belongs on beeliv.co. Only three repos
+ * are used (lead 2026-11-13), so the Talent repo also carries it and serves it ONLY when the request's host is
+ * beeliv.co / www.beeliv.co. On talent.beeliv.co (and any other host) those pages still redirect to sign-in. Inert until
+ * beeliv.co is pointed at the Beeliv-Staff Vercel project.
+ */
+const PUBLIC_HOST = "(www\.)?beeliv\.co";
+const onPublicHost = [{ type: "host" as const, value: PUBLIC_HOST }];
+const TALENT_ONLY = ["staff", "applicant", "login", "signup", "verify-email", "forgot-password", "reset-password", "invite", "access-denied", "account-suspended"];
+
 export function redirectsFor(app: DeployApp | null) {
   if (!app) return [];
   const away = ALL.filter((seg) => !KEEP[app].includes(seg));
-  return [
-    { source: "/", destination: ENTRY[app], permanent: false },
+  // Talent: these app-only rules apply everywhere EXCEPT beeliv.co, where the public site is served instead.
+  const notPublic = app === "talent" ? { missing: onPublicHost } : {};
+  const appRules = [
+    { source: "/", destination: ENTRY[app], permanent: false, ...notPublic },
     ...away.flatMap((seg) => [
-      { source: `/${seg}`, destination: ENTRY[app], permanent: false },
-      { source: `/${seg}/:path*`, destination: ENTRY[app], permanent: false },
+      { source: `/${seg}`, destination: ENTRY[app], permanent: false, ...notPublic },
+      { source: `/${seg}/:path*`, destination: ENTRY[app], permanent: false, ...notPublic },
     ]),
+  ];
+  if (app !== "talent") return appRules;
+  // On beeliv.co: Talent pages go to talent.beeliv.co (same path), and Admin / Client to their own sign-in.
+  const toSub = (seg: string, origin: string, keepPath: boolean) => [
+    { source: `/${seg}`, has: onPublicHost, destination: keepPath ? `${origin}/${seg}` : origin, permanent: false },
+    { source: `/${seg}/:path*`, has: onPublicHost, destination: keepPath ? `${origin}/${seg}/:path*` : origin, permanent: false },
+  ];
+  return [
+    ...appRules,
+    ...TALENT_ONLY.flatMap((seg) => toSub(seg, "https://talent.beeliv.co", true)),
+    ...toSub("admin", "https://admin.beeliv.co/admin/login", false),
+    ...toSub("client", "https://client.beeliv.co/client/login", false),
   ];
 }

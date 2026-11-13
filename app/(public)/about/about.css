@@ -1,0 +1,31 @@
+/*
+ * About Us (/about).
+ * Two shapes/patterns the shared public-site.css tokens don't already cover.
+ * All colours come from the scoped tokens in ../public-site.css (.public-site).
+ */
+@layer theme, base, components, utilities;
+
+@layer components {
+  /* Story photo (About-Desktop "THE BEELIV STORY" / About-Mobile "STORY"):
+     mirrored sculpt curve - top-RIGHT corner rounded instead of top-left,
+     because this photo bleeds off the LEFT edge instead of the right (the
+     opposite of every other sculpted photo on the site, which is why it is
+     not just `.ps-sculpt`). */
+  .ab-sculpt-l {
+    border-radius: 0 42% 0 0 / 0 88% 0 0;
+  }
+
+  /* Team portrait (About "MEET OUR TEAM"): pill top, softened bottom
+     corners, thin gold ring set off from the edge. Radius differs slightly
+     between the mobile and desktop boards (120px vs a scaled 110px). */
+  .ab-portrait {
+    border-radius: 120px 120px 14px 14px;
+    outline: 1px solid var(--antique-gold);
+    outline-offset: 6px;
+  }
+  @media (min-width: 820px) {
+    .ab-portrait {
+      border-radius: calc(110 * var(--u)) calc(110 * var(--u)) 14px 14px;
+    }
+  }
+}

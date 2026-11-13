@@ -1,0 +1,29 @@
+/*
+ * Training & Services (/training). Values mirror Training-Desktop.dc.html /
+ * Training-Mobile.dc.html. All colours come from the scoped tokens in
+ * ../public-site.css (.public-site).
+ */
+@layer theme, base, components, utilities;
+
+@layer components {
+  /* Mobile "Four practice areas" accordion (`<details>`): hide the native
+     marker so the card matches the wireframe's plain heading row - both
+     boards render every section already open. */
+  .tr-acc summary {
+    list-style: none;
+  }
+  .tr-acc summary::-webkit-details-marker {
+    display: none;
+  }
+  .tr-acc summary::marker {
+    content: "";
+  }
+  /* The wireframe draws no toggle affordance on desktop (>=820px): the
+     cards are always-open, static. Kept as a real <details> (progressive
+     enhancement for mobile), so only the pointer affordance is removed. */
+  @media (min-width: 820px) {
+    .tr-acc summary {
+      cursor: default;
+    }
+  }
+}

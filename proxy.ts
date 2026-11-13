@@ -6,6 +6,16 @@ import { canVisit, readAccess, type AuthApp } from "@/lib/server/auth/policy";
 import { RateFailure, rejectRpcRateLimit } from "@/lib/server/auth/rate";
 
 const publicSegments = new Set(["login","invite","forgot-password","reset-password","access-denied","account-suspended","first-setup"]);
+/**
+ * Page visits (a browser asking for HTML) get the designed "temporarily unavailable" screen, rewritten so the URL stays
+ * the same and the status code is kept. API / script requests keep the short JSON answer.
+ */
+function blocked(request: NextRequest, status: number, error: string, extra: Record<string, string> = {}) {
+  const headers = { "Cache-Control": "private, no-store", ...extra };
+  const wantsPage = request.method === "GET" && (request.headers.get("accept") ?? "").includes("text/html");
+  if (wantsPage) return NextResponse.rewrite(new URL("/unavailable", request.url), { status, headers });
+  return NextResponse.json({ error }, { status, headers });
+}
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const first = path.split("/")[1];
@@ -23,7 +33,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Cache-Control", "private, no-store");
   try {
     const config = authConfig(app);
-    if (request.nextUrl.origin !== config.origin) return NextResponse.json({ error: "This area is not available." }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
+    if (request.nextUrl.origin !== config.origin) return blocked(request, 403, "This area is not available.");
     const persist = request.cookies.get(config.rememberName)?.value === "true";
     const client = createServerClient(config.url, config.key, {
       cookieOptions: { name: config.cookieName, httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" },
@@ -62,12 +72,12 @@ export async function proxy(request: NextRequest) {
         redirect.headers.set("Cache-Control", "private, no-store");
         return redirect;
       }
-      return NextResponse.json({ error: "This area is not available." }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
+      return blocked(request, 403, "This area is not available.");
     }
     return response;
   } catch (error) {
-    if (error instanceof RateFailure) return NextResponse.json({ error: "Please wait before trying again." }, { status: 429, headers: { "Cache-Control": "private, no-store", "Retry-After": String(error.retryAfterSeconds) } });
-    return NextResponse.json({ error: "This area is temporarily unavailable." }, { status: 503, headers: { "Cache-Control": "private, no-store" } });
+    if (error instanceof RateFailure) return blocked(request, 429, "Please wait before trying again.", { "Retry-After": String(error.retryAfterSeconds) });
+    return blocked(request, 503, "This area is temporarily unavailable.");
   }
 }
 export const config = { matcher: ["/applicant/:path*", "/staff/:path*", "/client/:path*", "/admin/:path*"] };
