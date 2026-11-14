@@ -46,6 +46,7 @@ import { BottomNavBar, BottomNavButton, BottomNavLink } from "./BottomNav";
 import { AccountSheet } from "./AccountMenu";
 import { appliedAttentionCount } from "./applied-attention";
 import { useInterviewRequests } from "@/lib/bridge/interview-requests";
+import { PUBLIC_SITE_HOME } from "@/lib/public-site/site-url";
 
 /** Step-by-step forms keep the phone screen free for the form and its own Back/Continue buttons: no bottom tab bar on mobile. */
 const FOCUSED_FLOW = /^\/applicant\/(apply|profile\/edit|tests\/[^/]+\/take|jobs\/[^/]+|applications\/[^/]+(\/(documentation|offer))?)(\/|$)/;
@@ -242,7 +243,7 @@ function Sidebar({ pathname, unread }: { pathname: string; unread: number }) {
 
       <div className="mt-1 flex flex-col gap-3 min-[768px]:max-[1100px]:hidden">
         <Link
-          href="/"
+          href={PUBLIC_SITE_HOME}
           className="flex h-10 items-center gap-2.5 rounded-[10px] px-3 text-[13px] font-semibold text-white/62 hover:bg-white/7 hover:text-white"
         >
           <ArrowUpLeft className="size-4" aria-hidden="true" />
@@ -340,7 +341,7 @@ function ProfileMenu() {
           <CircleHelp className="size-4" aria-hidden="true" />
           Help & support
         </Link>
-        <Link href="/" className="flex h-10.5 items-center gap-2.5 rounded-[9px] px-2.5 text-sm font-semibold text-(--ap-ink-2) hover:bg-(--ap-line-2)">
+        <Link href={PUBLIC_SITE_HOME} className="flex h-10.5 items-center gap-2.5 rounded-[9px] px-2.5 text-sm font-semibold text-(--ap-ink-2) hover:bg-(--ap-line-2)">
           <ArrowUpLeft className="size-4" aria-hidden="true" />
           Back to Beeliv website
         </Link>

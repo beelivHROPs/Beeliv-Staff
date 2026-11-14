@@ -8,6 +8,7 @@ import { SHOW_PROTOTYPE_CONTROLS } from "@/lib/prototype";
 import { useApplicantStore } from "@/lib/applicant/service";
 import { ModeSwitcher, MoreSheet, useLogout } from "./AppShell";
 import { MORE_ROUTES, NAV_ITEMS } from "./nav";
+import { PUBLIC_SITE_HOME } from "@/lib/public-site/site-url";
 
 /**
  * Phones: the hamburger on the Profile page. It opens the menu that used to live behind the
@@ -51,7 +52,7 @@ export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => 
             </Link>
           ))}
           <hr className="my-1.5 border-(--ap-line-2)" />
-          <Link href="/" onClick={close} className="flex h-13 items-center gap-3 rounded-[9px] px-2 text-[16px] font-semibold text-(--ap-ink-2)">
+          <Link href={PUBLIC_SITE_HOME} onClick={close} className="flex h-13 items-center gap-3 rounded-[9px] px-2 text-[16px] font-semibold text-(--ap-ink-2)">
             <ArrowUpLeft className="size-[19px]" aria-hidden="true" />
             Back to Beeliv website
           </Link>

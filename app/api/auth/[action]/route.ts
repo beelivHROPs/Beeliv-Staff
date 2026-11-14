@@ -1,4 +1,4 @@
-﻿import { randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { authFailure } from "@/lib/auth/wire";
 import { readJson } from "@/lib/server/public-enquiries/handler";
 import { acceptInvitation, AuthFailure, enforceOrigin, getSession, previewInvitation, reconcileInvitation, requestedApp, signIn, signOut } from "@/lib/server/auth/service";
@@ -13,7 +13,7 @@ export async function POST(request: Request, context: { params: Promise<{ action
   const supportRef = randomUUID();
   try {
     const { action } = await context.params;
-    if (!["invite-create-draft","invite-edit-draft","invite-review","invite-send","invite-resend","invite-revoke","invite-replace","invite-status","invite-copy-link","invite-list","sign-in", "sign-out", "session", "invite-preview", "invite-accept", "invite-reconcile", "setup", "setup-profile", "setup-agreement", "setup-finish", "mfa-status", "mfa-enroll", "mfa-verify", "mfa-cancel-enrollment"].includes(action)) return Response.json({ ok: false }, { status: 404 });
+    if (!["invite-create-draft","invite-edit-draft","invite-review","invite-send","invite-resend","invite-revoke","invite-replace","invite-status","invite-copy-link","invite-list","sign-in", "sign-out", "session", "invite-preview", "invite-accept", "invite-reconcile", "setup", "setup-profile", "setup-agreement", "setup-finish", "mfa-status", "mfa-enroll", "mfa-verify", "mfa-cancel-enrollment"].includes(action)) return Response.json({ ok: false }, { status: 404, headers: { "Cache-Control": "private, no-store" } });
     const input = await readJson(request);
     if (!input || typeof input !== "object" || Array.isArray(input)) throw new AuthFailure("invalid_request");
     const app = requestedApp(input);

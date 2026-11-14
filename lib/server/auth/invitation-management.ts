@@ -1,4 +1,5 @@
 import "server-only";
+import { requestMailSend } from "@/lib/server/scan-dispatch";
 import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import { sessionClient, adminClient } from "./session";
 import { readAccess, hasAccess, canGrantInvitation } from "./policy";
@@ -89,7 +90,10 @@ export async function manageInvitation(action:ManagementAction,input:Record<stri
  const result=await gateway.rpc("auth_invitation_apply",{...args,p_queue:queue,p_draft_hash:action==="invite-create-draft"||action==="invite-replace"?createHash("sha256").update(randomBytes(32)).digest("hex"):null});
  if(result.error)throw new AuthFailure("outcome_unknown",503);
  const data=record(result.data);if(!data?.ok)throw managementFailure(data?.reason);
- return clean(data);
+ const output=clean(data);
+ // The database write is committed. A wake-up failure may only delay delivery.
+ if(queue && output.replayed!==true && output.invitation.deliveryStatus==="queued") await requestMailSend().catch(()=>false);
+ return output;
 }
 /**
  * Copy-link delivery: no email, no outbox, no encrypted payload. The raw link is created here,

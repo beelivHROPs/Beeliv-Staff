@@ -38,32 +38,46 @@ export function parseDeployApp(value: unknown): DeployApp | null {
  * beeliv.co / www.beeliv.co. On talent.beeliv.co (and any other host) those pages still redirect to sign-in. Inert until
  * beeliv.co is pointed at the Beeliv-Staff Vercel project.
  */
+/**
+ * Every top-level page has ONE home domain (truth doc section 1; docs/requirements/beeliv-talent-platform-architecture-2026-09-29.md):
+ *   www.beeliv.co     public website: Home, About, For Businesses, Training, Contact, Request (Hire Talent / Book a Service Audit)
+ *   talent.beeliv.co  sign-in, sign-up, verify, recovery, invitations, account states, Applicant, Staff, and Jobs
+ *   admin.beeliv.co   /admin      client.beeliv.co  /client
+ * A path requested on the wrong domain is sent to its home domain with the SAME path, so links never dead-end on another
+ * app's sign-in. The Talent repo also carries the public site and serves it ONLY on the beeliv.co host (inert until the
+ * domain points at the Beeliv-Staff project). Jobs is served on both talent.beeliv.co and beeliv.co.
+ */
+const SITE = "https://www.beeliv.co";
+const HOME_OF: Record<string, string> = {
+  about: SITE, business: SITE, contact: SITE, request: SITE, training: SITE,
+  staff: "https://talent.beeliv.co", applicant: "https://talent.beeliv.co", login: "https://talent.beeliv.co", signup: "https://talent.beeliv.co",
+  "verify-email": "https://talent.beeliv.co", "forgot-password": "https://talent.beeliv.co", "reset-password": "https://talent.beeliv.co",
+  invite: "https://talent.beeliv.co", "access-denied": "https://talent.beeliv.co", "account-suspended": "https://talent.beeliv.co", jobs: "https://talent.beeliv.co",
+  admin: "https://admin.beeliv.co", client: "https://client.beeliv.co",
+};
+const SITE_PAGES = ["about", "business", "contact", "request", "training", "jobs"] as const; // served on the beeliv.co host
 const PUBLIC_HOST = "(www\.)?beeliv\.co";
 const onPublicHost = [{ type: "host" as const, value: PUBLIC_HOST }];
-const TALENT_ONLY = ["staff", "applicant", "login", "signup", "verify-email", "forgot-password", "reset-password", "invite", "access-denied", "account-suspended"];
 
 export function redirectsFor(app: DeployApp | null) {
   if (!app) return [];
   const away = ALL.filter((seg) => !KEEP[app].includes(seg));
-  // Talent: these app-only rules apply everywhere EXCEPT beeliv.co, where the public site is served instead.
+  // Talent: app-domain rules apply everywhere EXCEPT the beeliv.co host, which has its own rules below.
   const notPublic = app === "talent" ? { missing: onPublicHost } : {};
-  const appRules = [
-    { source: "/", destination: ENTRY[app], permanent: false, ...notPublic },
-    ...away.flatMap((seg) => [
-      { source: `/${seg}`, destination: ENTRY[app], permanent: false, ...notPublic },
-      { source: `/${seg}/:path*`, destination: ENTRY[app], permanent: false, ...notPublic },
-    ]),
-  ];
+  const send = (seg: string, extra: object) => {
+    const home = HOME_OF[seg];
+    if (!home) return [ // e.g. design-preview: never public, back to this app's entry
+      { source: `/${seg}`, destination: ENTRY[app], permanent: false, ...extra },
+      { source: `/${seg}/:path*`, destination: ENTRY[app], permanent: false, ...extra },
+    ];
+    return [
+      { source: `/${seg}`, destination: `${home}/${seg}`, permanent: false, ...extra },
+      { source: `/${seg}/:path*`, destination: `${home}/${seg}/:path*`, permanent: false, ...extra },
+    ];
+  };
+  const appRules = [{ source: "/", destination: ENTRY[app], permanent: false, ...notPublic }, ...away.flatMap((seg) => send(seg, notPublic))];
   if (app !== "talent") return appRules;
-  // On beeliv.co: Talent pages go to talent.beeliv.co (same path), and Admin / Client to their own sign-in.
-  const toSub = (seg: string, origin: string, keepPath: boolean) => [
-    { source: `/${seg}`, has: onPublicHost, destination: keepPath ? `${origin}/${seg}` : origin, permanent: false },
-    { source: `/${seg}/:path*`, has: onPublicHost, destination: keepPath ? `${origin}/${seg}/:path*` : origin, permanent: false },
-  ];
-  return [
-    ...appRules,
-    ...TALENT_ONLY.flatMap((seg) => toSub(seg, "https://talent.beeliv.co", true)),
-    ...toSub("admin", "https://admin.beeliv.co/admin/login", false),
-    ...toSub("client", "https://client.beeliv.co/client/login", false),
-  ];
+  // On beeliv.co: the website pages and Jobs are served here; every app page goes to its home domain (same path).
+  const publicRules = ALL.filter((seg) => !(SITE_PAGES as readonly string[]).includes(seg)).flatMap((seg) => send(seg, { has: onPublicHost }));
+  return [...appRules, ...publicRules];
 }

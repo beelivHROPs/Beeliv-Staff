@@ -1,3 +1,5 @@
+import { recoveryRequest } from "@/lib/auth/recovery-transport";
+import type { Portal } from "@/lib/auth/types";
 /**
  * Auth data layer for the public auth screens: THE ONLY place the UI talks to
  * an auth backend.
@@ -59,6 +61,7 @@ export type AuthOk = {
   ok: true;
   /** Always false until the real backend is connected. */
   backendConnected: boolean;
+  signOutConfirmed?: boolean;
   /** Human-readable note for the flow-test banner. */
   notice: string;
 };
@@ -134,25 +137,12 @@ export async function signup(input: SignupInput): Promise<AuthResult> {
   return notConnected("No account was created.");
 }
 
-export async function requestPasswordReset(
-  input: PasswordResetInput,
-): Promise<AuthResult> {
-  if (!FLOW_TEST_ONLY) return notOpen(EMAIL_NOT_OPEN);
-  void input;
-  // SWAP POINT: supabase.auth.resetPasswordForEmail(email, { redirectTo }).
-  await wait(SIMULATED_LATENCY_MS);
-  return notConnected("No email was sent.");
+export async function requestPasswordReset(input: PasswordResetInput, portal: Portal = "talent"): Promise<AuthResult> {
+  const result=await recoveryRequest(portal,"request",{email:input.email});
+  return result.ok ? {ok:true,backendConnected:true,notice:"If an account matches that address, you will receive a password reset link."} : result;
 }
-
-export async function resendResetLink(
-  input: PasswordResetInput,
-): Promise<AuthResult> {
-  if (!FLOW_TEST_ONLY) return notOpen(EMAIL_NOT_OPEN);
-  void input;
-  // SWAP POINT: same call as requestPasswordReset (Supabase has no separate
-  // "resend" for password recovery).
-  await wait(SIMULATED_LATENCY_MS);
-  return notConnected("No email was sent.");
+export async function resendResetLink(input: PasswordResetInput, portal: Portal = "talent"): Promise<AuthResult> {
+  return requestPasswordReset(input,portal);
 }
 
 /* ------------------------------------------------------------------ */
@@ -251,10 +241,10 @@ export function parseFlowTestState(raw: unknown): LinkState | null {
 }
 
 /** Where a recovery link stands when /reset-password opens. */
-export type ResetLinkStatus = "valid" | LinkState;
+export type ResetLinkStatus = "valid" | "mfa-required" | LinkState;
 
 export type VerifyEmailResendInput = { email: string };
-export type UpdatePasswordInput = { password: string };
+export type UpdatePasswordInput = { password: string; mfaCode?: string };
 
 /** Verify-email screen "resend the link". */
 export async function verifyEmailResend(
@@ -291,36 +281,15 @@ export async function confirmEmail(link: EmailLinkParams | null): Promise<AuthRe
  * /reset-password on load: is the emailed recovery link usable? Only called
  * when AUTH_BACKEND_CONNECTED (the flow-test preview covers the states before).
  */
-export async function checkResetLink(
-  link: EmailLinkParams | null,
-): Promise<ResetLinkStatus> {
-  void link;
-  // SWAP POINT: the recovery email's link lands here with a one-time code and
-  // starts a short-lived recovery session (auth event PASSWORD_RECOVERY).
-  //  - PKCE: supabase.auth.exchangeCodeForSession(link.code)
-  //  - then supabase.auth.getSession(): no session -> "invalid"
-  // errorCode "otp_expired" (or an expired-token error) -> "expired"; every
-  // other failure / already-used code / opened with no credential -> "invalid".
-  // The link lifetime is the project's Email OTP Expiration (600 s, see above).
-  await wait(SIMULATED_LATENCY_MS);
-  return "valid";
+export async function checkResetLink(link: EmailLinkParams | null, portal: Portal = "talent"): Promise<ResetLinkStatus> {
+  if (link?.errorCode) return link.errorCode === "otp_expired" ? "expired" : "invalid";
+  if (link && (!link.tokenHash || link.type !== "recovery" || link.code)) return "invalid";
+  const result=await recoveryRequest(portal,"check",link ? {tokenHash:link.tokenHash,type:link.type} : {});
+  return result.ok ? result.mfaRequired ? "mfa-required" : "valid" : result.code === "link-expired" ? "expired" : "invalid";
 }
 
-/**
- * /reset-password submit. The password is passed straight through: never
- * stored, logged, echoed or put in a URL by this layer.
- */
-export async function updatePassword(input: UpdatePasswordInput): Promise<AuthResult> {
-  if (!FLOW_TEST_ONLY) return notOpen(EMAIL_NOT_OPEN);
-  void input;
-  // SWAP POINT: supabase.auth.updateUser({ password: input.password }) inside
-  // the recovery session, then supabase.auth.signOut() so the visitor is NOT
-  // auto-logged-in (the success screen sends them to /login).
-  // Map: expired / already-used recovery session -> "link-expired" / "link-invalid"
-  // (the form then swaps to the matching state); password rejected by the
-  // server's rules -> "weak-password"; anything else -> "unknown".
-  // The backend must re-check the password rule (>= 8 chars with a number):
-  // the UI check in auth-rules.ts is only a convenience.
-  await wait(SIMULATED_LATENCY_MS);
-  return notConnected("No password was changed.");
+/** Recovery-only session; password and optional existing TOTP proof go straight to the server. */
+export async function updatePassword(input: UpdatePasswordInput, portal: Portal = "talent"): Promise<AuthResult> {
+  const result=await recoveryRequest(portal,"complete",input);
+  return result.ok ? {ok:true,backendConnected:true,signOutConfirmed:result.signOutConfirmed,notice:"Your password has been changed. Sign in to continue."} : result;
 }

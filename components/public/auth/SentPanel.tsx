@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Reveal } from "@/components/public/kit";
 import { DUR, EASE } from "@/components/public/motion";
 import { T, stagger } from "@/components/public/primitives";
-import { AUTH_BACKEND_CONNECTED, resendResetLink } from "@/lib/public-site/auth";
+import { resendResetLink } from "@/lib/public-site/auth";
 import {
   AUTH_MESSAGES,
   RESEND_COOLDOWN_SECONDS,
@@ -15,6 +15,7 @@ import {
 } from "@/lib/public-site/auth-content";
 import { authPaths } from "@/lib/auth/portals";
 import type { Portal } from "@/lib/auth/types";
+import { useAuthLive } from "@/lib/ui/auth-live";
 import { AuthBody, AuthFrame } from "./AuthFrame";
 import { CheckIcon, MailDrawIcon } from "./AuthIcons";
 import { FlowNotice, FormAlert, PillLink } from "./fields";
@@ -45,6 +46,7 @@ export function SentPanel({
   /** The route's loading frame: no focus grab, no timers, no motion. */
   skeleton?: boolean;
 }) {
+  const live = useAuthLive();
   const paths = authPaths(portal);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Both countdowns are deadlines (timestamps), read against ONE shared clock,
@@ -91,7 +93,7 @@ export function SentPanel({
     if (resending || (remaining > 0 && !expired) || !email) return;
     setResending(true);
     setFailure(null);
-    const res = await resendResetLink({ email });
+    const res = await resendResetLink({ email }, portal);
     setResending(false);
     if (res.ok) {
       const t = Date.now();
@@ -189,7 +191,7 @@ export function SentPanel({
         </Reveal>
 
         <FormAlert>{failure}</FormAlert>
-        {!AUTH_BACKEND_CONNECTED && !skeleton && (
+        {!live && !skeleton && (
           <FlowNotice>
             {notice ??
               "No email was sent. Please return to sign in and try again, or contact Beeliv for help."}
