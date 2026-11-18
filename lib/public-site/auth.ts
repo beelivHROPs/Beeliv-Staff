@@ -78,6 +78,8 @@ export type AuthFailure = {
     | "link-invalid"
     /** The server's password rules rejected the new password. */
     | "weak-password"
+    /** Password reset: no Beeliv account with access to this app uses that email (lead decision 2026-11-18). */
+    | "account-not-found"
     | "network"
     | "unknown";
   message: string;
