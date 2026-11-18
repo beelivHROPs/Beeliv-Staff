@@ -16,7 +16,8 @@ export default async function CheckEmailPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   // No email is ever sent until the backend exists: this "check your email / password changed" screen would be a fake success.
-  if (!FLOW_TEST_ONLY) notFound();
+  // Password recovery is live once the auth backend is configured; before that this screen would be a fake success.
+  if (!FLOW_TEST_ONLY && process.env.AUTH_BACKEND_ENABLED !== "true") notFound();
   const raw = (await searchParams).email;
   const candidate = typeof raw === "string" ? normaliseEmail(raw) : "";
   // Only ever echo something that is a well-formed address.
