@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { authConfig } from "./config";
 import { limitAuth, limitCaller } from "./rate";
+import { adminClient } from "./session";
 import { AuthFailure, requestedApp } from "./service";
 import type { AuthApp } from "./policy";
 
@@ -67,9 +68,17 @@ export async function passwordRecovery(input: Record<string,unknown>) {
     // Reuse installed limits with a separate subject; no unreviewed quota migration.
     await limitCaller(app,"sign_in_ip");
     await limitAuth(app,"sign_in",`recovery-request:${email}`);
+    // Lead decision 2026-11-18: tell the person when no account exists instead of a "check your email" screen.
+    // An account here = a signed-up person (auth user linked) with invited/active access to THIS app. Checked after the
+    // rate limits above, so the answer cannot be farmed quickly.
+    const db = adminClient(app);
+    const { data: person, error: personError } = await db.from("auth_people").select("id").eq("email", email).not("auth_user_id", "is", null).neq("status", "deactivated").limit(1).maybeSingle();
+    if (personError) throw new AuthFailure("unavailable", 503);
+    const { data: access, error: accessError } = person ? await db.from("auth_app_access").select("id").eq("person_id", person.id).eq("app", app).in("status", ["active", "invited"]).limit(1) : { data: [], error: null };
+    if (accessError) throw new AuthFailure("unavailable", 503);
+    if (!person || !access || access.length === 0) throw new AuthFailure("account_not_found", 404);
     const recovery = await recoveryClient(app);
     const path = app === "talent" ? "/reset-password" : `/${app}/reset-password`;
-    // Provider outcome is deliberately indistinguishable for registered/unregistered addresses.
     await recovery.client.auth.resetPasswordForEmail(email,{redirectTo:config.origin+path}).catch(() => undefined);
     return {ok:true};
   }

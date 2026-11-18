@@ -65,7 +65,11 @@ export function ForgotForm({
     }
     setPending(false);
     if (res.code === "rate-limited") setLimit(res.retryAfterSeconds ?? 60);
-    else setFailure(res.message);
+    else if (res.code === "account-not-found") {
+      setError(res.message);
+      setShake((n) => n + 1);
+      focusFirstInvalid(["email"], { email: res.message });
+    } else setFailure(res.message);
   }
 
   return (

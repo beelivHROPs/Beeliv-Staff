@@ -6,8 +6,8 @@ export async function recoveryRequest(portal: Portal, action: string, input: Rec
     const body=await response.json();
     if(response.ok && body?.ok===true) return {ok:true,mfaRequired:body.mfaRequired===true,signOutConfirmed:body.signOutConfirmed!==false};
     const reason=body?.reason;
-    const code=reason==="rate_limited" ? "rate-limited" : reason==="link_expired" ? "link-expired" : reason==="link_invalid" ? "link-invalid" : reason==="weak_password" ? "weak-password" : "unknown";
-    const message=reason==="mfa_required" || reason==="mfa_invalid" ? "Enter the current six-digit code from your authenticator app." : code==="weak-password" ? "Use a different password with at least 8 characters and a number." : code==="rate-limited" ? "Too many attempts. Please wait before trying again." : "We could not complete this request. Please try again or request a new link.";
+    const code=reason==="rate_limited" ? "rate-limited" : reason==="link_expired" ? "link-expired" : reason==="link_invalid" ? "link-invalid" : reason==="weak_password" ? "weak-password" : reason==="account_not_found" ? "account-not-found" : "unknown";
+    const message=reason==="mfa_required" || reason==="mfa_invalid" ? "Enter the current six-digit code from your authenticator app." : code==="weak-password" ? "Use a different password with at least 8 characters and a number." : code==="rate-limited" ? "Too many attempts. Please wait before trying again." : code==="account-not-found" ? "No Beeliv account uses this email. Check the address, or ask your Beeliv admin for an invitation." : "We could not complete this request. Please try again or request a new link.";
     return {ok:false,code,message,retryAfterSeconds:typeof body?.retryAfterSeconds==="number" ? body.retryAfterSeconds : undefined};
   } catch { return {ok:false,code:"network",message:"We could not confirm completion. Please check your connection before trying again."}; }
 }
