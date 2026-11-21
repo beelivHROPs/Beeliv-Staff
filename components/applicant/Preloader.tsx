@@ -32,7 +32,9 @@ export type PreloadKind =
   | "submit-application"
   | "submit-documentation"
   | "accept-offer"
-  | "activate-staff";
+  | "activate-staff"
+  /** Talent sign-in that lands in the Staff Hub (not the applicant area). */
+  | "login-staff";
 
 type Vars = { name?: string; role?: string; company?: string; /** Skip the first N phrases (continuing a preloader started on the auth page). */ startAt?: number };
 
@@ -56,6 +58,8 @@ function phrases(kind: PreloadKind, v: Vars): string[] {
       return ["Recording your acceptance", "Letting the Beeliv team know", "Starting your onboarding"];
     case "activate-staff":
       return ["Confirming your placement", "Adding staff access to your account", "Getting your Staff Hub ready"];
+    case "login-staff":
+      return [`Welcome back${hi}`, "Opening your Staff Hub"];
   }
 }
 
@@ -71,6 +75,7 @@ const MIN_MS: Record<PreloadKind, number> = {
   "submit-documentation": 4000,
   "accept-offer": 4000,
   "activate-staff": 4000,
+  "login-staff": 2000,
 };
 
 type Req = { id: number; kind: PreloadKind; vars: Vars };
@@ -170,7 +175,8 @@ export function PreloaderScreen({ kind, vars }: { kind: PreloadKind; vars: Vars 
 
       {/* Rotating phrase */}
       <div className="relative h-[72px] w-full max-w-[520px] overflow-hidden max-[767px]:h-[84px]">
-        <AnimatePresence mode="popLayout" initial={false}>
+        {/* One phrase at a time: the next waits for the previous to leave, so lines never overlap. */}
+        <AnimatePresence mode="wait" initial={false}>
           <motion.p
             key={i}
             className="absolute inset-x-0 top-0 text-[34px] leading-[1.15] font-medium text-[#11111b] max-[767px]:text-[26px]"

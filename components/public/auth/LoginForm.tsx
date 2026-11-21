@@ -8,7 +8,8 @@ import { T, stagger } from "@/components/public/primitives";
 import { AUTH_ROUTES, LOGIN_COPY, RESEND_COOLDOWN_SECONDS } from "@/lib/public-site/auth-content";
 import { validateEmail, validateLoginPassword } from "@/lib/public-site/auth-rules";
 import { PORTAL_FRAMES, PORTAL_NAMES, authPaths } from "@/lib/auth/portals";
-import { resendVerificationEmail, signIn } from "@/lib/auth/service";
+import { destinationFor as accessDestination, readAccess, hasAccess } from "@/lib/server/auth/policy";
+import { getSession, resendVerificationEmail, signIn } from "@/lib/auth/service";
 import { playWelcome } from "@/lib/admin/sound";
 import { inviteReturnPath } from "@/lib/auth-ui/invite-state";
 import type { ApiError, Portal, SignInResult } from "@/lib/auth/types";
@@ -73,11 +74,29 @@ export function LoginForm({
     preview === "wrong" || preview === "unverified" ? "you@example.com" : "",
   );
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(portal === "admin");
   const [errors, setErrors] = useState<Partial<Record<Field, string | null>>>({});
   const [shake, setShake] = useState<Record<Field, number>>({ email: 0, password: 0 });
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(portal === "admin" && !skeleton && !preview);
+  // Reuse the server-verified session. Submitting the password again creates a
+  // fresh AAL1 session and unnecessarily throws away the existing MFA proof.
+  useEffect(() => {
+    if (portal !== "admin" || skeleton || preview) return;
+    let live = true;
+    let resuming = false;
+    getSession("admin").then(result => {
+      if (!live || result.ok !== true) return;
+      const access = readAccess("access" in result ? result.access : null, "admin");
+      if (hasAccess(access) && access) {
+        resuming = true;
+        router.replace(accessDestination(access, next && /^\/admin\/setup(?:[/?#]|$)/.test(next) ? undefined : next));
+        router.refresh();
+      }
+    }).finally(() => { if (live && !resuming) setCheckingSession(false); });
+    return () => { live = false; };
+  }, [portal, skeleton, preview, next, router]);
   const [outcome, setOutcome] = useState<LoginOutcome | null>(() => {
     if (preview === "wrong") return { kind: "wrong" };
     if (preview === "unverified") return { kind: "unverified" };
@@ -96,6 +115,7 @@ export function LoginForm({
   const [summaryKey, setSummaryKey] = useState(0);
   const [sessionOpen, setSessionOpen] = useState(preview === "session-expired");
   const [arriving, setArriving] = useState(false);
+  const [arrivingKind, setArrivingKind] = useState<"login" | "login-job" | "login-staff">("login");
   const { register } = useFieldRefs<Field>();
   const unverifiedRef = useRef<HTMLDivElement>(null);
 
@@ -149,7 +169,7 @@ export function LoginForm({
   }
 
   async function attempt() {
-    if (pending || limited) return;
+    if (pending || checkingSession || limited) return;
     setSubmitted(true);
     setOutcome(null);
     setValidation([]);
@@ -168,9 +188,10 @@ export function LoginForm({
     }
 
     setPending(true);
-    if (isTalent) setArriving(true);
     const res = await signIn({ email: email.trim(), password, remember, portal, next: inviteReturn ? null : next });
     if (res.ok) {
+      // The welcome screen only after a SUCCESSFUL sign-in, worded for where the person is going (Staff Hub vs applicant).
+      if (isTalent) { setArrivingKind(destinationFor(res).startsWith("/staff") ? "login-staff" : jobId ? "login-job" : "login"); setArriving(true); }
       // Welcome sound: Admin and Client portals only (no-op for talent / staff).
       playWelcome(portal);
       // Stay pending while the next page opens.
@@ -228,7 +249,7 @@ export function LoginForm({
 
   return (
     <>
-      {arriving ? <PreloaderScreen kind={jobId ? "login-job" : "login"} vars={{}} /> : null}
+      {arriving ? <PreloaderScreen kind={arrivingKind} vars={{}} /> : null}
       {!skeleton && <OfflineBanner />}
       {!skeleton && (
         <SessionExpiredDialog
@@ -244,7 +265,7 @@ export function LoginForm({
         portal={isTalent ? undefined : portal}
         panel={frame.panel ?? undefined}
       >
-        <AuthBody onSubmit={onSubmit} ariaBusy={pending}>
+        <AuthBody onSubmit={onSubmit} ariaBusy={pending || checkingSession}>
           <AuthHeading lead={frame.headLead} accent={frame.headAccent} sub={frame.sub} />
 
           {jobNotice ? (
@@ -309,7 +330,7 @@ export function LoginForm({
             className="-mt-1 flex items-center justify-between"
           >
             <CheckField id="li-r" checked={remember} onChange={setRemember}>
-              {LOGIN_COPY.remember}
+              {portal === "admin" ? "Remember me for 30 days" : LOGIN_COPY.remember}
             </CheckField>
             <Link href={paths.forgotPath} className="py-2.5 text-sm font-medium">
               <T>{LOGIN_COPY.forgot}</T>
@@ -370,8 +391,8 @@ export function LoginForm({
           <Reveal when="mount" y={16} delay={stagger(6, 0.1)}>
             <SubmitButton
               label={LOGIN_COPY.submit}
-              pendingLabel={LOGIN_COPY.submitting}
-              pending={pending}
+              pendingLabel={checkingSession ? "Checking your session..." : LOGIN_COPY.submitting}
+              pending={pending || checkingSession}
               blocked={limited}
               icon={<LockIcon />}
             />
