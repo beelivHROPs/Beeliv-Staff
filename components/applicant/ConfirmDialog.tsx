@@ -19,7 +19,7 @@
  * block from a later promise callback). If it returns a promise, the button
  * shows a working state until it settles.
  */
-import { useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useId, useState, useSyncExternalStore, type ReactNode, useEffect } from "react";
 import { type LucideIcon } from "@/components/applicant/icons";
 import { ConfirmActions, ConfirmHeader, ConfirmPortal, ConfirmShell, type ConfirmMeaning } from "./dialogs/ConfirmSheet";
 
@@ -70,7 +70,35 @@ const BOX: Record<ConfirmTone, { box: string; dot: string }> = {
   neutral: { box: "bg-[#fbf8fd] border-(--ap-line)", dot: "bg-(--ap-violet)" },
 };
 
+/*
+ * Only ONE host may render dialogs. Pages outside an app shell (account setup, the sign-in code screen) mount their
+ * own host; when a shell host is also mounted, the first-mounted one renders and the others stay silent.
+ */
+const hostIds: number[] = [];
+let nextHostId = 0;
+const hostListeners = new Set<() => void>();
+function useIsPrimaryHost() {
+  const [id] = useState(() => ++nextHostId);
+  useEffect(() => {
+    hostIds.push(id);
+    hostListeners.forEach((l) => l());
+    return () => {
+      hostIds.splice(hostIds.indexOf(id), 1);
+      hostListeners.forEach((l) => l());
+    };
+  }, [id]);
+  return useSyncExternalStore(
+    (cb) => {
+      hostListeners.add(cb);
+      return () => hostListeners.delete(cb);
+    },
+    () => hostIds[0] === id,
+    () => false,
+  );
+}
+
 export function ConfirmHost() {
+  const primary = useIsPrimaryHost();
   const req = useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
@@ -80,6 +108,7 @@ export function ConfirmHost() {
     () => null,
   );
   // The key remounts per request so typed text / checkbox never carry over.
+  if (!primary) return null;
   return <ConfirmPortal>{req ? <Dialog key={req.title + req.confirmLabel} req={req} /> : null}</ConfirmPortal>;
 }
 

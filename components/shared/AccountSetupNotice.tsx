@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LogOut } from "@/components/applicant/icons";
-import { confirmAction } from "@/components/applicant/ConfirmDialog";
+import { ConfirmHost, confirmAction } from "@/components/applicant/ConfirmDialog";
 import type { Portal } from "@/lib/auth/types";
 import { usePortalSignOut } from "@/lib/ui/use-portal-sign-out";
 
@@ -45,6 +45,7 @@ export function AccountSetupNotice({
   const finishing = kind === "finish-setup";
   return (
     <section aria-label="Account setup" className="ap-card mx-auto max-w-[680px] rounded-[20px] p-5 min-[640px]:p-7">
+      <ConfirmHost />
       <h1 className="text-[24px] font-bold leading-tight text-(--ap-ink)">{finishing ? "Finish your account setup" : "Your account is almost ready"}</h1>
       <p className="mt-3 text-[15px] leading-relaxed text-(--ap-ink-2)">
         {finishing ? "Add your details to get started." : `${what} isn't open yet. Check your account status, or get help and we'll sort it out with you.`}
