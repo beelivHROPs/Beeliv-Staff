@@ -1,3 +1,4 @@
+import { requestApplicantSignup, resendApplicantConfirmation, confirmApplicantEmail } from "../auth/signup-transport";
 import { recoveryRequest } from "@/lib/auth/recovery-transport";
 import type { Portal } from "@/lib/auth/types";
 /**
@@ -62,6 +63,8 @@ export type AuthOk = {
   /** Always false until the real backend is connected. */
   backendConnected: boolean;
   signOutConfirmed?: boolean;
+  confirmed?: boolean;
+  destination?: "/login";
   /** Human-readable note for the flow-test banner. */
   notice: string;
 };
@@ -81,6 +84,7 @@ export type AuthFailure = {
     /** Password reset: no Beeliv account with access to this app uses that email (lead decision 2026-11-18). */
     | "account-not-found"
     | "network"
+    | "registration-incomplete"
     | "unknown";
   message: string;
   /** `rate-limited`: seconds the server says to wait (the UI countdown is cosmetic). */
@@ -103,11 +107,6 @@ export const FLOW_TEST_ONLY: boolean = process.env.NODE_ENV !== "production";
 
 const SIMULATED_LATENCY_MS = 800;
 
-function notOpen(message: string): AuthFailure {
-  return { ok: false, code: "unknown", message };
-}
-const SIGNUP_NOT_OPEN = "Creating an account online is not open yet. Please check back soon, or contact Beeliv and we will help you.";
-const EMAIL_NOT_OPEN = "Email links are not open yet. Please check back soon, or contact Beeliv and we will help you.";
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -130,13 +129,8 @@ export async function login(input: LoginInput): Promise<AuthResult> {
 }
 
 export async function signup(input: SignupInput): Promise<AuthResult> {
-  if (!FLOW_TEST_ONLY) return notOpen(SIGNUP_NOT_OPEN);
-  void input;
-  // SWAP POINT: supabase.auth.signUp({ email, password, options: { data: {
-  // full_name, phone, job_id } } }). Do NOT pass a role from the client; the
-  // backend assigns role = applicant (see ROLE RULE above).
-  await wait(SIMULATED_LATENCY_MS);
-  return notConnected("No account was created.");
+  const result = await requestApplicantSignup(input);
+  return result.ok ? { ok: true, backendConnected: true, confirmed: result.confirmed, destination: result.destination, notice: result.confirmed ? "Your account is ready. Log in to continue." : "If this address can be registered, check your email for a verification link." } : result;
 }
 
 export async function requestPasswordReset(input: PasswordResetInput, portal: Portal = "talent"): Promise<AuthResult> {
@@ -173,6 +167,8 @@ export type EmailLinkParams = {
   type: string | null;
   /** Supabase error redirect, e.g. `otp_expired` (in the query or the #fragment). */
   errorCode: string | null;
+  /** Only an unambiguous token_hash + type fragment is accepted for Applicant confirmation. */
+  credentialFormat?: "fragment-token" | "unsupported";
 };
 
 const LINK_PARAM_KEYS = [
@@ -218,6 +214,9 @@ export function takeEmailLink(): EmailLinkParams | null {
     tokenHash: pick("token_hash"),
     type: pick("type"),
     errorCode: pick("error_code"),
+    credentialFormat: frag.getAll("token_hash").length === 1 && frag.getAll("type").length === 1
+      && [...frag.keys()].every((key) => key === "token_hash" || key === "type")
+      && !LINK_PARAM_KEYS.some((key) => url.searchParams.has(key)) ? "fragment-token" : "unsupported",
   };
 
   for (const k of LINK_PARAM_KEYS) url.searchParams.delete(k);
@@ -249,17 +248,9 @@ export type VerifyEmailResendInput = { email: string };
 export type UpdatePasswordInput = { password: string; mfaCode?: string };
 
 /** Verify-email screen "resend the link". */
-export async function verifyEmailResend(
-  input: VerifyEmailResendInput,
-): Promise<AuthResult> {
-  if (!FLOW_TEST_ONLY) return notOpen(EMAIL_NOT_OPEN);
-  void input;
-  // SWAP POINT: supabase.auth.resend({ type: "signup", email, options: {
-  // emailRedirectTo: <origin>/verify-email/success } }). Supabase sends a new
-  // confirmation email; keep the response generic (never say whether the
-  // address has an account).
-  await wait(SIMULATED_LATENCY_MS);
-  return notConnected("No email was sent.");
+export async function verifyEmailResend(input: VerifyEmailResendInput): Promise<AuthResult> {
+  const result = await resendApplicantConfirmation(input.email);
+  return result.ok ? { ok: true, backendConnected: true, notice: "If a confirmation is needed, a new link will arrive." } : result;
 }
 
 /**
@@ -267,16 +258,8 @@ export async function verifyEmailResend(
  * Today it resolves "not connected" (the screen is reachable for the flow test).
  */
 export async function confirmEmail(link: EmailLinkParams | null): Promise<AuthResult> {
-  void link;
-  // SWAP POINT: the confirmation email's link carries a one-time credential.
-  //  - PKCE: supabase.auth.exchangeCodeForSession(link.code)
-  //  - token hash: supabase.auth.verifyOtp({ token_hash: link.tokenHash, type: "signup" | "email" })
-  // Map: errorCode "otp_expired" or an expired-token error -> code "link-expired";
-  // any other failure / no credential -> "link-invalid" (generic; never reveal
-  // whether an account exists). Do NOT leave the applicant signed in from here:
-  // they continue to /login (no auto-login), so signOut() after the exchange.
-  await wait(SIMULATED_LATENCY_MS);
-  return notConnected("No email was verified.");
+  const result = await confirmApplicantEmail(link);
+  return result.ok ? { ok: true, backendConnected: true, notice: "Your email is confirmed. Log in to continue." } : result;
 }
 
 /**

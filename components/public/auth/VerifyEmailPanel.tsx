@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Reveal } from "@/components/public/kit";
 import { DUR, EASE } from "@/components/public/motion";
 import { T, stagger } from "@/components/public/primitives";
-import { AUTH_BACKEND_CONNECTED, verifyEmailResend } from "@/lib/public-site/auth";
+import { verifyEmailResend } from "@/lib/public-site/auth";
 import {
   AUTH_MESSAGES,
   AUTH_ROUTES,
@@ -15,7 +15,7 @@ import {
 } from "@/lib/public-site/auth-content";
 import { AuthBody, AuthFrame } from "./AuthFrame";
 import { CheckIcon, MailCheckIcon } from "./AuthIcons";
-import { FlowNotice, FormAlert, PillLink } from "./fields";
+import { FormAlert, PillLink } from "./fields";
 import { AuthFoot, AuthHeading, IconTile } from "./parts";
 
 const secondsLeft = (deadline: number, now: number) =>
@@ -47,7 +47,6 @@ export function VerifyEmailPanel({
   const [resending, setResending] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!skeleton) headingRef.current?.focus({ preventScroll: true });
@@ -76,10 +75,13 @@ export function VerifyEmailPanel({
     if (res.ok) {
       const t = Date.now();
       setConfirmed(true);
-      setNotice(res.notice);
       setTimes({ now: t, cooldownEndsAt: t + RESEND_COOLDOWN_SECONDS * 1000 });
     } else {
       setFailure(res.message || AUTH_MESSAGES.resendFailed);
+      if (res.code === "rate-limited" && res.retryAfterSeconds) {
+        const t = Date.now();
+        setTimes({ now: t, cooldownEndsAt: t + res.retryAfterSeconds * 1000 });
+      }
     }
   }
 
@@ -140,15 +142,12 @@ export function VerifyEmailPanel({
               transition={{ duration: DUR.fast, ease: EASE }}
             >
               <CheckIcon size={14} />
-              {AUTH_MESSAGES.resendSent}
+              If a confirmation is needed, a new link will arrive.
             </motion.p>
           )}
         </Reveal>
 
         <FormAlert>{failure}</FormAlert>
-        {!AUTH_BACKEND_CONNECTED && !skeleton && (
-          <FlowNotice>{notice ?? VERIFY_COPY.flowNote}</FlowNotice>
-        )}
 
         <AuthFoot
           lead={VERIFY_COPY.wrongPrompt}
