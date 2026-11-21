@@ -292,9 +292,9 @@ export const SENT_COPY = {
 export const VERIFY_COPY = {
   headLead: "Verify your ",
   headAccent: "email.",
-  bodyLead: "We've sent a verification link to ",
+  bodyLead: "Check ",
   emailFallback: "your email address",
-  bodyEnd: ". Check your email to verify your account.",
+  bodyEnd: " for a verification link. If this address can be registered, you will receive an email.",
   back: "Back to log in",
   spamLead: "Didn't get it? Check your spam folder, or ",
   resend: "resend the link",

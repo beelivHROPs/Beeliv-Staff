@@ -46,6 +46,13 @@ export async function signIn(input: Record<string, unknown>) {
   if (error) { await audit(app, "sign_in_failed"); throw providerError(error.code); }
   try {
     if (!data.user?.email_confirmed_at) throw new AuthFailure("email_unverified", 403);
+    // Repair a confirmed public registration if its one-time callback response was lost.
+    // No intent is a no-op for existing invitation-only users; never grant from metadata.
+    if (app === "talent" && process.env.APPLICANT_SIGNUP_ENABLED === "true" && process.env.APPLICANT_SIGNUP_SCHEMA_READY === "true") {
+      const { finishApplicantRegistration } = await import("./signup");
+      const registration = await finishApplicantRegistration(client, data.user.id);
+      if (!registration.ok && registration.reason !== "not_applicant") throw new AuthFailure("no_access", 403);
+    }
     const binding = await bindFreshSession(client, adminClient(app), app, data.user.id).catch((e: unknown) => { throw e instanceof Error && e.message === "auth_no_access" ? new AuthFailure("no_access", 403) : e; });
     if (binding.purpose === "setup") {
       await setupForClient(client, app);

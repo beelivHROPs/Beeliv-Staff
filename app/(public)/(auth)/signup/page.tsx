@@ -23,6 +23,9 @@ export default async function SignupPage({
   searchParams: SearchParams;
 }) {
   const raw=(await searchParams).job;
-  const { job, notice } = publicJobsEnabled()?await resolveLiveJobIntent(raw):resolveJobIntent(raw);
+  const live = process.env.NODE_ENV === "production" || process.env.AUTH_BACKEND_ENABLED === "true";
+  const { job, notice } = publicJobsEnabled() ? await resolveLiveJobIntent(raw) : live
+    ? { job: null, notice: raw ? "We could not check that vacancy. You can create your account and browse jobs later." : null }
+    : resolveJobIntent(raw);
   return <SignupForm job={job} jobNotice={notice} />;
 }

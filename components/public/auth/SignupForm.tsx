@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Reveal } from "@/components/public/kit";
@@ -11,7 +10,6 @@ import {
   AUTH_ROUTES,
   PASSWORD_RULE,
   SIGNUP_COPY,
-  AUTH_MESSAGES,
 } from "@/lib/public-site/auth-content";
 import {
   passwordStrength,
@@ -22,14 +20,12 @@ import {
   validateAccountPhone,
 } from "@/lib/public-site/auth-rules";
 import type { Job } from "@/lib/public-site/jobs";
-import { PreloaderScreen } from "@/components/applicant/Preloader";
 import { AuthBody, AuthFrame } from "./AuthFrame";
 import { MailIcon, UserIcon } from "./AuthIcons";
 import {
   ArrowLink,
   AuthField,
   AuthPhoneField,
-  CheckField,
   FlowNotice,
   FormAlert,
   PasswordField,
@@ -95,7 +91,7 @@ export function SignupForm({
     phone: "",
     password: "",
   });
-  const [consent, setConsent] = useState(false);
+
   const [errors, setErrors] = useState<Partial<Record<Field, string | null>>>({});
   const [shake, setShake] = useState<Record<Field, number>>({
     fullName: 0,
@@ -105,12 +101,10 @@ export function SignupForm({
     consent: 0,
   });
   const [submitted, setSubmitted] = useState(false);
-  // Arrival preloader (covers the navigation into the dashboard).
-  const [arriving, setArriving] = useState(false);
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [step, setStep] = useState<1 | 2>(1);
+  const step = 1;
   const { register, focusFirstInvalid } = useFieldRefs<Field>();
   const router = useRouter();
   const motionOk = useMotionAllowed();
@@ -169,7 +163,7 @@ export function SignupForm({
       email: check.email(values.email),
       phone: check.phone(values.phone),
       password: check.password(values.password),
-      consent: consent ? null : AUTH_MESSAGES.consentRequired,
+      consent: null, // Unpublished terms are deferred; never invent an acceptance.
     };
     setErrors(next);
     if (ORDER.some((k) => next[k])) {
@@ -183,50 +177,22 @@ export function SignupForm({
     }
 
     setPending(true);
-    setArriving(true);
     const res = await signup({
       fullName: values.fullName.trim(),
       email: values.email.trim(),
       phone: canonicalAccountPhone(values.phone) ?? values.phone.trim(),
       password: values.password,
-      acceptedTerms: consent,
+      acceptedTerms: false,
       jobId: job?.id ?? null,
     });
     if (res.ok) {
       // Do not keep the password in memory once it has been handed over.
       setValues((v) => ({ ...v, password: "" }));
       setNotice(res.notice);
-      if (job) {
-        // Job-application signup: continue straight into the applicant
-        // dashboard's apply flow for this job, instead of the general
-        // "check your email to verify" detour below. No real Supabase auth
-        // is wired yet (project-lead direction, 2026-09-28: signup/login are
-        // a frontend-only pass-through for now — do not gate /applicant/**
-        // on any session/auth check), so this is a plain, unconditional
-        // navigation once the form itself succeeds.
-        //
-        // OPEN ITEM for when real auth lands: email verification will need
-        // to happen first, with the job id threaded through it (verify-email
-        // -> verify-email/success -> here) rather than skipped. That's an
-        // auth/backend integration question, flagged for the Security/RBAC
-        // and Database agents rather than decided here.
-        setStep(2);
-        // `from=signup` tells the dashboard which arrival preloader to show
-        // (it reads and strips the param itself).
-        router.push(`/applicant/apply?job=${encodeURIComponent(job.id)}&from=signup`);
-        return;
-      }
-      // General "Get Started -> find work" signup: same frontend-only
-      // pass-through as the job-specific path above (project-lead direction,
-      // 2026-09-28), landing on the dashboard Overview since there is no
-      // specific job attached. Same OPEN ITEM applies: real email
-      // verification (AUTH_ROUTES.verifyEmail) gets reinstated in front of
-      // this once real auth lands. Stay in the pending state while it opens.
-      router.push("/applicant?from=signup");
+      router.push(res.confirmed ? AUTH_ROUTES.login : `/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`);
       return;
     }
     setPending(false);
-    setArriving(false);
     setFailure(res.message);
   }
 
@@ -235,7 +201,6 @@ export function SignupForm({
 
   return (
     <>
-    {arriving ? <PreloaderScreen kind={job ? "signup-job" : "signup"} vars={{ role: job?.role, company: job?.company }} /> : null}
     <AuthFrame
       screen="signup"
       skeleton={skeleton}
@@ -362,28 +327,7 @@ export function SignupForm({
           </Reveal>
 
           <Reveal when="mount" y={16} delay={stagger(7, 0.1)}>
-            <CheckField
-              id="su-ok"
-              top
-              checked={consent}
-              onChange={(c) => {
-                setConsent(c);
-                if (errors.consent && c) setErrors((e) => ({ ...e, consent: null }));
-              }}
-              error={errors.consent}
-              shakeKey={shake.consent}
-              ref={register("consent")}
-            >
-              {SIGNUP_COPY.consentLead}
-              <Link href={AUTH_ROUTES.terms} target="_blank" rel="noopener">
-                {SIGNUP_COPY.consentTerms}
-              </Link>
-              {SIGNUP_COPY.consentAnd}
-              <Link href={AUTH_ROUTES.privacy} target="_blank" rel="noopener">
-                {SIGNUP_COPY.consentPrivacy}
-              </Link>
-              .
-            </CheckField>
+
           </Reveal>
 
           <SubmitButton
