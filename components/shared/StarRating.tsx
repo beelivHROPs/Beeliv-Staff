@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useRef } from "react";
 
 /**
  * Star rating for scorecards (project lead, 2026-10-24): filled gold stars, outline empty stars, instead of numbers in circles.
@@ -10,7 +10,8 @@ import { useId, useRef, useState } from "react";
  *    so keep `scale` 10 for that mode). The stored value is always the data scale (never a fraction).
  *  - Radio-group semantics: one tab stop, arrow keys move by one step, Home/End jump, Escape or the Clear button clears
  *    (when `allowClear`). Each step is announced as "3 out of 5".
- *  - Hover / press previews the rating before it is set. `readOnly` renders the same stars with no controls.
+ *  - Stars fill only when tapped (no hover preview, lead 2026-11-21). Tapping the selected star again clears it.
+ *    `readOnly` renders the same stars with no controls.
  *  - Touch targets: every star is 44px square (half steps are 22px wide halves of that star, full height).
  *  - Themed with the --ap-* variables so Admin, Client and Staff dark modes stay legible; gold falls back to #d4a72c.
  */
@@ -53,10 +54,9 @@ export function StarRating({
   const half = scale > 5;
   const stars = half ? 5 : scale;
   const per = scale / stars; // data steps per star (1, or 2 for a 10-point scale)
-  const [hover, setHover] = useState<number | null>(null);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const current = value ?? 0;
-  const shown = hover ?? current;
+  const shown = current; // no hover preview: only a tap fills stars
   const steps = Array.from({ length: scale }, (_, k) => k + 1);
   // How much of star `s` (1-based) is filled for a data value `v`.
   const fillOf = (s: number, v: number): 0 | 0.5 | 1 => {
@@ -89,7 +89,7 @@ export function StarRating({
 
   return (
     <div className={`flex items-center gap-x-1.5 min-[768px]:gap-x-2 ${className}`}>
-      <div role="radiogroup" aria-label={label} className="inline-flex" onPointerLeave={() => setHover(null)}>
+      <div role="radiogroup" aria-label={label} className="inline-flex">
         {Array.from({ length: stars }, (_, i) => {
           const s = i + 1;
           return (
@@ -111,10 +111,7 @@ export function StarRating({
                     aria-label={`${value && on ? value : step} out of ${scale}`}
                     aria-description={half ? "Tap again for a half star" : undefined}
                     tabIndex={on || (!value && step === per) || (!value && !half && step === 1) ? 0 : -1}
-                    onPointerEnter={() => setHover(step)}
-                    onPointerDown={() => setHover(step)}
-                    onFocus={() => setHover(null)}
-                    onClick={() => onChange?.(half && value === step ? step - 1 : step)}
+                    onClick={() => onChange?.(half ? (value === step ? step - 1 : value === step - 1 && allowClear ? null : step) : value === step && allowClear ? null : step)}
                     onKeyDown={(e) => {
                       if (e.key === "ArrowRight" || e.key === "ArrowUp") {
                         e.preventDefault();
@@ -142,7 +139,7 @@ export function StarRating({
       </div>
       {showValue ? (
         <span className="min-w-[3.4rem] text-[14px] font-semibold text-(--ap-ink-2) tabular-nums" aria-live="polite">
-          {hover ? `${hover} of ${scale}` : text}
+          {text}
         </span>
       ) : null}
       {allowClear && value ? (
