@@ -733,7 +733,7 @@ function AgreementsList({ list, ticks, hint, themeClass, onTick }: { list: Setup
                   {a.body === null ? (
                     <span className="text-(--ap-muted)">Beeliv will publish this wording soon.</span>
                   ) : (
-                    <ReadButton title={a.title} version={a.version} body={a.body} themeClass={themeClass} onRead={() => {}} label="Read the full text" asLink />
+                    <ReadButton title={a.title} version={a.version} body={a.body} themeClass={themeClass} onRead={() => {}} onAccept={locked ? undefined : () => onTick(a.id, true)} label="Read the full text" asLink />
                   )}
                   {locked ? (
                     <span className="inline-flex items-center gap-1 font-semibold text-(--ap-ok)">
