@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Check, ChevronDown, ChevronLeft, LogOut, RefreshCw } from "@/components/applicant/icons";
 import { INPUT_CLS } from "@/components/applicant/apply/parts";
-import { confirmAction } from "@/components/applicant/ConfirmDialog";
+import { ConfirmHost, confirmAction } from "@/components/applicant/ConfirmDialog";
 import { FieldError } from "@/components/applicant/form-feedback";
 import { SubmitButton } from "@/components/public/auth/fields";
 import "@/app/(public)/(auth)/auth.css";
@@ -561,6 +561,8 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
 
   return (
     <div className="flex flex-col gap-5 max-[1023px]:pb-28" style={AU_VARS}>
+      {/* Setup pages sit outside the app shells: mount the confirm host so "Sign out?" can open (deduped if a shell has one). */}
+      <ConfirmHost />
       <div className="flex items-center justify-between">
         <span className="text-[15px] font-bold tracking-[0.01em] text-(--ap-violet)">{brand}</span>
         <button type="button" onClick={() => void signOut()} className={`inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-[15px] text-(--ap-muted) hover:text-(--ap-violet) ${FOCUS}`}>
