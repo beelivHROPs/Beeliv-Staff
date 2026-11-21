@@ -27,7 +27,7 @@ import {
   Users,
   Video,
 } from "@/components/applicant/icons";
-import { useApplicantStore } from "@/lib/applicant/service";
+import { useApplicantStore, useIsLiveApplicant } from "@/lib/applicant/service";
 import { questionsForJob, testFormIdForJob } from "@/lib/journeys/applicant";
 import { useDraft } from "@/components/applicant/tests/taker";
 import { answeredCount, readScreeningAnswers } from "@/lib/applicant/screening";
@@ -69,7 +69,8 @@ export function ApplicationDetailBody({ applicationId }: { applicationId: string
   const [showAll, setShowAll] = useState(false);
   const a = store.applications.find((app) => app.id === applicationId);
   // The test this role carries (if any), taken inside the application. Status only, never marks.
-  const testId = a ? testFormIdForJob({ id: a.vacancyId, role: a.role }) : undefined;
+  const live = useIsLiveApplicant(); // real applications carry no sample test or screening set
+  const testId = a && !live ? testFormIdForJob({ id: a.vacancyId, role: a.role }) : undefined;
   const testDraft = useDraft(`${store.profile.id}:apply-${a?.vacancyId ?? ""}`, testId ?? "none").draft;
   const testStatus = testDraft.submittedAt ? "Submitted" : "Not started";
 
@@ -128,7 +129,7 @@ export function ApplicationDetailBody({ applicationId }: { applicationId: string
   }
 
   // Per-role screening questions (lib/applicant/screening.ts); the role title picks the set.
-  const screeningQs = questionsForJob({ id: a.vacancyId, role: a.role });
+  const screeningQs = live ? [] : questionsForJob({ id: a.vacancyId, role: a.role });
   const answered = answeredCount(screeningQs, readScreeningAnswers(a.form, screeningQs));
   const yes = (v: string) => v.toLowerCase();
   const answers: [string, string][] = [

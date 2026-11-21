@@ -23,12 +23,12 @@ const REQUEST_KEYS = ["requestId", "purpose", "fileName", "size", "contentType"]
 const MIME = /^[a-z0-9][a-z0-9!#$&^_.+-]*\/[a-z0-9][a-z0-9!#$&^_.+-]*$/;
 
 const frozenType = (extension: string, mime: string): UploadType => Object.freeze({ extension, mime });
-/** Project-lead-approved application upload preflight, 5,000,000 bytes per file. */
+/** Lead approved PDF-only CVs for this release on 2026-11-21; 5,000,000 bytes per file. */
 export const APPROVED_APPLICATION_UPLOAD_POLICY: UploadPolicy = Object.freeze({
   approved: true,
   maxBytes: 5_000_000,
   typesByPurpose: Object.freeze({
-    cv: Object.freeze([frozenType(".pdf", "application/pdf"), frozenType(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")]),
+    cv: Object.freeze([frozenType(".pdf", "application/pdf")]),
     "passport-photo": Object.freeze([frozenType(".jpg", "image/jpeg"), frozenType(".jpeg", "image/jpeg"), frozenType(".png", "image/png")]),
     "valid-id": Object.freeze([frozenType(".pdf", "application/pdf"), frozenType(".jpg", "image/jpeg"), frozenType(".jpeg", "image/jpeg"), frozenType(".png", "image/png")]),
   }),

@@ -19,7 +19,7 @@ import type { SearchEntry, SearchGroupDef, SearchProvider } from "@/components/s
 import { FAQS } from "@/components/applicant/HelpBody";
 import { listPublishedFor } from "@/lib/forms/participant-store";
 import { getApplicantJobs } from "@/lib/applicant/jobs";
-import { getProfile, listApplications, listDocuments, listInterviews, listNotifications, markAllNotificationsRead } from "@/lib/applicant/service";
+import { getProfile, listApplications, listDocuments, listInterviews, listNotifications, markAllNotificationsRead, useIsLiveApplicant } from "@/lib/applicant/service";
 
 const human = (s: string) => {
   const t = s.replace(/-/g, " ");
@@ -79,7 +79,8 @@ function applicantActions(logout: () => void): SearchAction[] {
 }
 
 export const LiveVacanciesContext=createContext(false);
-export const buildApplicantSearchProvider = (logout: () => void,live=false): SearchProvider => live?{
+// realApplicant: a real user (live deployment). Their own applications/documents are searched; sample jobs and tests never are.
+export const buildApplicantSearchProvider = (logout: () => void,live=false,realApplicant=false): SearchProvider => live&&!realApplicant?{
   appId:'applicant',label:'Search vacancies',placeholder:'Search jobs...',searchPath:'/applicant/jobs',hint:'Search current vacancies by title or location.',shortcuts:[],
   groups:GROUPS.filter(group=>group.key==='jobs'||group.key==='pages'),actions:applicantActions(logout).filter(action=>action.id==='search-jobs'),
   fallback:q=>({title:`Search jobs for "${q}"`,href:`/applicant/jobs?q=${encodeURIComponent(q)}`,icon:Search}),load:async()=>pageEntries(PAGES),
@@ -98,13 +99,13 @@ export const buildApplicantSearchProvider = (logout: () => void,live=false): Sea
     const tasks: Promise<SearchEntry[]>[] = [
       // Pages first; the Staff Hub page only for a person whose staff access has been granted.
       getProfile().then((p) => pageEntries(p.staffEntitlement.granted ? [...PAGES, STAFF_PAGE] : PAGES), () => pageEntries(PAGES)),
-      getApplicantJobs().then((jobs) => {
+      (realApplicant ? Promise.resolve([] as Awaited<ReturnType<typeof getApplicantJobs>>) : getApplicantJobs()).then((jobs) => {
         const savedIds = getSavedJobIds();
         return jobs.map((j) => ({ id: j.id, group: "jobs", title: j.role, subtitle: join(j.company, j.location, j.employmentType), href: `/applicant/jobs/${j.id}`, icon: BriefcaseBusiness, keys: [j.department, savedIds.includes(j.id) ? "saved" : undefined].filter((k): k is string => !!k), status: j.closed ? "Closed" : savedIds.includes(j.id) ? "Saved" : undefined }));
       }),
       listApplications().then((rows) => rows.map((a) => ({ id: a.id, group: "applications", title: a.role, subtitle: join(a.company, a.location), href: `/applicant/applications/${a.id}`, icon: Users, status: a.lifecycle === "draft" ? "Draft" : human(a.lifecycle) }))),
       listInterviews().then((rows) => rows.map((i) => ({ id: i.id, group: "interviews", title: i.title, subtitle: i.applicationLabel, href: "/applicant/interviews", icon: CalendarCheck2, status: human(i.status) }))),
-      Promise.resolve(listPublishedFor("applicants")).then((forms) => forms.map((f) => ({ id: f.id, group: "tests", title: f.title, subtitle: join(f.kind === "appraisal" ? "Appraisal" : "Test", f.clientName), href: `/applicant/tests/${f.id}`, icon: ClipboardList }))),
+      Promise.resolve(realApplicant ? [] : listPublishedFor("applicants")).then((forms) => forms.map((f) => ({ id: f.id, group: "tests", title: f.title, subtitle: join(f.kind === "appraisal" ? "Appraisal" : "Test", f.clientName), href: `/applicant/tests/${f.id}`, icon: ClipboardList }))),
       listDocuments().then((rows) => rows.map((d) => ({ id: d.id, group: "documents", title: d.name, subtitle: d.category === "pre-employment" ? "Pre-employment" : "Application", href: "/applicant/documents", icon: Files, status: human(d.status) }))),
       listNotifications().then((rows) => rows.map((n) => ({ id: n.id, group: "notifications", title: n.title, subtitle: n.detail, href: n.link?.href ?? "/applicant/notifications", icon: Bell, status: n.unread ? "Unread" : undefined }))),
       Promise.resolve(FAQS.map((f, i) => ({ id: `faq-${i}`, group: "help", title: f.q, subtitle: "Help and support", href: "/applicant/help", icon: CircleHelp, keys: f.keywords.split(" ") }))),
@@ -119,5 +120,6 @@ export const buildApplicantSearchProvider = (logout: () => void,live=false): Sea
 export function useApplicantSearchProvider(logout: () => void): SearchProvider {
   const stableLogout = useStableFn(logout);
   const live=useContext(LiveVacanciesContext);
-  return useMemo(() => buildApplicantSearchProvider(stableLogout,live), [stableLogout,live]);
+  const realApplicant=useIsLiveApplicant();
+  return useMemo(() => buildApplicantSearchProvider(stableLogout,live,realApplicant), [stableLogout,live,realApplicant]);
 }

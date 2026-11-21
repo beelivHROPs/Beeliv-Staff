@@ -12,7 +12,9 @@ import {
   getDraftForVacancy,
   getOrCreateDraft,
   getProfile,
+  isLiveApplicant,
   listApplications,
+  LiveApplicationFailure,
   saveApplicationStep,
   saveProfile,
   submitApplication,
@@ -67,7 +69,13 @@ const PROFILE_FORM_KEYS = ["fullName", "preferredName", "phone", "whatsapp", "em
 type Init =
   | { kind: "loading" }
   | { kind: "blocked"; reason: "closed" | "applied"; applicationId?: string }
-  | { kind: "ready"; applicationId: string };
+  | { kind: "ready"; applicationId: string }
+  | { kind: "error"; message: string };
+
+/** A live server refusal in plain words; anything unexpected gets one generic line. */
+function liveMessage(e: unknown): string {
+  return e instanceof LiveApplicationFailure ? e.message : "Something went wrong. Please try again.";
+}
 
 function locationFrom(address: string, state: string): string {
   const area = address.split(",").map((s) => s.trim()).filter(Boolean).pop() ?? "";
@@ -95,9 +103,10 @@ export function ApplyBody({ job }: { job: Job }) {
   const mainRef = useRef<HTMLElement>(null);
   const [savedAt, setSavedAt] = useState<string>(() => new Date().toISOString());
   // This vacancy's own screening questions (lib/applicant/screening.ts).
-  const questions = useMemo(() => questionsForJob(job), [job]);
+  const live = isLiveApplicant() || job.liveVacancy === true;
+  const questions = useMemo(() => (live ? [] : questionsForJob(job)), [job, live]);
   // The test this vacancy carries (if any): taken inside the Screening step and sent with the application.
-  const test = useApplyTest(job.testFormId, `${store.profile.id}:apply-${job.id}`);
+  const test = useApplyTest(live ? undefined : job.testFormId, `${store.profile.id}:apply-${job.id}`);
 
   const startedFor = useRef<string | null>(null);
   const pending = useRef<{ form: ApplyFormData | null; personal: PersonalProfileFields | null; profileDirty: boolean }>({
@@ -125,12 +134,20 @@ export function ApplyBody({ job }: { job: Job }) {
         setInit({ kind: "blocked", reason: "closed" });
         return;
       }
-      const draft = await getOrCreateDraft(job.id, {
-        role: job.role,
-        company: job.company,
-        location: job.location,
-        employmentType: job.employmentType,
-      });
+      let draft;
+      try {
+        draft = await getOrCreateDraft(job.id, {
+          role: job.role,
+          company: job.company,
+          location: job.location,
+          employmentType: job.employmentType,
+        });
+      } catch (e) {
+        if (e instanceof LiveApplicationFailure && e.code === "already_submitted") setInit({ kind: "blocked", reason: "applied", applicationId: e.message });
+        else if (e instanceof LiveApplicationFailure && e.code === "closed") setInit({ kind: "blocked", reason: "closed" });
+        else setInit({ kind: "error", message: liveMessage(e) });
+        return;
+      }
       setForm(draft.form);
       setPersonalState({
         applicantId: profile.applicantId,
@@ -170,7 +187,15 @@ export function ApplyBody({ job }: { job: Job }) {
     pending.current = { form: null, personal: null, profileDirty: false };
     if (!applicationId) return;
     const f = p.form ?? form;
-    if (f) await saveApplicationStep(applicationId, atStep, f);
+    if (f) {
+      try {
+        await saveApplicationStep(applicationId, atStep, f);
+      } catch (e) {
+        setSaving(false);
+        toast.add({ title: "We couldn't save your latest changes", description: liveMessage(e) });
+        return;
+      }
+    }
     if (p.profileDirty && f) {
       const per = p.personal ?? personal;
       await saveProfile({
@@ -300,6 +325,7 @@ export function ApplyBody({ job }: { job: Job }) {
         return;
       }
     }
+    try {
     await withPreloader("submit-application", { role: job.role, company: job.company }, async () => {
       await flush(step);
       // "Use existing ✓": the stored CV / photo / ID file are attached to this
@@ -307,6 +333,10 @@ export function ApplyBody({ job }: { job: Job }) {
       for (const d of reusable) if (d.doc) await attachExistingDocument(d.doc.id, applicationId);
       await submitApplication(applicationId);
     });
+    } catch (e) {
+      toast.add({ title: "Your application wasn't sent", description: liveMessage(e) });
+      return;
+    }
     setSubmitted(true);
     window.scrollTo(0, 0);
   }
@@ -315,6 +345,16 @@ export function ApplyBody({ job }: { job: Job }) {
 
   if (submitted && applicationId) return <ApplySuccess job={job} applicationId={applicationId} />;
   if (init.kind === "blocked") return <ApplyBlocked job={job} reason={init.reason} applicationId={init.applicationId} />;
+  if (init.kind === "error")
+    return (
+      <div className={`${CARD} mx-auto my-10 max-w-lg p-6 text-center`} role="alert">
+        <p className="text-[17px] font-semibold text-(--ap-ink)">We couldn&apos;t open this application</p>
+        <p className="mt-2 text-[15px] text-(--ap-ink-2)">{init.message}</p>
+        <Link href="/applicant/jobs" className={`${LINK_CLS} mt-4 inline-block`}>
+          Back to jobs
+        </Link>
+      </div>
+    );
   if (init.kind === "loading" || !form || !personal || !applicationId) return <ApplySkeleton />;
 
   const total = APPLY_STEPS.length;

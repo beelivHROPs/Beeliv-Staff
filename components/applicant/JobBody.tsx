@@ -39,7 +39,7 @@ export function JobBody({ job }: { job: Job }) {
   const submitted = store.applications.find((a) => a.vacancyId === job.id && a.lifecycle !== "draft");
   const draft = store.applications.find((a) => a.vacancyId === job.id && a.lifecycle === "draft");
   const closed = Boolean(job.closed);
-  const questions = useMemo(() => screeningQuestionsFor(job), [job]);
+  const questions = useMemo(() => (job.liveVacancy ? [] : screeningQuestionsFor(job)), [job]);
   const shownStatus: Job["status"] = closed && job.status === "Published" ? "Closed" : job.status;
 
   // "All jobs" returns to the list exactly as it was left (search, filters, Saved tab).
@@ -54,7 +54,7 @@ export function JobBody({ job }: { job: Job }) {
   // §2.9 job-posting facts. The first five are the ones a phone shows; the rest only on larger screens.
   const key: [string, string][] = [
     ["Salary", salaryLabel(job.salary)],
-    ["Type", `${job.employmentType} · ${job.shift} shift`],
+    ["Type", job.shift ? `${job.employmentType} · ${job.shift} shift` : job.employmentType],
     ["Applications close", job.deadline ? formatLongDate(job.deadline) : "Closed"],
     ["Experience", experienceLabel(job.experience)],
     ["Starts", formatLongDate(job.expectedResumption) || "To be confirmed"],

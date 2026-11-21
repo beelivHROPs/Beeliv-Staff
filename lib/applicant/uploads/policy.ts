@@ -30,10 +30,10 @@ export interface SlotPolicy {
 export const SLOT_POLICY: Readonly<Record<UploadSlot, SlotPolicy>> = {
   cv: {
     slot: "cv",
-    extensions: [".pdf", ".docx"],
-    accept: ".pdf,.docx",
-    hint: "PDF or Word (.docx), up to 5 MB",
-    kinds: "a PDF or Word (.docx) file",
+    extensions: [".pdf"],
+    accept: ".pdf",
+    hint: "PDF only, up to 5 MB",
+    kinds: "a PDF file",
   },
   "passport-photo": {
     slot: "passport-photo",

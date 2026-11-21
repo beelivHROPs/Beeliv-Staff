@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft } from "@/components/applicant/icons";
 import { toast } from "@/components/ui/toast";
 import { personaNames, useAvatarState } from "@/lib/applicant/avatar";
-import { saveProfile, useApplicantStore } from "@/lib/applicant/service";
+import { saveProfile, useApplicantStore, useApplicantNames } from "@/lib/applicant/service";
 import { FieldsForm } from "./ProfileBody";
 
 /**
@@ -17,7 +17,7 @@ export function ProfileEditBody() {
   const router = useRouter();
   const { profile } = useApplicantStore();
   const { gender } = useAvatarState();
-  const names = personaNames(gender);
+  const names = useApplicantNames(gender);
 
   const back = () => {
     if (window.history.length > 1) router.back();

@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { getApplicantJobs } from "@/lib/applicant/jobs";
+import { getApplicantJobs, type ApplicantJob } from "@/lib/applicant/jobs";
+import { sampleDataOn } from "@/lib/env/sample-data";
 import { OverviewBody } from "@/components/applicant/OverviewBody";
-import {publicJobsEnabled} from '@/lib/server/public-jobs/runtime';
-import {LiveJobsList} from '@/components/shared/jobs/LiveJobsList';
+import { publicJobsEnabled } from "@/lib/server/public-jobs/runtime";
+import { liveApplicantJobs } from "@/lib/server/public-jobs/applicant-jobs";
 
 export const metadata: Metadata = { title: "Overview" };
 
+/** The approved Home design always. Jobs: real vacancies when the jobs backend is on; sample only in preview; else none. */
 export default async function ApplicantOverviewPage() {
-  if(publicJobsEnabled())return <><h1 className="text-3xl font-semibold">Find your next role</h1><LiveJobsList params={{}} applicant/></>;
-  const jobs = await getApplicantJobs();
+  let jobs: ApplicantJob[] = [];
+  if (publicJobsEnabled()) {
+    try { jobs = await liveApplicantJobs(); } catch { jobs = []; }
+  } else if (sampleDataOn()) jobs = await getApplicantJobs();
   return <OverviewBody jobs={jobs} />;
 }

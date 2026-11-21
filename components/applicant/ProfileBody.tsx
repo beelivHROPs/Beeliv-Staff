@@ -22,7 +22,7 @@ import {
 import { toast } from "@/components/ui/toast";
 import { readAndResize, chooseAvatar, personaNames, setAvatarPhoto, useAvatarState } from "@/lib/applicant/avatar";
 import { GENDER_OPTIONS, NIGERIAN_STATES, SALARY_BANDS, SKILL_CATEGORIES } from "@/lib/applicant/reference-data";
-import { computeProfileCompleteness, saveProfile, useApplicantStore } from "@/lib/applicant/service";
+import { computeProfileCompleteness, saveProfile, useApplicantStore, useApplicantNames } from "@/lib/applicant/service";
 import { scrollToSection } from "@/lib/applicant/settings";
 import type { ApplicantProfile, EmploymentEntry } from "@/lib/applicant/types";
 import { formatIsoLabel, monthLabelToIso } from "@/lib/applicant/documentation";
@@ -75,7 +75,7 @@ export function ProfileBody() {
   const { profile } = store;
   const isNew = store.mode === "new";
   const { photo, gender } = useAvatarState();
-  const names = personaNames(gender);
+  const names = useApplicantNames(gender);
   const completeness = computeProfileCompleteness(profile, store.documents);
   const [editing, setEditing] = useState<string | null>(null);
   const router = useRouter();

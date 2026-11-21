@@ -13,7 +13,7 @@ import { Chip, DETAIL_TITLE, EmptyState } from "@/components/applicant/primitive
 import { CARD, IconTile } from "@/components/applicant/SectionCard";
 import { ScreenHeading } from "@/components/applicant/applications/shared";
 import { useIsClient } from "@/components/applicant/motion";
-import { useApplicantStore } from "@/lib/applicant/service";
+import { useApplicantStore, useIsLiveApplicant } from "@/lib/applicant/service";
 import { getForm, listPublishedFor, useFormsVersion, useHasSent } from "@/lib/forms/participant-store";
 import { estimateMinutes, statusOf, useDraft, type Draft, useDraftsFor, type TakerStatus } from "./taker";
 import { Column, TakeDone, TakeFlow, TakeSkeleton } from "./TakeFlow";
@@ -30,7 +30,8 @@ export function TestsListBody() {
   useFormsVersion();
   const { profile } = useApplicantStore();
   const isClient = useIsClient();
-  const tests = listPublishedFor("applicants");
+  const live = useIsLiveApplicant(); // real users: no tests exist yet (no sample tests)
+  const tests = live ? [] : listPublishedFor("applicants");
   const drafts = useDraftsFor(profile.id, tests.map((t) => t.id));
 
   return (
@@ -94,7 +95,8 @@ export function TestIntroBody({ id }: { id: string }) {
   const router = useRouter();
   const { profile } = useApplicantStore();
   const isClient = useIsClient();
-  const form = getForm(id);
+  const live = useIsLiveApplicant();
+  const form = live ? null : getForm(id);
   const { draft, update } = useDraft(profile.id, id);
   const sentElsewhere = useHasSent(profile.id, id);
 

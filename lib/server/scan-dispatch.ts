@@ -22,7 +22,12 @@ export function requestMailSend(fetcher: typeof fetch = fetch): Promise<boolean>
   return dispatch("send-auth-mail", fetcher);
 }
 
-async function dispatch(eventType: "scan-staff-documents" | "send-auth-mail", fetcher: typeof fetch): Promise<boolean> {
+/** Applicant lane remains separately gated in the private workflow. No document facts are sent. */
+export function requestApplicantDocumentScan(fetcher: typeof fetch = fetch): Promise<boolean> {
+  return dispatch("scan-applicant-documents", fetcher);
+}
+
+async function dispatch(eventType: "scan-staff-documents" | "scan-applicant-documents" | "send-auth-mail", fetcher: typeof fetch): Promise<boolean> {
   const token = process.env.GITHUB_SCAN_DISPATCH_TOKEN;
   const repository = process.env.GITHUB_SCAN_REPOSITORY;
   if (!token || !repository || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) return false;

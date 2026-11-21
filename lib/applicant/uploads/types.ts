@@ -173,5 +173,6 @@ export type UploadEvent =
   | { type: "lost-reply"; stage: Extract<UploadStage, "request" | "complete"> }
   | { type: "put-failed"; cause: "offline" | "network" | "expired" | "denied" }
   | { type: "status"; status: "checking" | "rejected" | "accepted" }
+  | { type: "status-expired" }
   | { type: "hydrate"; attempt: UploadAttempt; stage: "request" | "bytes" | "complete" | "checking" | "in-review" }
   | { type: "reset" };

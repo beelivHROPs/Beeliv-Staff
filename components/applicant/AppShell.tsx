@@ -32,7 +32,7 @@ import { newsreader } from "./fonts";
 import { SelectMenu } from "./SelectMenu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { personaNames, promoImage, useAvatarState } from "@/lib/applicant/avatar";
-import { getProfile, markNotificationRead, setMode, unreadNotificationsCount, useApplicantStore } from "@/lib/applicant/service";
+import { getProfile, markNotificationRead, setMode, unreadNotificationsCount, useApplicantStore, useApplicantNames, useIsLiveApplicant } from "@/lib/applicant/service";
 import { NotificationPopoverBody } from "@/components/shared/notifications/NotificationRow";
 import { fromApplicant } from "@/lib/notifications/adapters";
 import type { PrototypeMode } from "@/lib/applicant/types";
@@ -173,6 +173,7 @@ export function ModeSwitcher({ mode, compact }: { mode: PrototypeMode; compact?:
 
 function Sidebar({ pathname, unread }: { pathname: string; unread: number }) {
   const { gender } = useAvatarState();
+  const names = useApplicantNames(gender);
   const { applications, interviews, documents } = useApplicantStore();
   const ivRequests = useInterviewRequests();
   const appliedCount = appliedAttentionCount(applications, interviews, documents, ivRequests);
@@ -235,7 +236,7 @@ function Sidebar({ pathname, unread }: { pathname: string; unread: number }) {
       <Link href="/applicant/profile" className="mt-3 flex items-center gap-2.5 rounded-xl px-2 py-2 text-white hover:bg-white/7 min-[768px]:max-[1100px]:hidden">
         <Avatar size={36} />
         <span className="min-w-0 flex-1 leading-tight">
-          <b className="block truncate text-[14px]">{personaNames(gender).full}</b>
+          <b className="block truncate text-[14px]">{names.full}</b>
           <span className="block truncate text-[12px] text-white/62">Applicant</span>
         </span>
         <span className="text-white/62" aria-hidden="true">···</span>
@@ -303,7 +304,7 @@ export function useLogout() {
 
 function ProfileMenu() {
   const { gender } = useAvatarState();
-  const who = personaNames(gender);
+  const who = useApplicantNames(gender);
   const staff = useApplicantStore().profile.staffEntitlement.granted;
   const [open, setOpen] = useState(false);
   const logout = useLogout();
@@ -395,7 +396,9 @@ function MobileTopbar({ unread, title, pathname }: { unread: number; title: stri
   const { gender } = useAvatarState();
   const store = useApplicantStore();
   const home = pathname === "/applicant";
-  const first = store.applications.length ? personaNames(gender).first : store.profile.preferredName || personaNames(gender).first;
+  const names = useApplicantNames(gender);
+  const live = useIsLiveApplicant();
+  const first = live ? names.first : store.applications.length ? names.first : store.profile.preferredName || names.first;
   const segments = pathname.split("/").filter(Boolean);
   const backHref = segments.length > 2 ? `/${segments.slice(0, -1).join("/")}` : "/applicant";
   const search = <GlobalSearchButton provider={provider} themeClass={`applicant-shell ${newsreader.variable}`} className={topbarCircle} buttonLabel="Search" />;
