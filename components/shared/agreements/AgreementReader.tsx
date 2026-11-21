@@ -23,6 +23,7 @@ export function AgreementReader({
   version,
   body,
   onClose,
+  onPrimary,
   banner,
   meta,
   themeClass = "applicant-shell",
@@ -32,6 +33,8 @@ export function AgreementReader({
   version?: string | null;
   body: string | null;
   onClose: () => void;
+  /** Primary button action (defaults to onClose). Used by "Accept" to tick the agreement; X/backdrop only close. */
+  onPrimary?: () => void;
   /** Top banner, e.g. "Draft, not published". */
   banner?: ReactNode;
   /** One muted line under the title (publish date, hash). */
@@ -112,7 +115,7 @@ export function AgreementReader({
           )}
         </div>
         <div className="flex justify-end border-t border-(--ap-line-2) px-5 pt-3 pb-[calc(14px+env(safe-area-inset-bottom))] min-[768px]:px-6">
-          <button type="button" onClick={onClose} className="ap-btn ap-btn-p h-11 rounded-full px-6 text-[14px] font-semibold text-white!">
+          <button type="button" onClick={onPrimary ?? onClose} className="ap-btn ap-btn-p h-11 rounded-full px-6 text-[14px] font-semibold text-white!">
             {closeLabel}
           </button>
         </div>
@@ -127,7 +130,7 @@ export function AgreementReader({
  * has been opened and closed; the caller keeps the accept control disabled until then
  * (or while already accepted). Renders nothing when there is no wording to read.
  */
-export function ReadButton({ title, version, body, onRead, themeClass, className = "", label = "Read the full text", asLink = false }: { title: string; version?: string | null; body: string | null; onRead: () => void; themeClass?: string; label?: string; asLink?: boolean; className?: string }) {
+export function ReadButton({ title, version, body, onRead, onAccept, themeClass, className = "", label = "Read the full text", asLink = false }: { title: string; version?: string | null; body: string | null; onRead: () => void; /** When given, the reader's button says "Accept" and calls this (lead 2026-11-21). */ onAccept?: () => void; themeClass?: string; label?: string; asLink?: boolean; className?: string }) {
   const [open, setOpen] = useState(false);
   if (body === null) return null;
   return (
@@ -145,11 +148,16 @@ export function ReadButton({ title, version, body, onRead, themeClass, className
           version={version}
           body={body}
           themeClass={themeClass}
-          closeLabel="Done reading"
+          closeLabel={onAccept ? "Accept" : "Done reading"}
           onClose={() => {
             setOpen(false);
             onRead();
           }}
+          onPrimary={onAccept ? () => {
+            setOpen(false);
+            onRead();
+            onAccept();
+          } : undefined}
         />
       ) : null}
     </>
