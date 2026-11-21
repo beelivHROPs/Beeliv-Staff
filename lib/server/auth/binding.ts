@@ -15,6 +15,8 @@ export async function bindFreshSession(client: VerifyingClient, gateway: Binding
     p_app: app, p_session_id: claims.session_id, p_auth_user_id: userId,
     p_purpose: invitationHash ? "invitation" : "interactive", p_token_hash: invitationHash ?? null,
   });
+  // A definite "this person has no access to this app" is a normal answer, not an outage: say so plainly.
+  if (!result.error && result.data && typeof result.data === "object" && (result.data as Record<string, unknown>).ok === false && ["no_access","forbidden","not_found"].includes(String((result.data as Record<string, unknown>).reason))) throw new Error("auth_no_access");
   if (result.error || !result.data || typeof result.data !== "object" || (result.data as Record<string, unknown>).ok !== true) throw new Error("auth_session_binding_unavailable");
   const purpose = (result.data as Record<string, unknown>).purpose;
   if (purpose !== "interactive" && purpose !== "invitation" && purpose !== "setup") throw new Error("auth_session_binding_unavailable");
