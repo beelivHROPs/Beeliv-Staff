@@ -11,13 +11,13 @@
 export type PilotApp = "admin" | "client" | "staff";
 
 /** Route prefixes hidden during the pilot (a prefix also covers every route under it). Source: docs/MVP-FOCUS-REVIEW.md. */
+// Lead 2026-11-21: "we should use the nav and the things we built in the apps": every built screen is in the menus.
+// Screens not connected to real data yet show their own Preview / not-connected states. Add a prefix here to hide
+// a screen again.
 export const PILOT_HIDDEN: Record<PilotApp, readonly string[]> = {
-  // Attendance, Leave, Scheduling, Warnings (all under /workforce), SOPs & Training, Announcements.
-  admin: ["/admin/workforce", "/admin/sops-training", "/admin/announcements"],
-  // Attendance, Schedules, Documents & Compliance, Payroll, Analytics (and Compare), plus the QUESTIONABLE Recruitment / Candidates.
-  client: ["/client/attendance", "/client/schedules", "/client/compliance", "/client/payroll", "/client/analytics", "/client/recruitment"],
-  // Schedule, Attendance, Leave, SOPs & Training, Forms (QUESTIONABLE), Warnings & Records.
-  staff: ["/staff/schedule", "/staff/attendance", "/staff/leave", "/staff/sops-training", "/staff/forms", "/staff/records"],
+  admin: [],
+  client: [],
+  staff: [],
 };
 
 const ALL_HIDDEN: readonly string[] = [...PILOT_HIDDEN.admin, ...PILOT_HIDDEN.client, ...PILOT_HIDDEN.staff];
