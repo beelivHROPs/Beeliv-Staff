@@ -46,7 +46,7 @@ export async function signIn(input: Record<string, unknown>) {
   if (error) { await audit(app, "sign_in_failed"); throw providerError(error.code); }
   try {
     if (!data.user?.email_confirmed_at) throw new AuthFailure("email_unverified", 403);
-    const binding = await bindFreshSession(client, adminClient(app), app, data.user.id);
+    const binding = await bindFreshSession(client, adminClient(app), app, data.user.id).catch((e: unknown) => { throw e instanceof Error && e.message === "auth_no_access" ? new AuthFailure("no_access", 403) : e; });
     if (binding.purpose === "setup") {
       await setupForClient(client, app);
       await audit(app, "sign_in", data.user.id);
