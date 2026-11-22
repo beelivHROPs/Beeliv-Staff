@@ -1,27 +1,38 @@
-import { PageHeading } from "./PageHeading";
-import { EmptyState } from "./EmptyState";
+import { EmptyState, PageHeading } from "@/components/applicant/primitives";
+import { Clock3 } from "@/components/applicant/icons";
+import type { GlassName } from "@/components/shared/icons/GlassIcon";
 
 /**
- * Used for screens listed in docs/architecture/ui-ux-framework.md as required
- * navigation destinations that are not among the "major" wireframes built out
- * in this implementation slice. Keeps navigation link-safe (no 404s) without
- * pretending functionality exists that hasn't been implemented.
+ * "Coming soon" for a screen that is not connected to Beeliv records yet (lead rule 2026-11-21: real data or Coming
+ * soon, never sample data). Uses the SAME approved title and empty state as the live Admin, Client and Staff pages
+ * (components/applicant/primitives), with the approved GLASS picture that matches the page (never a flat icon), in each
+ * app's own colours.
  */
-export function ComingSoonScreen({
-  title,
-  description,
-}: {
-  title: string;
-  description?: string;
-}) {
+const GLASS_BY_TITLE: [RegExp, GlassName][] = [
+  [/job|vacanc/i, "jobs"],
+  [/leave/i, "leave"],
+  [/attendance|schedul|calendar|shift/i, "calendar"],
+  [/inbox|request/i, "inbox"],
+  [/sop|training/i, "sops"],
+  [/announce|notification/i, "notifications"],
+  [/warning|compliance|approval/i, "shield"],
+  [/record|payroll|document/i, "documents"],
+  [/recruit|application|candidate/i, "applications"],
+  [/form|test/i, "tests"],
+  [/assignment|client/i, "clients"],
+  [/report|analytic|activity/i, "activity"],
+  [/staff|people|team/i, "people"],
+  [/search/i, "search"],
+];
+
+export function ComingSoonScreen({ title, description, glass }: { title: string; description?: string; glass?: GlassName }) {
+  const g = glass ?? GLASS_BY_TITLE.find(([re]) => re.test(title))?.[1] ?? "help";
   return (
     <div>
-      <PageHeading title={title} description={description} />
-      <EmptyState
-        variant="default"
-        title="Coming soon"
-        description="This part of Beeliv is being connected. Real records will show here as soon as it is ready."
-      />
+      <PageHeading title={title} />
+      <div className="ap-card rounded-2xl">
+        <EmptyState icon={Clock3} glass={g} title="Coming soon" description={description ?? "This part of Beeliv is being connected. Real records will show here as soon as it is ready."} />
+      </div>
     </div>
   );
 }
