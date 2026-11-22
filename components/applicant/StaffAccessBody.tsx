@@ -13,7 +13,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { BriefcaseBusiness, Calendar, CalendarCheck2, Check, Clock3, FileText, CircleHelp, ScrollText, ShieldCheck, Sparkles, UserRound } from "@/components/applicant/icons";
 import { personaNames, useAvatarState } from "@/lib/applicant/avatar";
-import { useApplicantStore } from "@/lib/applicant/service";
+import { useApplicantStore, useApplicantNames } from "@/lib/applicant/service";
 import { markCelebrated, setSetupStep, setupDone, SETUP_TOTAL, STAFF_HUB_HOST, STAFF_HUB_URL, useStaffHubSetup, type SetupStep } from "@/lib/applicant/staff-access";
 import { formatDate } from "@/lib/applicant/time";
 import { SubmittedMark } from "./apply/SubmittedMark";
@@ -53,8 +53,9 @@ export function StaffAccessBody() {
   const { profile, applications } = useApplicantStore();
   const { gender } = useAvatarState();
   const setup = useStaffHubSetup();
+  const names = useApplicantNames(gender);
   const ent = profile.staffEntitlement;
-  const name = profile.preferredName || personaNames(gender).full.split(" ")[0];
+  const name = profile.preferredName || names.full.split(" ")[0];
   const done = setupDone(setup);
   const allDone = done === SETUP_TOTAL;
   // Celebrate on the first visit only (after that, a calm header).

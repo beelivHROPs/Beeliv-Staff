@@ -36,6 +36,8 @@ export type ApplicantJob = Omit<Job, "image" | "postedDaysAgo" | "state" | "clos
   daysSinceEnd: number;
   /** A test the vacancy carries, taken as part of the application (from the vacancy's testFormId). */
   testFormId?: string;
+  /** A REAL published vacancy (lib/applicant/live-jobs.ts): no sample screening, test or journey enrichment. */
+  liveVacancy?: boolean;
 };
 
 function build(j: SharedJob): ApplicantJob {

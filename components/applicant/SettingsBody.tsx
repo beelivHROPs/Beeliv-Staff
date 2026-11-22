@@ -1,5 +1,6 @@
 "use client";
 
+import { useApplicantNames } from "@/lib/applicant/service";
 import { useEffect, useState, type ReactNode } from "react";
 import { Bell, Download, Eye, LockKeyhole, LogOut, Mail, MessageSquareText, Pause, ShieldCheck, Sparkles, Trash2, UserRound, type LucideIcon } from "@/components/applicant/icons";
 import { toast } from "@/components/ui/toast";
@@ -44,7 +45,7 @@ export function SettingsBody() {
   const { gender } = useAvatarState();
   const settings = useApplicantSettings();
   const jobAlert = useJobAlert();
-  const email = personaNames(gender).email;
+  const email = useApplicantNames(gender).email;
   const [active, setActive] = useState(SECTIONS[0][0]);
 
   // Highlight the section currently in view (wireframe only did this on click).

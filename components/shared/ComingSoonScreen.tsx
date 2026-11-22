@@ -19,8 +19,8 @@ export function ComingSoonScreen({
       <PageHeading title={title} description={description} />
       <EmptyState
         variant="default"
-        title="Not yet implemented"
-        description="This screen's structure is reserved in the navigation per the Stage 1 UI/UX framework. Its data and interactions are Stage 2+ work."
+        title="Coming soon"
+        description="This part of Beeliv is being connected. Real records will show here as soon as it is ready."
       />
     </div>
   );

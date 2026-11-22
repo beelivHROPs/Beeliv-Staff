@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type {PublishedVacancy} from '@/lib/server/public-jobs/repository';
+import {applicationsEnabled} from '@/lib/server/applications/runtime';
 import {CheckList,FactGrid} from '@/components/applicant/jobs/JobDetailSections';
 /** Real content only; no sample journey, screening or schedule enrichment. */
 export function LiveJobDetail({job,applicant=false}:{job:PublishedVacancy;applicant?:boolean}){
@@ -20,6 +21,11 @@ export function LiveJobDetail({job,applicant=false}:{job:PublishedVacancy;applic
   {conditions.length?<section><h2 className="mb-3 text-xl font-semibold">Working conditions</h2><FactGrid rows={conditions}/></section>:null}
   {section('Benefits',job.benefits.map(b=>`${b.kind}: ${b.detail}`))}{section('Documents at application',job.requiredDocuments.atApplication)}{section('Documents after selection',job.requiredDocuments.afterSelection)}
   {job.recruitmentProcess.length?<section><h2 className="mb-3 text-xl font-semibold">Recruitment process</h2><ol className="list-inside list-decimal space-y-2">{job.recruitmentProcess.map((step,i)=><li key={i}>{step}</li>)}</ol></section>:null}
-  <p role="status" className="ap-card rounded-2xl p-4">{job.availability==='closed'?'This vacancy is no longer accepting applications.':'Online applications are not available yet. Please check back.'}</p>
+  {job.availability!=='closed'&&applicationsEnabled()
+   ?<div className="ap-card flex flex-wrap items-center gap-4 rounded-2xl p-5">
+     <Link href={applicant?`/applicant/apply?job=${encodeURIComponent(job.id)}`:`/signup?job=${encodeURIComponent(job.id)}`} className="ap-btn ap-btn-p">Apply for this job</Link>
+     {applicant?null:<Link href={`/login?job=${encodeURIComponent(job.id)}`} className="underline underline-offset-4">I already have an account</Link>}
+    </div>
+   :<p role="status" className="ap-card rounded-2xl p-4">{job.availability==='closed'?'This vacancy is no longer accepting applications.':'Online applications are not available yet. Please check back.'}</p>}
  </main>;
 }

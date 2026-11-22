@@ -49,7 +49,7 @@ export function JobChips({
       ) : null}
       <span className={`${chip} bg-[rgba(91,8,123,.06)] text-(--ap-ink-2)`}>{job.employmentType}</span>
       <span className={`${chip} bg-[rgba(91,8,123,.06)] text-(--ap-ink-2)`}>{job.department}</span>
-      {withShift ? <span className={`${chip} bg-[rgba(91,8,123,.06)] text-(--ap-ink-2)`}>{job.shift} shift</span> : null}
+      {withShift && job.shift ? <span className={`${chip} bg-[rgba(91,8,123,.06)] text-(--ap-ink-2)`}>{job.shift} shift</span> : null}
       {job.pay ? <span className={`${chip} bg-(--ap-ok-bg) text-(--ap-ok)`}>{job.pay}</span> : null}
     </div>
   );

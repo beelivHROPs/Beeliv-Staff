@@ -153,6 +153,7 @@ export function createUploadController(deps: ControllerDeps) {
       const res = await status.call(deps.getTransport(), { uploadId: attempt.uploadId });
       if (e.token !== token) return;
       if (res.ok) dispatch(slot, { type: "status", status: res.status });
+      else if (res.code === "expired") dispatch(slot, { type: "status-expired" });
     } catch {
       /* a failed read changes nothing; the file stays "checking" */
     }
@@ -272,6 +273,19 @@ export function createUploadController(deps: ControllerDeps) {
     },
 
     refresh,
+    /** Stop this provider instance without erasing safe same-session resume facts. */
+    dispose() {
+      for (const slot of UPLOAD_SLOTS) {
+        const entry = entries[slot];
+        entry.token += 1;
+        if (entry.timer) clearTimeout(entry.timer);
+        entry.timer = null;
+        entry.abort?.abort();
+        entry.abort = null;
+        entry.file = null;
+      }
+      listeners.clear();
+    },
   };
   return api;
 }

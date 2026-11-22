@@ -20,7 +20,7 @@ import type { Application, Interview } from "@/lib/applicant/types";
 import { describeApplicationStatus } from "@/lib/applicant/status";
 import { Award, Bell, Bookmark, Check, Eye, MapPin, Pencil, Search, Upload, UserRound, Video, type IconComponent } from "@/components/applicant/icons";
 import type { ApplicantJob as Job } from "@/lib/applicant/jobs";
-import { computeProfileCompleteness, useApplicantStore } from "@/lib/applicant/service";
+import { computeProfileCompleteness, useApplicantStore, useApplicantNames, useIsLiveApplicant } from "@/lib/applicant/service";
 import { formatDueLabel } from "@/lib/applicant/time";
 import { useInterviewRequests } from "@/lib/bridge/interview-requests";
 import { interviewView } from "@/lib/applicant/interview-state";
@@ -181,7 +181,9 @@ function DesktopGreeting() {
   const hello = useSyncExternalStore(subscribeNever, () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"; }, () => "Welcome");
   const { gender } = useAvatarState();
   const store = useApplicantStore();
-  const first = store.applications.length ? personaNames(gender).first : store.profile.preferredName || personaNames(gender).first;
+  const names = useApplicantNames(gender);
+  const live = useIsLiveApplicant();
+  const first = live ? names.first : store.applications.length ? names.first : store.profile.preferredName || names.first;
   return <p className="-mb-3 text-[17px] font-semibold text-(--ap-ink-2) max-[767px]:hidden">{hello}, {first}</p>;
 }
 

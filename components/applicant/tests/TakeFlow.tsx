@@ -7,6 +7,7 @@
  * Tests with a time limit show a timer (warning at 5 minutes, sent automatically at 0).
  * No score or right/wrong wording is ever shown to the person taking it.
  */
+import { useIsLiveApplicant } from "@/lib/applicant/service";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -83,7 +84,8 @@ export function TakeFlow(p: TakeFlowProps) {
   const [dir, setDir] = useState<"fwd" | "back">("fwd");
   const router = useRouter();
   const isClient = useIsClient();
-  const form = getForm(p.formId);
+  const live = useIsLiveApplicant();
+  const form = live ? null : getForm(p.formId);
   const { draft, update } = useDraft(p.takerId, p.formId);
   const sentElsewhere = useHasSent(p.takerId, p.formId);
   const [error, setError] = useState("");

@@ -124,6 +124,11 @@ export function transition(state: UploadState, event: UploadEvent): UploadState 
       return state;
     }
 
+    case "status-expired": {
+      const sent = sentOf(state);
+      return sent ? { kind: "expired", attempt: sent.attempt } : state;
+    }
+
     case "hydrate": {
       if (state.kind !== "idle") return state;
       const { attempt, stage } = event;

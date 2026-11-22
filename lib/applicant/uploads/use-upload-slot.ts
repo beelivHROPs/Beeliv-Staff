@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import type { PickedFile, SlotView } from "./controller";
 import { IDLE } from "./state";
-import { getUploadController } from "./runtime";
+import { useApplicantUploadController } from "./provider";
 import type { UploadSlot } from "./types";
 
 const SERVER_VIEW: SlotView = { state: IDLE };
 
 /** State and actions for one upload slot. State is shared by every component that asks for the same slot. */
 export function useUploadSlot(slot: UploadSlot) {
-  const c = getUploadController();
+  const c = useApplicantUploadController();
   const view = useSyncExternalStore(c.subscribe, () => c.getView(slot), () => SERVER_VIEW);
   useEffect(() => {
     c.hydrate(slot); // after mount, so server and first client render agree
@@ -29,7 +29,7 @@ export function useUploadSlot(slot: UploadSlot) {
 
 /** Read-only view of all three slots (for the Apply page summary). */
 export function useUploadSlotStates() {
-  const c = getUploadController();
+  const c = useApplicantUploadController();
   const cv = useSyncExternalStore(c.subscribe, () => c.getView("cv"), () => SERVER_VIEW);
   const photo = useSyncExternalStore(c.subscribe, () => c.getView("passport-photo"), () => SERVER_VIEW);
   const id = useSyncExternalStore(c.subscribe, () => c.getView("valid-id"), () => SERVER_VIEW);

@@ -24,12 +24,14 @@
  * useApplicantStore()'s effect. All mutations are client-only no-ops on the
  * server (guarded by `typeof window`).
  */
-import { useEffect, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 import { fromApplicant } from "@/lib/notifications/adapters";
 import type { SharedNotification } from "@/lib/notifications/types";
 import { addRequest, markApplied, readRequests, subscribeRequests, withdrawRequest } from "@/lib/bridge/interview-requests";
 import { requestBlock } from "@/lib/applicant/interview-state";
 import { getSeeds, type MockSeed } from "./mock-db";
+import * as liveApi from "./live-api";
+import { personaNames } from "./avatar";
 import { DOCUMENT_TYPES, PROFILE_CHECKLIST } from "./reference-data";
 import type {
   Application,
@@ -60,6 +62,120 @@ function seedFor(mode: PrototypeMode): MockSeed {
 
 // Wireframe default (`st.mode="active"`) — see mock-db.ts header comment.
 let state: MockState = { mode: "active", ...seedFor("active") };
+
+/* ------------------------------------------------------------------ */
+/* LIVE MODE (real applicants, lead 2026-11-21: "everything should be  */
+/* real data", no sample, no prototype). The store starts EMPTY with   */
+/* the signed-in person's own name/email/phone; applications come from */
+/* and go to /api/applications. Nothing is read from or written to     */
+/* localStorage, and no sample seed or mock bridge ever runs.          */
+/* ------------------------------------------------------------------ */
+export type LiveApplicantSeed = { personId: string; fullName: string; email: string; phone: string; applicationsOn: boolean };
+let live: LiveApplicantSeed | null = null;
+const revisions = new Map<string, number>();
+const saveChains = new Map<string, Promise<void>>();
+
+export class LiveApplicationFailure extends Error {
+  constructor(
+    public code: string,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+function failWith(e: liveApi.LiveApplicationError): never {
+  throw new LiveApplicationFailure(e.code, e.message);
+}
+
+/** Pure: the empty live state for this person (also the server/hydration snapshot). */
+export function liveSeedState(seed: LiveApplicantSeed): MockState {
+  const base = seedFor("new");
+  const first = seed.fullName.trim().split(/\s+/)[0] ?? "";
+  return {
+    mode: "new",
+    ...base,
+    profile: { ...base.profile, id: seed.personId, fullName: seed.fullName, preferredName: first, email: seed.email, phone: seed.phone, whatsapp: "", applicantId: "" },
+    applications: [],
+    documents: [],
+    interviews: [],
+    notifications: [],
+  };
+}
+
+/** Client only. Switches this tab's store to live mode before any child renders. */
+export function enterLive(seed: LiveApplicantSeed, snapshot: MockState) {
+  if (typeof window === "undefined" || live) return;
+  live = seed;
+  hydrated = true; // never load the sample store from localStorage
+  state = snapshot;
+  void refreshLiveApplications();
+}
+export function isLiveApplicant(): boolean {
+  return live !== null;
+}
+export function liveApplicationsOn(): boolean {
+  return live?.applicationsOn === true;
+}
+
+function upsert(app: Application) {
+  const exists = state.applications.some((a) => a.id === app.id);
+  setState({ ...state, applications: exists ? state.applications.map((a) => (a.id === app.id ? app : a)) : [app, ...state.applications] });
+}
+
+async function refreshLiveApplications(): Promise<void> {
+  if (!live?.applicationsOn) return;
+  const r = await liveApi.listMine(1, 50);
+  if (!r.ok) return;
+  const blank = blankForm(state.profile);
+  const submitted = r.value.items.map((d) => liveApi.fromApplicationDto(d, state.profile.id, blank));
+  const drafts = state.applications.filter((a) => a.lifecycle === "draft" && !submitted.some((x) => x.id === a.id));
+  setState({ ...state, applications: [...drafts, ...submitted] });
+}
+
+function liveDraft(d: liveApi.DraftDto, job: JobSnapshot): Application {
+  revisions.set(d.applicationId, d.revision);
+  return {
+    id: d.applicationId,
+    applicantId: state.profile.id,
+    vacancyId: d.vacancyId,
+    role: job.role,
+    company: job.company,
+    location: job.location,
+    employmentType: job.employmentType,
+    lifecycle: "draft",
+    stage: -1,
+    stageDates: [],
+    submittedAt: null,
+    updatedAt: d.updatedAt,
+    draftPercent: 0,
+    form: liveApi.fromWireForm(blankForm(state.profile), d.form),
+    next: { label: "Continue your application", detail: "Saved draft", ctaLabel: "Continue application", href: `/applicant/apply?job=${d.vacancyId}` },
+    activity: [{ title: "Draft started", when: d.updatedAt }],
+  };
+}
+
+/** Saves run one after another per application; a stale revision (another tab saved) is retried once on top. */
+async function liveSave(applicationId: string, form: ApplyFormData): Promise<void> {
+  const prev = saveChains.get(applicationId) ?? Promise.resolve();
+  const next = prev
+    .catch(() => undefined)
+    .then(async () => {
+      const rev = revisions.get(applicationId);
+      if (rev === undefined) failWith({ code: "stale", message: "This application changed. Reload before making another change." });
+      let r = await liveApi.saveDraft(applicationId, rev, form);
+      if (!r.ok && r.error.code === "stale") {
+        const g = await liveApi.getDraft(applicationId);
+        if (g.ok && g.value.state === "open") {
+          revisions.set(applicationId, g.value.draft.revision);
+          r = await liveApi.saveDraft(applicationId, g.value.draft.revision, form);
+        }
+      }
+      if (!r.ok) failWith(r.error);
+      revisions.set(applicationId, r.value.revision);
+    });
+  saveChains.set(applicationId, next);
+  return next;
+}
 // The state the server rendered with. React hydrates with getServerSnapshot, so the browser must start
 // from this and only then switch to the saved (localStorage) state; returning the live state here made
 // the first client render differ from the server HTML (hydration mismatch).
@@ -78,7 +194,7 @@ function setState(next: MockState) {
 }
 
 function persist() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || live) return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
@@ -118,9 +234,33 @@ function getServerSnapshot() {
 }
 
 /** Live, reactive read access to the whole mock store. */
+/** Live seed state from ApplicantLiveBoot (server-built). Present = live: the server render and hydration use it, never a sample. */
+export const LiveApplicantContext = createContext<MockState | null>(null);
+
+/** True for a real applicant (live deployment). Hydration-safe: the server knows it too. */
+export function useIsLiveApplicant(): boolean {
+  return useContext(LiveApplicantContext) !== null;
+}
+
+/**
+ * The name/email to show for the signed-in person. Live: their OWN details only, never a sample persona.
+ * Preview: the wireframe persona (Sarah/David) as before.
+ */
+export function useApplicantNames(gender: "f" | "m") {
+  const liveSnapshot = useContext(LiveApplicantContext);
+  const store = useApplicantStore();
+  if (!liveSnapshot) return personaNames(gender);
+  const full = store.profile.fullName.trim();
+  const parts = full.split(/\s+/).filter(Boolean);
+  const initials = ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+  return { first: store.profile.preferredName || parts[0] || "", full, legal: full, email: store.profile.email, initials };
+}
+
 export function useApplicantStore(): MockState {
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const liveSnapshot = useContext(LiveApplicantContext);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, liveSnapshot ? () => liveSnapshot : getServerSnapshot);
   useEffect(() => {
+    if (live) return; // live mode: no sample storage, no mock bridges
     hydrateFromStorage();
     drainResubmissionInbox();
     absorbInterviewOutcomes();
@@ -295,7 +435,7 @@ function nowIso(): string {
 /* ------------------------------------------------------------------ */
 
 export async function setMode(mode: PrototypeMode): Promise<void> {
-  if (mode === state.mode) return;
+  if (live || mode === state.mode) return;
   setState({ mode, ...seedFor(mode) });
 }
 
@@ -345,11 +485,18 @@ export function computeProfileCompleteness(
 /* ------------------------------------------------------------------ */
 
 export async function listApplications(): Promise<Application[]> {
+  if (live) await refreshLiveApplications();
   return state.applications;
 }
 
 export async function getApplication(id: string): Promise<Application | null> {
-  return state.applications.find((a) => a.id === id) ?? null;
+  const local = state.applications.find((a) => a.id === id) ?? null;
+  if (local || !live?.applicationsOn) return local;
+  const r = await liveApi.readMine(id);
+  if (!r.ok) return null;
+  const app = liveApi.fromApplicationDto(r.value, state.profile.id, blankForm(state.profile));
+  upsert(app);
+  return app;
 }
 
 export function getApplicationSync(id: string): Application | null {
@@ -396,6 +543,18 @@ export type JobSnapshot = { role: string; company: string; location: string; emp
  * twice, or signing up then landing here, never creates a duplicate draft.
  */
 export async function getOrCreateDraft(vacancyId: string, job: JobSnapshot): Promise<Application> {
+  if (live) {
+    if (!live.applicationsOn) failWith({ code: "unavailable", message: "Applications aren't open yet. Please check back soon." });
+    const r = await liveApi.openDraft(vacancyId);
+    if (!r.ok) failWith(r.error);
+    if (r.value.state === "submitted") {
+      await refreshLiveApplications();
+      throw new LiveApplicationFailure("already_submitted", r.value.applicationId);
+    }
+    const app = liveDraft(r.value.draft, job);
+    upsert(app);
+    return app;
+  }
   const existing = getDraftForVacancy(vacancyId);
   if (existing) return existing;
 
@@ -453,12 +612,34 @@ export async function saveApplicationStep(
     ...state,
     applications: state.applications.map((a) => (a.id === applicationId ? updated : a)),
   });
+  if (live) await liveSave(applicationId, updated.form);
   return updated;
 }
 
 export async function submitApplication(applicationId: string): Promise<Application | null> {
   const app = getApplicationSync(applicationId);
   if (!app) return null;
+  if (live) {
+    await (saveChains.get(applicationId) ?? Promise.resolve()).catch(() => undefined);
+    const rev = revisions.get(applicationId);
+    if (rev === undefined) failWith({ code: "stale", message: "This application changed. Reload before trying again." });
+    const r = await liveApi.submit(applicationId, rev);
+    if (!r.ok) failWith(r.error);
+    revisions.set(applicationId, r.value.revision);
+    const done: Application = {
+      ...app,
+      lifecycle: "submitted",
+      stage: 0,
+      stageDates: [r.value.submittedAt, null, null, null, null, null, null, null],
+      submittedAt: r.value.submittedAt,
+      updatedAt: r.value.submittedAt,
+      draftPercent: undefined,
+      next: null,
+      activity: [{ title: "Application submitted", when: r.value.submittedAt }],
+    };
+    upsert(done);
+    return done;
+  }
   const updated: Application = {
     ...app,
     lifecycle: "submitted",
