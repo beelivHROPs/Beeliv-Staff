@@ -8,13 +8,14 @@ import {APPROVED_APPLICATION_UPLOAD_POLICY} from './validation';
 import {privateDocumentGateway} from './gateway';
 import type {UploadRequestDependencies} from './request-service';
 import type {CompletionDependencies} from './completion-service';
+import type {SummaryDependencies} from './summary-service';
 import type {UploadStatusDependencies} from './status-service';
 
 /** No route selects this runtime yet. All four readiness flags are absent/disabled. */
-export function privateDocumentRuntime():{origin:string;request:UploadRequestDependencies;completion:CompletionDependencies;status:UploadStatusDependencies}{
+export function privateDocumentRuntime():{origin:string;request:UploadRequestDependencies;completion:CompletionDependencies;status:UploadStatusDependencies;summary:SummaryDependencies}{
  const enabled=['PRIVATE_DOCUMENTS_BACKEND_ENABLED','PRIVATE_DOCUMENTS_SCHEMA_READY','PRIVATE_DOCUMENTS_STORAGE_READY','PRIVATE_DOCUMENTS_SCANNER_READY'].every(key=>process.env[key]==='true');
  const disabled=async():Promise<never>=>{throw new Error('private_upload_unavailable');};
- if(!enabled)return {origin:'',request:{enabled:false,policy:APPROVED_APPLICATION_UPLOAD_POLICY,storageOrigin:'',authOrigin:'',now:()=>new Date(),verifyIdentity:disabled,consumeLimit:disabled,fingerprint:()=>'',reserve:disabled,signUpload:disabled},completion:{enabled:false,verifyIdentity:disabled,consumeLimit:disabled,enqueue:disabled},status:{enabled:false,audience:'applicant',verifyIdentity:disabled,consumeLimit:disabled,status:disabled}};
+ if(!enabled)return {origin:'',request:{enabled:false,policy:APPROVED_APPLICATION_UPLOAD_POLICY,storageOrigin:'',authOrigin:'',now:()=>new Date(),verifyIdentity:disabled,consumeLimit:disabled,fingerprint:()=>'',reserve:disabled,signUpload:disabled},completion:{enabled:false,verifyIdentity:disabled,consumeLimit:disabled,enqueue:disabled},status:{enabled:false,audience:'applicant',verifyIdentity:disabled,consumeLimit:disabled,status:disabled},summary:{enabled:false,verifyIdentity:disabled,consumeLimit:disabled,summary:disabled}};
  const config=authConfig('talent');
  const server=adminClient('talent');
  const gateway=privateDocumentGateway({
@@ -39,5 +40,5 @@ export function privateDocumentRuntime():{origin:string;request:UploadRequestDep
  return {origin:config.origin,request:{enabled:true,policy:APPROVED_APPLICATION_UPLOAD_POLICY,storageOrigin:config.url,authOrigin:config.url,now:()=>new Date(),verifyIdentity,consumeLimit,
   fingerprint:request=>{const key=process.env.PUBLIC_ENQUIRY_RATE_LIMIT_SECRET;if(!key||key.length<32)throw new Error('private_upload_unavailable');return createHmac('sha256',key).update('private-document:initiate:').update(JSON.stringify(request)).digest('hex');},
   reserve:async args=>await gateway.reserve(args),signUpload:gateway.signUpload,
- },completion:{enabled:true,verifyIdentity,consumeLimit,enqueue:async args=>await gateway.enqueue(args)},status:{enabled:true,audience:'applicant',verifyIdentity,consumeLimit,status:gateway.status}};
+ },completion:{enabled:true,verifyIdentity,consumeLimit,enqueue:async args=>await gateway.enqueue(args)},status:{enabled:true,audience:'applicant',verifyIdentity,consumeLimit,status:gateway.status},summary:{enabled:true,verifyIdentity,consumeLimit,summary:gateway.summary}};
 }

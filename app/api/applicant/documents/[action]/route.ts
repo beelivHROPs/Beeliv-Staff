@@ -5,6 +5,8 @@ import { requestPrivateUpload } from "@/lib/server/private-documents/request-ser
 import { completePrivateUpload } from "@/lib/server/private-documents/completion-service";
 import { getPrivateUploadStatus } from "@/lib/server/private-documents/status-service";
 
+import { getApplicantDocumentSummary } from '@/lib/server/private-documents/summary-service';
+
 export const runtime = "nodejs";
 /**
  * Applicant (Talent session, applicant entitlement) OWN private uploads: request (signed upload slot), complete
@@ -19,6 +21,7 @@ export async function POST(request: Request, context: { params: Promise<{ action
       enabled: rt.request.enabled,
       origin: rt.origin,
       actions: {
+        summary: (input) => getApplicantDocumentSummary(input, rt.summary),
         request: (input) => requestPrivateUpload(input, rt.request),
         complete: async (input) => {
           const result = await completePrivateUpload(input, rt.completion);

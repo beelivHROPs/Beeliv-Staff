@@ -70,7 +70,7 @@ export default async function ApplicantLayout({ children }: LayoutProps<"/">) {
       <noscript>
         <style>{`.applicant-shell [data-ap-reveal]{opacity:1!important;transform:none!important;clip-path:none!important}`}</style>
       </noscript>
-      {open ? <ApplicantUploadProvider config={uploads}>{seed ? <ApplicantLiveBoot seed={seed}><AppShell liveVacancies={publicJobsEnabled()}>{children}</AppShell></ApplicantLiveBoot> : <AppShell liveVacancies={publicJobsEnabled()}>{children}</AppShell>}</ApplicantUploadProvider> : <AreaNotOpen siteUrl={publicSiteUrl()} />}
+      {open ? <ApplicantUploadProvider key={uploads.mode === "live" ? `live:${uploads.sessionScope}` : uploads.mode} config={uploads}>{seed ? <ApplicantLiveBoot seed={seed}><AppShell liveVacancies={publicJobsEnabled()}>{children}</AppShell></ApplicantLiveBoot> : <AppShell liveVacancies={publicJobsEnabled()}>{children}</AppShell>}</ApplicantUploadProvider> : <AreaNotOpen siteUrl={publicSiteUrl()} />}
     </div>
   );
 }
