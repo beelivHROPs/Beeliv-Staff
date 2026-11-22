@@ -304,6 +304,7 @@ function AcceptForm({
         return;
       case "weak_password":
       case "validation_failed":
+      case "phone_in_use":
         // Rejected before anything was created: inputs stay so they can be fixed.
         setSummary({ title: res.error.message, items: [] });
         setSummaryKey((k) => k + 1);
