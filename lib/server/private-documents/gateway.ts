@@ -36,6 +36,7 @@ export function privateDocumentGateway(ports:PrivateDocumentPorts){
   status:(args:{actorUid:string;sessionId:string;uploadId:string}):PromiseLike<Reply>=>ports.rpc('private_document_status',{
    p_actor_uid:args.actorUid,p_session_id:args.sessionId,p_upload_id:args.uploadId,
   }),
+  summary:(args:{actorUid:string;sessionId:string}):PromiseLike<Reply>=>ports.rpc('private_document_applicant_summary',{p_actor_uid:args.actorUid,p_session_id:args.sessionId}),
   signUpload:async(input:{bucket:string;objectKey:string;upsert:false}):Promise<{url:string;expiresAt:string}>=>{
    if(input.bucket!=='applicant-document-quarantine'||input.upsert!==false||
     !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\/source\.(pdf|docx|jpg|jpeg|png)$/.test(input.objectKey))throw new Error('private_upload_unavailable');

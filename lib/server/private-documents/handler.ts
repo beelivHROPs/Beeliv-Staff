@@ -1,8 +1,9 @@
 /** HTTP boundary shared by separately authorized document services. File bytes use private Storage. */
+import { selectSummaryItems } from './summary-service';
 export type DocumentAction = 'request' | 'complete' | 'status';
 type FailureCode = 'unavailable' | 'unauthenticated' | 'no_access' | 'invalid_request' | 'rate_limited' | 'conflict' | 'expired' | 'limit_reached' | 'outcome_unknown';
 type Result = { ok: true; [key: string]: unknown } | { ok: false; code: FailureCode; requestId?: string; fields?: Record<string, string> };
-export type DocumentActions = Record<DocumentAction, (input: unknown) => Promise<Result>>;
+export type DocumentActions = Record<DocumentAction, (input: unknown) => Promise<Result>> & { summary?: (input: unknown) => Promise<Result> };
 const HEADERS = { 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' };
 const MAX_BYTES = 4096;
 const STATUS: Record<FailureCode, number> = { unavailable: 503, unauthenticated: 401, no_access: 403, invalid_request: 400, rate_limited: 429, conflict: 409, expired: 410, limit_reached: 422, outcome_unknown: 503 };
@@ -37,20 +38,24 @@ async function body(request: Request): Promise<unknown> {
 export async function handlePrivateDocument(request: Request, action: string, config: { enabled: boolean; origin: string; actions: DocumentActions }): Promise<Response> {
   if (!config.enabled) return failure('unavailable');
   if (request.method !== 'POST') return Response.json({ ok: false }, { status: 405, headers: { ...HEADERS, Allow: 'POST' } });
-  if (!['request', 'complete', 'status'].includes(action)) return Response.json({ ok: false }, { status: 404, headers: HEADERS });
+  if (!['request', 'complete', 'status'].includes(action) && !(action === 'summary' && config.actions.summary)) return Response.json({ ok: false }, { status: 404, headers: HEADERS });
   let target: URL;
   try { target = new URL(request.url); } catch { return failure('no_access'); }
   if (!config.origin || target.origin !== config.origin || request.headers.get('origin') !== config.origin || request.headers.get('sec-fetch-site') === 'cross-site') return failure('no_access');
   let input: unknown;
   try { input = await body(request); } catch { return failure('invalid_request'); }
   const requestId = input && typeof input === 'object' && 'requestId' in input && typeof input.requestId === 'string' ? input.requestId : undefined;
-  const uncertain = () => failure(action === 'status' ? 'unavailable' : 'outcome_unknown', requestId);
+  const uncertain = () => failure((action === 'status' || action === 'summary') ? 'unavailable' : 'outcome_unknown', requestId);
   try {
     // Callbacks are server-owned typed services that select their own response DTOs, never raw RPCs.
-    const result = await config.actions[action as DocumentAction](input);
+    const result = await (action === 'summary' ? config.actions.summary! : config.actions[action as DocumentAction])(input);
     if (!result || typeof result !== 'object') return uncertain();
     if (result.ok === false) return failure(Object.hasOwn(STATUS, result.code) ? result.code : 'unavailable', result.requestId);
     if (result.ok !== true) return uncertain();
+    if (action === 'summary') {
+      const items = selectSummaryItems(result.items);
+      return items ? Response.json({ ok: true, items }, { headers: HEADERS }) : uncertain();
+    }
     const statuses = action === 'request' ? ['awaiting-bytes'] : action === 'complete' ? ['checking'] : ['awaiting-bytes', 'checking', 'available', 'rejected', 'expired'];
     if (typeof result.uploadId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(result.uploadId) || typeof result.status !== 'string' || !statuses.includes(result.status)) return uncertain();
     const allowed = action === 'request' ? ['ok', 'uploadId', 'status', 'uploadUrl', 'uploadUrlExpiresAt', 'completeBefore', 'replayed']
