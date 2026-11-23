@@ -5,6 +5,7 @@
  * Sensitive inputs go to the transport body only; this file never logs, keeps or echoes them.
  * Only relative imports so it can be unit-tested offline.
  */
+import { liveAttendanceHistory, liveCheck, liveHomeShifts, liveSchedule, liveToday } from "../workforce-live";
 import type { AdapterEvent, StaffAdapter } from "../adapter";
 import { enrollmentCall, enrollmentWrite, StaffNotConnectedError } from "../enrollment-transport";
 import { onboardingFromChecklist, type EnrollmentChecklist } from "../onboarding-checklist";
@@ -55,17 +56,22 @@ async function getEntitlements(): Promise<Entitlements> {
  * "onboarding" only while a profile item is still open (otherwise "active"). Everything else is empty.
  */
 async function getStaffHome(): Promise<StaffHome> {
-  const checklist = await enrollmentCall<EnrollmentChecklist>("checklist-get");
+  const [checklist, today, shifts] = await Promise.all([
+    enrollmentCall<EnrollmentChecklist>("checklist-get"),
+    // Shifts and attendance are real (workforce-shifts-attendance.sql); if they can't load, Home still opens with none.
+    liveToday().catch(() => ({ state: "no-shift" as const, shift: null, checkedInAt: null, checkedOutAt: null, attentionReason: null })),
+    liveHomeShifts().catch(() => ({ todaysShifts: [], upcoming: [], recentAttendance: [] })),
+  ]);
   const onboarding = onboardingFromChecklist(checklist);
   const open = onboarding.some((i) => !i.done);
   return {
     profile: { id: "", staffId: "", firstName: "", lastName: "", preferredName: null, email: "", phone: null, avatarUrl: null, roleLabel: "", accountStatus: open ? "onboarding" : "active" },
     assignment: null,
-    today: { state: "no-shift", shift: null, checkedInAt: null, checkedOutAt: null, attentionReason: null },
-    todaysShifts: [],
+    today,
+    todaysShifts: shifts.todaysShifts,
     requiredActions: [],
-    upcoming: [],
-    recentAttendance: [],
+    upcoming: shifts.upcoming,
+    recentAttendance: shifts.recentAttendance,
     leave: [],
     leaveSummary: null,
     learning: [],
@@ -87,9 +93,9 @@ export const liveStaffAdapter: StaffAdapter = {
   getNavCounts: async () => ({}),
   getCurrentAssignment: () => notConnected(),
   getAssignmentHistory: () => notConnected(),
-  getSchedule: () => notConnected(),
-  getTodayAttendance: () => notConnected(),
-  getAttendanceHistory: () => notConnected(),
+  getSchedule: (range) => liveSchedule(range),
+  getTodayAttendance: () => liveToday(),
+  getAttendanceHistory: () => liveAttendanceHistory(),
   getLeaveRequests: () => notConnected(),
   getStaffDocuments: getLiveStaffDocuments,
   getSOPs: () => notConnected(),
@@ -102,8 +108,8 @@ export const liveStaffAdapter: StaffAdapter = {
   getEmployment: () => enrollmentCall<StaffEmployment>("employment-get"),
   getSensitiveStatus: () => enrollmentCall<StaffSensitiveStatus>("sensitive-status"),
 
-  checkIn: () => notConnected(),
-  checkOut: () => notConnected(),
+  checkIn: () => wrote(() => liveCheck("in")),
+  checkOut: () => wrote(() => liveCheck("out")),
   requestLeave: () => notConnected(),
   cancelLeaveRequest: () => notConnected(),
   uploadStaffDocument: (slot, file) => wrote(() => sendLiveStaffDocument(slot, file)),
