@@ -4,8 +4,8 @@ import { asRecord, authFailure, type AuthWireFailure } from "./wire";
 export type InvitationKind = "client" | "staff" | "internal";
 export type InvitationPreview = { state: "unavailable" } | { state: "valid-new-account" | "valid-existing-account"; kind: InvitationKind; emailMasked: string };
 export type InvitationPreviewResult = { ok: true; preview: InvitationPreview } | AuthWireFailure;
-export type InvitationAcceptInput = { portal: Portal; token: string; password: string; email?: string; profile?: { fullName: string; phone: string } };
-export type InvitationAcceptResult = { ok: true; status: "completed"; kind: InvitationKind; destination: string; accessState?: "pending-setup" | "pending-approval" | "active" } | AuthWireFailure;
+export type InvitationAcceptInput = { portal: Portal; token: string; password: string; email?: string; profile?: { fullName: string; phone: string }; code?: string };
+export type InvitationAcceptResult = { ok: true; status: "completed"; kind: InvitationKind; destination: string; accessState?: "pending-setup" | "pending-approval" | "active" } | { ok: true; status: "code_sent"; kind: InvitationKind; emailMasked: string } | AuthWireFailure;
 function kindForPortal(portal: Portal): InvitationKind { return portal === "client" ? "client" : portal === "admin" ? "internal" : "staff"; }
 export function portalDestination(value: unknown, portal: Portal): value is string {
   if (typeof value !== "string" || value.length > 2000 || !value.startsWith("/") || value.startsWith("//") || /[\\\u0000-\u0020]/.test(value) || /%(?:2f|5c|00|0a|0d)/i.test(value)) return false;
@@ -26,6 +26,7 @@ export function parseInvitationAcceptance(value: unknown, portal: Portal): Invit
   const body = asRecord(value);
   if (body?.ok === false) return authFailure(body, "outcome_unknown");
   if (body?.accessState !== undefined && !["pending-setup","pending-approval","active"].includes(String(body.accessState))) return authFailure(undefined, "outcome_unknown");
+  if (body?.ok === true && body.status === "code_sent" && body.kind === kindForPortal(portal) && typeof body.emailMasked === "string" && body.emailMasked.length <= 120) return { ok: true, status: "code_sent", kind: kindForPortal(portal), emailMasked: body.emailMasked };
   if (body?.ok === true && body.status === "completed" && body.kind === kindForPortal(portal) && portalDestination(body.destination, portal)) return { ok: true, status: "completed", kind: kindForPortal(portal), destination: body.destination, ...(body.accessState === undefined ? {} : { accessState: body.accessState as "pending-setup" | "pending-approval" | "active" }) };
   return authFailure(undefined, "outcome_unknown");
 }

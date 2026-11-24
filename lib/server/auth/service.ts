@@ -128,9 +128,20 @@ export async function acceptInvitation(input: Record<string, unknown>): Promise<
     const { data: taken, error: phoneError } = await adminClient(app).from("auth_people").select("id").eq("phone", phone).neq("email", record.email.toLowerCase()).limit(1);
     if (phoneError) throw new AuthFailure("unavailable", 503);
     if (taken && taken.length) throw new AuthFailure("phone_in_use", 409);
-    // Email possession is proven by the high-entropy, emailed business token. Never set/reset an existing user's password.
-    const { error } = await adminClient(app).auth.admin.createUser({ email: record.email, password, email_confirm: true, user_metadata: { full_name: name, phone } });
-    if (error) throw providerError(error.code);
+    // Lead 2026-11-24: the invitee must PROVE the invited email (a copied link alone is not enough).
+    // Step 1 (no code): Supabase emails a 6-digit code; no account or person record exists until it is verified
+    // (auth_link_verified_identity only links a CONFIRMED email). Step 2 (code): verify, then set the password.
+    const code = typeof input.code === "string" ? input.code.trim() : "";
+    if (!code) {
+      const { error: otpError } = await client.auth.signInWithOtp({ email: record.email, options: { shouldCreateUser: true, data: { full_name: name, phone } } });
+      if (otpError) throw otpError.code === "over_email_send_rate_limit" ? new AuthFailure("rate_limited", 429, 60) : providerError(otpError.code);
+      return { ok: true, status: "code_sent", kind: record.kind, emailMasked: maskEmail(record.email) };
+    }
+    if (!/^\d{6}$/.test(code)) throw new AuthFailure("invalid_code", 400);
+    const { data: verified, error: verifyError } = await client.auth.verifyOtp({ email: record.email, token: code, type: "email" });
+    if (verifyError || !verified.user?.email_confirmed_at) throw new AuthFailure("invalid_code", 400);
+    const { error: passwordError } = await client.auth.updateUser({ password, data: { full_name: name, phone } });
+    if (passwordError) throw providerError(passwordError.code);
   }
   const { data, error } = await client.auth.signInWithPassword({ email: record.email, password });
   if (error || !data.user?.email_confirmed_at) throw new AuthFailure("invalid_credentials", 401);

@@ -33,6 +33,8 @@ export type InviteInput = {
   password: string;
   email?: string;
   profile?: { fullName: string; phone: string };
+  /** The 6-digit email code (second step for a new account). */
+  code?: string;
 };
 
 const ref = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : "00000000-0000-4000-8000-000000000000");

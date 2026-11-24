@@ -57,6 +57,7 @@ import { AuthField, AuthPhoneField, PasswordField, PasswordHint, SubmitButton } 
 import { InvitationUnavailable } from "./InviteStates";
 import { AuthFoot, AuthHeading } from "./parts";
 import { StatusPanel } from "./StatusPanel";
+import { CodeBoxes } from "@/components/shared/auth/CodeBoxes";
 
 /** The only previews this screen can be given. */
 export type ValidInvitation = Extract<InvitationPreview, { state: "valid-new-account" | "valid-existing-account" }>;
@@ -197,6 +198,9 @@ function AcceptForm({
   const unknown = showCheckCompletion(flow) ? flow.unknown : null;
   const [limit, setLimit] = useState<number | null>(null);
   const [success, setSuccess] = useState(false);
+  /** Email proof (lead 2026-11-24): after the details are accepted, a 6-digit code is emailed to the invited address. */
+  const [codeSentTo, setCodeSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState("");
   /** "Check completion" (observation only): in flight, its latest plain-wording result, its own rate limit. */
   const [checking, setChecking] = useState(false);
   const [checkNote, setCheckNote] = useState<CheckNote | null>(null);
@@ -274,12 +278,19 @@ function AcceptForm({
         profile: existing
           ? undefined
           : { fullName: fullName.trim(), phone: canonicalAccountPhone(phone) ?? phone.trim() },
+        ...(codeSentTo && code ? { code } : {}),
       },
       mode,
       demo,
     );
     setPending(false);
-    if (res.ok) {
+    if (res.ok && res.status === "code_sent") {
+      setCodeSentTo(res.emailMasked);
+      setCode("");
+      setSummary(null);
+      return;
+    }
+    if (res.ok && res.status === "completed") {
       dispatch({ type: "confirmed" });
       setSuccess(true); // stops the unsaved-changes guard before we switch screens
       setPassword("");
@@ -302,6 +313,11 @@ function AcceptForm({
         return;
       case "rate_limited":
         setLimit(res.error.retryAfterSeconds ?? 60);
+        return;
+      case "invalid_code":
+        setCode("");
+        setSummary({ title: res.error.message, items: [] });
+        setSummaryKey((k) => k + 1);
         return;
       case "weak_password":
       case "validation_failed":
@@ -336,7 +352,7 @@ function AcceptForm({
     setChecking(true);
     const res = await checkInvitationCompletion({ portal: routePortal, token }, mode, demo);
     setChecking(false);
-    if (res.ok) {
+    if (res.ok && res.status === "completed") {
       dispatch({ type: "confirmed" });
       setSuccess(true); // stops the unsaved-changes guard before we switch screens
       setPassword("");
@@ -344,6 +360,7 @@ function AcceptForm({
       onDone({ kind: res.kind, destination: res.destination });
       return;
     }
+    if (res.ok) return; // a check never sends a code
     // Anything below is "not confirmed": the earlier doubt stays until confirmed or dismissed.
     switch (res.reason) {
       case "rate_limited":
@@ -604,6 +621,17 @@ function AcceptForm({
             </>
           )}
 
+          {codeSentTo && !existing ? (
+            <div className="mt-2 rounded-2xl border border-(--ap-line,#e8e1ea) bg-[#F6EFF8] p-4">
+              <p className="m-0 text-[15px] font-bold text-[#1F1726]">Check your email</p>
+              <p className="mt-1 mb-3 text-[14px] text-[#5E5468]">We sent a 6-digit code to {codeSentTo}. Enter it to confirm this email is yours. It expires in 10 minutes.</p>
+              <CodeBoxes id="iv-code" value={code} onChange={setCode} label="Six-digit code from your email" hint="" disabled={pending} />
+              <button type="button" className="mt-3 text-[14px] font-semibold underline underline-offset-4" disabled={pending} onClick={() => { setCodeSentTo(null); setCode(""); }}>
+                Didn&apos;t get it? Change details or send a new code
+              </button>
+            </div>
+          ) : null}
+
           {failure && (
             <ServiceError
               title="We couldn't finish that"
@@ -616,10 +644,10 @@ function AcceptForm({
           )}
 
           <SubmitButton
-            label={existing ? "Sign in and accept →" : "Create account →"}
-            pendingLabel={existing ? "Signing in…" : "Creating your account…"}
+            label={existing ? "Sign in and accept →" : codeSentTo ? "Verify and create account →" : "Continue →"}
+            pendingLabel={existing ? "Signing in…" : codeSentTo ? "Creating your account…" : "Sending your code…"}
             pending={pending}
-            blocked={limit !== null || !canSubmitAgain(flow, existing)}
+            blocked={limit !== null || !canSubmitAgain(flow, existing) || (!!codeSentTo && code.length !== 6)}
           />
 
           <AuthFoot

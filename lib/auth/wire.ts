@@ -19,6 +19,7 @@ export const AUTH_ERROR_MESSAGES = {
   weak_password: "Use at least 8 characters, including a number.",
   validation_failed: "Please check your personal details.",
   phone_in_use: "This phone number is already used by another Beeliv account. Use a different number.",
+  invalid_code: "That code is wrong or has expired. Check your email, or send a new code.",
   forbidden: "This request is not allowed.",
   invalid_request: "Refresh the form and try again.",
   unavailable: "We could not confirm completion. Please try again or sign in to check.",
