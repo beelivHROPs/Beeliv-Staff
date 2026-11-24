@@ -53,7 +53,7 @@ import { History } from "./icons";
 import { isNavActive, MORE_ROUTES, STAFF_NAV, STAFF_NOTIFICATIONS_HREF, STAFF_SETTINGS } from "./nav";
 import { PilotNotice } from "@/components/shared/PilotNotice";
 import { usePilotMenu } from "@/lib/pilot/context";
-import { PILOT_MOBILE_PRIMARY, pilotFilter } from "@/lib/pilot/menu";
+import { pilotFilter } from "@/lib/pilot/menu";
 
 
 const THEME = `applicant-shell staff-theme ${newsreader.variable}`;
@@ -491,9 +491,10 @@ function MobileBottomNav({ pathname, moreActive, unread, counts, profile }: { pa
   const setOpen = useCallback((v: boolean) => setOpenAt(v ? pathname : null), [pathname]);
   const closeMore = useCallback(() => setOpenAt(null), []);
   const signOut = useSignOut();
-  // Pilot menu: the usual bar is Home, Schedule, Attendance, Leave; during the pilot it is Home, My Assignment, Documents (no raised centre).
+  // Lead 2026-11-24 (Proposal A): always the approved 5-tab bar - Home, Schedule, Attendance (raised centre), Leave, More.
+  // Schedule, Attendance and Leave are real now; the 4-tab pilot bar left the notch empty. Documents and My Assignment are in More.
   const pilot = usePilotMenu();
-  const primary = pilot ? PILOT_MOBILE_PRIMARY.staff.map((h) => STAFF_NAV.find((i) => i.href === h)).filter((i): i is (typeof STAFF_NAV)[number] => !!i) : STAFF_NAV.filter((i) => i.mobilePrimary);
+  const primary = STAFF_NAV.filter((i) => i.mobilePrimary);
   const visible = pilotFilter(STAFF_NAV, pilot);
   const moreItems = [...visible.filter((i) => !primary.includes(i) && !i.secondary), STAFF_SETTINGS, ...visible.filter((i) => i.secondary)];
   const moreCount = moreItems.reduce((n, i) => n + (counts[i.href] ?? 0), 0);
@@ -511,8 +512,8 @@ function MobileBottomNav({ pathname, moreActive, unread, counts, profile }: { pa
             icon={item.icon}
             label={item.short ?? item.label}
             active={isNavActive(pathname, item.href)}
-            center={!pilot && i === 2}
-            quiet={!pilot && i === 2 && !attendanceActionable}
+            center={i === 2}
+            quiet={i === 2 && !attendanceActionable}
             pillId="staff-bnav-pill"
           />
         ))}
