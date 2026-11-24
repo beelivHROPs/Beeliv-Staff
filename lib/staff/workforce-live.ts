@@ -2,7 +2,7 @@
  * Staff shifts and attendance, LIVE (/api/staff/workforce/*, docs/contracts/workforce-shifts-attendance.sql).
  * Only PUBLISHED shifts are returned; check-in / out windows and late rules live in the database, never here.
  */
-import type { AttendanceRecord, AttendanceState, DateRange, Shift, TodayAttendance } from "./types";
+import type { AttendanceRecord, AttendanceState, DateRange, LeaveRequest, LeaveRequestInput, Shift, TodayAttendance } from "./types";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : null);
@@ -84,4 +84,44 @@ export async function liveHomeShifts(): Promise<{ todaysShifts: Shift[]; upcomin
   const [list, history] = await Promise.all([shifts(iso(now), iso(plus(now, 14))), liveAttendanceHistory()]);
   const today = iso(now);
   return { todaysShifts: list.filter((s) => s.date === today), upcoming: list.filter((s) => s.date > today).slice(0, 5), recentAttendance: history.slice(0, 5) };
+}
+
+/* ---------- leave (workforce-leave.sql) ---------- */
+const LEAVE_REASON: Record<string, string> = {
+  overlap: "You already have leave on some of these dates.",
+  invalid_request: "Check the dates. Leave can't start in the past (sick leave can go back up to 7 days) and lasts at most 60 days.",
+  invalid_transition: "This request can no longer be cancelled.",
+};
+async function leaveCall(action: string, body: Rec): Promise<Rec> {
+  const res = await fetch(`/api/staff/workforce/${action}`, { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = rec(await res.json().catch(() => null));
+  if (j?.ok === true) return j;
+  throw new Error(LEAVE_REASON[str(j?.reason)] ?? "We couldn't reach Beeliv. Please try again.");
+}
+function leaveItem(raw: unknown): LeaveRequest | null {
+  const l = rec(raw);
+  if (!l) return null;
+  const st = str(l.status);
+  return { id: str(l.id), type: str(l.type), startDate: str(l.startDate), endDate: str(l.endDate), reason: str(l.reason) || null,
+    status: (st === "declined" ? "rejected" : ["pending", "approved", "cancelled"].includes(st) ? st : "pending") as LeaveRequest["status"],
+    submittedAt: str(l.submittedAt), decisionNote: str(l.decisionNote) || null, attachmentName: null, canCancel: l.canCancel === true };
+}
+export async function liveLeaveRequests(): Promise<LeaveRequest[]> {
+  const r = await leaveCall("leave-mine", {});
+  return (Array.isArray(r.items) ? r.items : []).map(leaveItem).filter((x): x is LeaveRequest => !!x);
+}
+export async function liveRequestLeave(input: LeaveRequestInput): Promise<LeaveRequest> {
+  // Attachments are not stored yet; the request itself is recorded.
+  const r = await leaveCall("leave-request", { type: input.type, startDate: input.startDate, endDate: input.endDate, reason: input.reason });
+  const mine = await liveLeaveRequests();
+  const made = mine.find((l) => l.id === str(r.id));
+  if (!made) throw new Error("Your request was sent. Reload to see it.");
+  return made;
+}
+export async function liveCancelLeave(id: string): Promise<LeaveRequest> {
+  await leaveCall("leave-cancel", { leaveId: id });
+  const mine = await liveLeaveRequests();
+  const done = mine.find((l) => l.id === id);
+  if (!done) throw new Error("Reload to see this request.");
+  return done;
 }
