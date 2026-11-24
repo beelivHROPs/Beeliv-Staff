@@ -11,8 +11,10 @@ import { beelivEnv, pilotMenuEnv } from "@/lib/env/sample-data";
 export const PILOT_COOKIE = "bv_pilot_menu";
 
 export async function pilotMenuState(): Promise<{ on: boolean; devSwitch: boolean }> {
+  // Lead 2026-11-24: "just copy the view done in the localhost". The live sites always use the full approved layouts
+  // (the pilot hides no screens any more), so outside local development the pilot menu is OFF whatever the setting says.
+  if (beelivEnv() !== "local") return { on: false, devSwitch: false };
   const base = pilotMenuEnv();
-  if (beelivEnv() !== "local") return { on: base, devSwitch: false };
   const v = (await cookies()).get(PILOT_COOKIE)?.value;
   return { on: v === "on" ? true : v === "off" ? false : base, devSwitch: true };
 }
