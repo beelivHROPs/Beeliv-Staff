@@ -14,6 +14,7 @@ import { ClipboardList } from "../icons";
 import { ActionPill, Dot, Facts, PANEL, StateCard, confirmAction } from "../kit";
 import { withStaffPreloader } from "../StaffPreloader";
 import { RecordsSkeleton } from "./RecordsSkeleton";
+import { CompletedForms } from "../forms/FormPrompt";
 
 /**
  * Warnings & Records (brief section 12). Deliberately neutral: plain labels,
@@ -49,6 +50,9 @@ export function RecordsBody() {
     <div className="w-full pt-1 pb-2">
       <h1 className="text-[28px] leading-tight font-bold text-(--ap-ink) min-[768px]:text-[32px]">Warnings &amp; Records</h1>
       <p className="mt-1 mb-5 text-[16px] text-(--ap-muted)">Records relating to your employment that Beeliv has shared with you.</p>
+      <div className="mb-5 empty:hidden">
+        <CompletedForms />
+      </div>
 
       {status === "empty" || records.length === 0 ? (
         <StateCard icon={ClipboardList} title="No records to show" text="When Beeliv shares a record with you, it appears here. Having nothing here is normal." />

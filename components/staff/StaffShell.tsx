@@ -54,6 +54,7 @@ import { isNavActive, MORE_ROUTES, STAFF_NAV, STAFF_NOTIFICATIONS_HREF, STAFF_SE
 import { PilotNotice } from "@/components/shared/PilotNotice";
 import { usePilotMenu } from "@/lib/pilot/context";
 import { pilotFilter } from "@/lib/pilot/menu";
+import { FormPrompt } from "./forms/FormPrompt";
 
 
 const THEME = `applicant-shell staff-theme ${newsreader.variable}`;
@@ -87,7 +88,7 @@ function StaffShellInner({ children }: { children: React.ReactNode }) {
           <MobileTopbar unread={unread} title={title} profile={profile} pathname={pathname} />
 
           <main id="applicant-view" tabIndex={-1} className="relative mx-auto max-w-[1176px] px-[18px] pt-1.5 pb-[116px] max-[380px]:px-3.5 min-[641px]:px-7 min-[768px]:pt-2.5 min-[768px]:pb-[72px] min-[1361px]:pb-20">
-            {noStaff ? <NoStaffAccess /> : (<><PilotNotice />{children}</>)}
+            {noStaff ? <NoStaffAccess /> : (<><PilotNotice />{children}<FormPrompt /></>)}
           </main>
         </div>
 
