@@ -238,6 +238,8 @@ export type Interview = {
   /** Meeting link for a video interview (https only), set by HR when scheduling. Optional: absent until HR adds it. */
   meetingLink?: string;
   withWhom?: string;
+  /** Live: the place (address for in person, a number or note for phone) as HR entered it. Plain text. */
+  place?: string;
   prep?: string[];
   /** Scheduled length, for the "10:00 – 10:45 AM (WAT)" range the wireframe shows. Optional; start time alone is shown without it. */
   durationMinutes?: number;

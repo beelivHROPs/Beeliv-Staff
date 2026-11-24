@@ -4,7 +4,7 @@
  * Live Applicant applications: the browser side of /api/applications/[action] (lib/server/applications).
  * Same-origin JSON only; the server derives who is signed in, owner, status and stage. Nothing here is authority.
  */
-import type { Application, ApplicationLifecycle, ApplyFormData } from "./types";
+import type { Application, ApplicationLifecycle, ApplyFormData, Interview } from "./types";
 
 export type LiveApplicationError = { code: string; message: string };
 type Reply<T> =
@@ -237,3 +237,40 @@ export function readMine(applicationId: string) {
 }
 
 export type { DraftDto, ApplicantApplicationDto };
+
+/* ---------- interviews (recruitment-interviews-phase2.sql): date, time, length, type, place, state ONLY ---------- */
+type ApplicantInterviewDto = {
+  id: string;
+  applicationId: string;
+  role: string;
+  company: string;
+  startsAt: string;
+  durationMins: number;
+  mode: "in_person" | "phone" | "video";
+  location: string;
+  state: "scheduled" | "cancelled" | "completed";
+};
+const MODE_LABEL: Record<ApplicantInterviewDto["mode"], string> = { in_person: "In person", phone: "Phone", video: "Video" };
+
+export function listMyInterviews() {
+  return call<{ items: ApplicantInterviewDto[] }>("interview-mine", {});
+}
+
+/** Server reply -> the Applicant Interview card. Never carries scores, notes, recommendation or the interviewer. */
+export function fromInterviewDto(d: ApplicantInterviewDto): Interview {
+  const link = d.mode === "video" && /^https:\/\/\S+$/i.test(d.location) ? d.location : undefined;
+  return {
+    id: d.id,
+    applicationId: d.applicationId,
+    title: "Interview",
+    kind: "Interview",
+    status: d.state,
+    applicationLabel: [d.role, d.company].filter(Boolean).join(" · "),
+    scheduledAt: d.startsAt,
+    ...(d.state === "completed" ? { completedAt: d.startsAt } : {}),
+    mode: MODE_LABEL[d.mode],
+    ...(link ? { meetingLink: link } : {}),
+    ...(!link && d.location ? { place: d.location } : {}),
+    durationMinutes: d.durationMins,
+  };
+}

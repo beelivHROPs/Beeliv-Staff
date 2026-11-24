@@ -1,5 +1,7 @@
 /** HTTP edge for the applications module: method, origin, content-type and body-size checks, then the service. */
-import { adminListApplications, adminReadApplication, getDraft, getMyApplication, listMyApplications, openDraft, saveDraft, submitApplication } from "./service";
+import { adminActOnApplication, adminApplicationHistory, adminListApplications, adminReadApplication, getDraft, getMyApplication, listMyApplications, openDraft, saveDraft, submitApplication } from "./service";
+import { adminCancelInterview, adminListInterviews, adminRecordInterview, adminSaveInterview, applicantListInterviews } from "./interviews";
+import { adminDecideApplication, adminVerifyDocuments } from "./approval";
 import type { ApplicationErrorCode, ApplicationFailure, ApplicationResult, ApplicationsDependencies } from "./types";
 
 export const MAX_BODY_BYTES = 40_000; // form cap is 32 KiB plus envelope
@@ -12,10 +14,14 @@ const MESSAGES: Record<ApplicationErrorCode, string> = {
   documents_missing: "Your CV, passport photo and valid ID must be uploaded and checked first.",
   documents_unsupported: "This job needs documents we cannot collect yet.", test_unavailable: "This job needs a test we cannot offer yet.",
   screening_incomplete: "Answer the required screening questions.",
+  note_required: "Add a short reason first.", invalid_transition: "This application has already moved on. Reload to see its current state.",
+  already_scheduled: "An interview is already scheduled for this applicant. Reschedule it instead.",
+  person_unavailable: "This person's account is not active, so they cannot be approved as staff.",
 };
 const STATUS: Record<ApplicationErrorCode, number> = {
   unavailable: 503, unauthenticated: 401, forbidden: 403, invalid_request: 400, conflict: 409, stale: 409, closed: 409,
   rate_limited: 429, outcome_unknown: 503, documents_missing: 422, documents_unsupported: 422, test_unavailable: 422, screening_incomplete: 422,
+  note_required: 422, invalid_transition: 409, already_scheduled: 409, person_unavailable: 409,
 };
 const HEADERS = { "Cache-Control": "private, no-store" };
 
@@ -48,8 +54,12 @@ async function readJson(request: Request): Promise<unknown> {
 type Action = (raw: unknown, deps: ApplicationsDependencies) => Promise<ApplicationResult<{ value: unknown }>>;
 export const APPLICANT_ACTIONS: Record<string, Action> = {
   "draft-open": openDraft, "draft-get": getDraft, "draft-save": saveDraft, submit: submitApplication, list: listMyApplications, read: getMyApplication,
+  "interview-mine": applicantListInterviews,
 };
-export const ADMIN_ACTIONS: Record<string, Action> = { list: adminListApplications, read: adminReadApplication };
+export const ADMIN_ACTIONS: Record<string, Action> = { list: adminListApplications, read: adminReadApplication, act: adminActOnApplication, history: adminApplicationHistory,
+  "interview-list": adminListInterviews, "interview-save": adminSaveInterview, "interview-cancel": adminCancelInterview, "interview-record": adminRecordInterview,
+  verify: adminVerifyDocuments, decide: adminDecideApplication,
+};
 
 export async function handleApplications(request: Request, action: string, actions: Record<string, Action>, deps: ApplicationsDependencies, origin: string): Promise<Response> {
   if (!deps.enabled) return failure({ ok: false, code: "unavailable" });
