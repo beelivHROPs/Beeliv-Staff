@@ -58,7 +58,6 @@ export function StatusGate({
               <span className={`flex size-16 items-center justify-center rounded-2xl bg-white/80 shadow-(--ap-shadow) ${t.ink}`}>
                 <Icon className="size-7" aria-hidden="true" />
               </span>
-              <span className="text-[12px] font-bold tracking-[.14em] text-(--ap-faint) uppercase">Illustration</span>
             </div>
           )}
         </div>

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { LogOut } from "@/components/applicant/icons";
 import { ConfirmHost, confirmAction } from "@/components/applicant/ConfirmDialog";
 import type { Portal } from "@/lib/auth/types";
@@ -43,6 +45,12 @@ export function AccountSetupNotice({
     cancelLabel: "Stay signed in",
   }, confirmAction);
   const finishing = kind === "finish-setup";
+  const router = useRouter();
+  // Lead 2026-11-24: no in-between card. Someone who still has to finish setup goes straight to the approved setup screen.
+  useEffect(() => {
+    if (finishing && setupHref) router.replace(setupHref);
+  }, [finishing, setupHref, router]);
+  if (finishing && setupHref) return <div role="status" aria-busy="true" aria-label="Opening your setup" className="ap-shimmer mx-auto h-40 max-w-[680px] rounded-[20px]" />;
   return (
     <section aria-label="Account setup" className="ap-card mx-auto max-w-[680px] rounded-[20px] p-5 min-[640px]:p-7">
       <ConfirmHost />
