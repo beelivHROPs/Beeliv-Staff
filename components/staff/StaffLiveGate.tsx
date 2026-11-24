@@ -6,13 +6,11 @@ import { ComingSoonScreen } from "@/components/shared/ComingSoonScreen";
 
 /**
  * Live Staff (lead rule 2026-11-21): real data or "Coming soon", never sample data and never an error-looking panel.
- * These approved screens have no backend yet. Real today: Home, Profile, Documents, Notifications, Settings, Help, Search.
+ * These approved screens have no backend yet. Real today: Home, Profile, Documents, Schedule, Attendance, Notifications, Settings, Help, Search.
  */
 const SOON: { prefix: string; title: string }[] = [
   { prefix: "/staff/assignment", title: "My assignment" },
-  { prefix: "/staff/attendance", title: "Attendance" },
   { prefix: "/staff/leave", title: "Leave" },
-  { prefix: "/staff/schedule", title: "Schedule" },
   { prefix: "/staff/sops-training", title: "SOPs & Training" },
   { prefix: "/staff/records", title: "Records" },
   { prefix: "/staff/forms", title: "Forms & tests" },
