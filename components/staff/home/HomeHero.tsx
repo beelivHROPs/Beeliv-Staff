@@ -105,7 +105,7 @@ export async function runClock(kind: "in" | "out", shift: StaffHome["today"]["sh
 function AttendanceCard({ home }: { home: StaffHome }) {
   const { today, assignment } = home;
   const shift = today.shift;
-  const where = shift ? `${shift.outlet} (${shift.section})` : assignment ? `${assignment.outlet.name}, ${assignment.outlet.location}` : null;
+  const where = shift ? `${shift.outlet} (${shift.section})` : assignment ? [assignment.outlet.name, assignment.outlet.location].filter(Boolean).join(", ") : null;
 
   let title = "No shift today";
   let sub = "You're currently off shift.";

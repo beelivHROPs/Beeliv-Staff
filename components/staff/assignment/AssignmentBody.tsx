@@ -79,12 +79,12 @@ function Hero({ a }: { a: StaffAssignment }) {
           <span className={`size-2 rounded-full ${a.status === "active" ? "bg-[#86efac]" : "bg-[#fcd34d]"}`} aria-hidden="true" />
           {st.label}
         </p>
-        <span className="text-[14px] text-white/72">{a.outlet.publicId}</span>
+        {a.outlet.publicId ? <span className="text-[14px] text-white/72">{a.outlet.publicId}</span> : null}
       </div>
       <h2 className="mt-4 text-[28px] leading-[1.1] font-bold min-[768px]:text-[34px]">{a.outlet.name}</h2>
       <p className="mt-2 flex items-center gap-1.5 text-[16px] text-white/85">
         <MapPin className="size-4 shrink-0" aria-hidden="true" />
-        {a.client.name} · {a.outlet.location}
+        {[a.client.name, a.outlet.location].filter(Boolean).join(" · ")}
       </p>
       <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-white/18 pt-5 min-[560px]:grid-cols-3">
         <div className="min-w-0">
@@ -115,7 +115,8 @@ function Details({ a }: { a: StaffAssignment }) {
         rows={[
           ["Client", a.client.name],
           ["Outlet", a.outlet.name],
-          ["Location", a.outlet.location],
+          // Live data may not have a city for the outlet yet: the row is left out rather than shown blank.
+          ...(a.outlet.location ? [["Location", a.outlet.location] as [string, string]] : []),
           ["Status", <Dot key="s" tone={st.tone}>{st.label}</Dot>],
           ["Ends", a.endDate ? fullDate(a.endDate) : "Ongoing"],
         ]}

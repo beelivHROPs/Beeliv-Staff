@@ -31,7 +31,7 @@ import {
   type LucideIcon,
 } from "@/components/applicant/icons";
 import { toast } from "@/components/ui/toast";
-import { sendCantMakeIt, useApplicantStore, withdrawCantMakeIt } from "@/lib/applicant/service";
+import { sendCantMakeIt, useApplicantStore, useIsLiveApplicant, withdrawCantMakeIt } from "@/lib/applicant/service";
 import { interviewView, type InterviewView } from "@/lib/applicant/interview-state";
 import { useInterviewRequests, type InterviewTimeRequest } from "@/lib/bridge/interview-requests";
 import { confirmAction } from "./ConfirmDialog";
@@ -78,12 +78,16 @@ function useNow(): number | null {
   return now;
 }
 
+const NO_REQUESTS: InterviewTimeRequest[] = [];
 const QUIET_BTN = "inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-semibold text-(--ap-violet) transition-colors hover:bg-(--ap-tint)";
 const SURFACE = "rounded-[24px] border border-(--ap-line) bg-white shadow-(--ap-shadow)";
 
 export function InterviewsBody() {
   const store = useApplicantStore();
-  const requests = useInterviewRequests();
+  const isLive = useIsLiveApplicant();
+  const previewRequests = useInterviewRequests();
+  // Live: real interviews only. The "can't make it" requests are a preview bridge that never reaches HR, so they are not used.
+  const requests = isLive ? NO_REQUESTS : previewRequests;
   const [tab, setTab] = useState<Tab>("up");
   // Announced to screen readers when a request is sent or withdrawn (the visible change is the card itself).
   const [announce, setAnnounce] = useState("");
@@ -137,7 +141,7 @@ export function InterviewsBody() {
           {tab === "up" ? (
             hero ? (
               <div className={`mt-5 grid gap-6 ${heroPrep || later.length ? "min-[1024px]:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] min-[1024px]:items-start" : "max-w-[760px]"}`}>
-                <Ticket key={hero.id} v={hero} requests={requests} announce={setAnnounce} hero />
+                <Ticket key={hero.id} v={hero} requests={requests} announce={setAnnounce} hero live={isLive} />
                 <div className={`${later.length ? "flex" : "hidden min-[1024px]:flex"} flex-col gap-6`}>
                   {heroPrep ? (
                     <section className={`${SURFACE} hidden p-6 min-[1024px]:block`} aria-labelledby="prep-h">
@@ -153,7 +157,7 @@ export function InterviewsBody() {
                         Coming up
                       </h2>
                       {later.map((v) => (
-                        <Ticket key={v.id} v={v} requests={requests} announce={setAnnounce} />
+                        <Ticket key={v.id} v={v} requests={requests} announce={setAnnounce} live={isLive} />
                       ))}
                     </section>
                   ) : null}
@@ -213,7 +217,7 @@ function modeIcon(mode: string | undefined): LucideIcon {
   return MapPin;
 }
 
-function Ticket({ v, requests, announce, hero = false }: { v: Interview; requests: InterviewTimeRequest[]; announce: (text: string) => void; hero?: boolean }) {
+function Ticket({ v, requests, announce, hero = false, live = false }: { v: Interview; requests: InterviewTimeRequest[]; announce: (text: string) => void; hero?: boolean; /** Real applicant: no preview-only "Message HR" request. */ live?: boolean }) {
   const view = interviewView(v, requests);
   const waiting = view.kind === "waiting";
   const [sheet, setSheet] = useState(false);
@@ -320,6 +324,11 @@ function Ticket({ v, requests, announce, hero = false }: { v: Interview; request
 
         <div className="mt-3 flex flex-col gap-2 text-[15px] text-(--ap-ink-2) min-[768px]:mt-4 min-[768px]:gap-2.5">
           {v.mode ? <MetaRow icon={ModeIcon}>{v.mode}</MetaRow> : null}
+          {v.place ? (
+            <MetaRow icon={MapPin}>
+              <span className="wrap-anywhere">{v.place}</span>
+            </MetaRow>
+          ) : null}
           {v.withWhom ? <MetaRow icon={UserRound}>{v.withWhom}</MetaRow> : null}
           {view.kind === "rescheduled" ? (
             <MetaRow icon={CalendarCheck}>
@@ -410,6 +419,8 @@ function Ticket({ v, requests, announce, hero = false }: { v: Interview; request
             </button>
             <span className="px-4 pb-2 text-center text-[14px] text-(--ap-muted)">Want to change your message? Withdraw it and send a new one.</span>
           </>
+        ) : live ? (
+          passed ? null : <p className="px-4 pt-1 pb-3 text-center text-[14px] text-(--ap-muted)">Can&apos;t make this time? Please contact the Beeliv team.</p>
         ) : passed ? (
           <p className="px-4 pt-1 pb-3 text-center text-[14px] text-(--ap-muted)">This interview time has passed, so a new-time request can&apos;t be sent from here. If you missed it, please contact the Beeliv team.</p>
         ) : (

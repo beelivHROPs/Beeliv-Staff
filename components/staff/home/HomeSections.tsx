@@ -117,10 +117,12 @@ export function AssignmentCard({ a, className }: { a: StaffAssignment | null; cl
         <ImageRoom src={a.outlet.imageUrl} alt={a.outlet.name} className="size-[76px] shrink-0 rounded-2xl min-[768px]:h-[84px] min-[768px]:w-[110px]" />
         <div className="min-w-0 flex-1">
           <b className="ap-title block text-[18px]">{a.outlet.name}</b>
-          <span className="ap-sm mt-0.5 flex items-center gap-1.5 text-(--ap-muted)">
-            <MapPin className="size-4 shrink-0" aria-hidden="true" />
-            {a.outlet.location}
-          </span>
+          {a.outlet.location ? (
+            <span className="ap-sm mt-0.5 flex items-center gap-1.5 text-(--ap-muted)">
+              <MapPin className="size-4 shrink-0" aria-hidden="true" />
+              {a.outlet.location}
+            </span>
+          ) : null}
           <div className="mt-2 min-[768px]:hidden">
             <Chip tone={a.status === "active" ? "ok" : "info"}>{a.status === "active" ? "Active" : "Starts soon"}</Chip>
           </div>

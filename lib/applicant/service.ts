@@ -109,6 +109,7 @@ export function enterLive(seed: LiveApplicantSeed, snapshot: MockState) {
   hydrated = true; // never load the sample store from localStorage
   state = snapshot;
   void refreshLiveApplications();
+  void refreshLiveInterviews();
 }
 export function isLiveApplicant(): boolean {
   return live !== null;
@@ -130,6 +131,14 @@ async function refreshLiveApplications(): Promise<void> {
   const submitted = r.value.items.map((d) => liveApi.fromApplicationDto(d, state.profile.id, blank));
   const drafts = state.applications.filter((a) => a.lifecycle === "draft" && !submitted.some((x) => x.id === a.id));
   setState({ ...state, applications: [...drafts, ...submitted] });
+}
+
+/** The person's real interviews. Not switched on / unavailable -> stays empty (the approved empty state), never sample. */
+async function refreshLiveInterviews(): Promise<void> {
+  if (!live) return;
+  const r = await liveApi.listMyInterviews();
+  if (!r.ok) return;
+  setState({ ...state, interviews: r.value.items.map(liveApi.fromInterviewDto) });
 }
 
 function liveDraft(d: liveApi.DraftDto, job: JobSnapshot): Application {
@@ -663,6 +672,7 @@ export async function submitApplication(applicationId: string): Promise<Applicat
 /* ------------------------------------------------------------------ */
 
 export async function listInterviews(): Promise<import("./types").Interview[]> {
+  if (live) await refreshLiveInterviews();
   return state.interviews;
 }
 

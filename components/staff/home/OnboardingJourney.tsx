@@ -85,7 +85,7 @@ function Hero({ home, assignment, next }: { home: StaffHome; assignment: StaffAs
               <b className="block truncate text-[16px]">{assignment.role}</b>
               <span className="flex items-center gap-1 text-[14px] text-white/78">
                 <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="truncate">{assignment.outlet.name}, {assignment.outlet.location}</span>
+                <span className="truncate">{[assignment.outlet.name, assignment.outlet.location].filter(Boolean).join(", ")}</span>
               </span>
             </span>
           </p>
@@ -153,7 +153,7 @@ function FirstDay({ a }: { a: StaffAssignment | null }) {
   const rows: [string, ReactNode][] = [
     ["Date", longDate(a.startDate)],
     ...(a.firstDay?.time ? ([["Time", formatClock(a.firstDay.time)]] as [string, ReactNode][]) : []),
-    ["Place", `${a.outlet.name}, ${a.outlet.location}`],
+    ["Place", [a.outlet.name, a.outlet.location].filter(Boolean).join(", ")],
     ...(a.supervisor ? ([["Ask for", a.supervisor.name]] as [string, ReactNode][]) : []),
     ...(a.firstDay?.bring?.length ? ([["Bring", a.firstDay.bring.join(", ")]] as [string, ReactNode][]) : []),
   ];

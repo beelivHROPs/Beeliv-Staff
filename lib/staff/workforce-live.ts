@@ -34,9 +34,20 @@ function shift(raw: unknown): LiveShift | null {
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const plus = (d: Date, days: number) => new Date(d.getTime() + days * 86_400_000);
 
+/** The server answers at most 62 days per request (workforce_my_shifts), so longer ranges are fetched in 60-day pieces. */
 async function shifts(from: string, to: string): Promise<LiveShift[]> {
-  const r = await call("my-shifts", { from, to });
-  return (Array.isArray(r.items) ? r.items : []).map(shift).filter((x): x is LiveShift => !!x);
+  const pieces: { from: string; to: string }[] = [];
+  let start = new Date(`${from}T00:00:00Z`);
+  const end = new Date(`${to}T00:00:00Z`);
+  while (start <= end) {
+    const stop = new Date(Math.min(start.getTime() + 59 * 86_400_000, end.getTime()));
+    pieces.push({ from: iso(start), to: iso(stop) });
+    start = new Date(stop.getTime() + 86_400_000);
+  }
+  const replies = await Promise.all(pieces.map((p) => call("my-shifts", p)));
+  const seen = new Set<string>();
+  return replies.flatMap((r) => (Array.isArray(r.items) ? r.items : [])).map(shift)
+    .filter((x): x is LiveShift => !!x && !seen.has(x.id) && !!seen.add(x.id));
 }
 
 export async function liveSchedule(range: DateRange): Promise<Shift[]> {

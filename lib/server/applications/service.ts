@@ -5,7 +5,7 @@
 import { UUID, plain, validateId, validateOpen, validatePage, validateSave, validateSubmit } from "./validation";
 import { projectAdminDetail, projectAdminRow, projectApplicantApplication, projectDraft, projectPage } from "./project";
 import type {
-  AdminApplicationDetailDto, AdminApplicationRowDto, AdminIdentity, ApplicantApplicationDto, ApplicantIdentity, ApplicationErrorCode, ApplicationFailure,
+  AdminActReceiptDto, AdminAction, AdminApplicationDetailDto, AdminApplicationRowDto, AdminHistoryDto, AdminIdentity, ApplicantApplicationDto, ApplicantIdentity, ApplicationErrorCode, ApplicationFailure,
   ApplicationResult, ApplicationsDependencies, OpenDraftDto, Page, RpcReply, SaveReceiptDto, SubmitReceiptDto,
 } from "./types";
 
@@ -14,11 +14,12 @@ const REASONS: Readonly<Record<string, ApplicationErrorCode>> = {
   no_access: "forbidden", invalid_request: "invalid_request", conflict: "conflict", stale: "stale", closed: "closed",
   rate_limited: "rate_limited", documents_missing: "documents_missing", documents_unsupported: "documents_unsupported",
   test_unavailable: "test_unavailable", screening_incomplete: "screening_incomplete", unavailable: "unavailable",
+  note_required: "note_required", invalid_transition: "invalid_transition", already_scheduled: "already_scheduled", person_unavailable: "person_unavailable",
 };
 const id = (v: unknown): v is string => typeof v === "string" && UUID.test(v);
-const fail = (code: ApplicationErrorCode, extra: Partial<ApplicationFailure> = {}): ApplicationFailure => ({ ok: false, code, ...extra });
+export const fail = (code: ApplicationErrorCode, extra: Partial<ApplicationFailure> = {}): ApplicationFailure => ({ ok: false, code, ...extra });
 
-async function applicant(deps: ApplicationsDependencies): Promise<ApplicantIdentity | ApplicationFailure> {
+export async function applicant(deps: ApplicationsDependencies): Promise<ApplicantIdentity | ApplicationFailure> {
   if (!deps.enabled) return fail("unavailable");
   let who: ApplicantIdentity | null;
   try { who = await deps.verifyApplicant(); } catch { return fail("unavailable"); }
@@ -27,7 +28,7 @@ async function applicant(deps: ApplicationsDependencies): Promise<ApplicantIdent
   if (who.app !== "talent" || who.status !== "active" || !Array.isArray(who.entitlements) || !who.entitlements.includes("applicant")) return fail("forbidden");
   return who;
 }
-async function admin(deps: ApplicationsDependencies): Promise<AdminIdentity | ApplicationFailure> {
+export async function admin(deps: ApplicationsDependencies): Promise<AdminIdentity | ApplicationFailure> {
   if (!deps.enabled || !deps.adminReadsEnabled) return fail("unavailable");
   let who: AdminIdentity | null;
   try { who = await deps.verifyAdmin(); } catch { return fail("unavailable"); }
@@ -35,7 +36,7 @@ async function admin(deps: ApplicationsDependencies): Promise<AdminIdentity | Ap
   if (who.aal !== "aal2") return fail("forbidden");
   return who;
 }
-async function limited(deps: ApplicationsDependencies, uid: string): Promise<ApplicationFailure | null> {
+export async function limited(deps: ApplicationsDependencies, uid: string): Promise<ApplicationFailure | null> {
   try { await deps.consumeLimit(uid); return null; } catch (error) {
     return plain(error) && error.code === "rate_limited" ? fail("rate_limited") : fail("unavailable");
   }
@@ -44,12 +45,12 @@ function fingerprint(deps: ApplicationsDependencies, op: "open" | "save" | "subm
   try { const f = deps.fingerprint(op, command); return /^[a-f0-9]{64}$/.test(f) ? f : null; } catch { return null; }
 }
 /** Returns the reply record, a definite denial, or null when the outcome cannot be trusted. */
-function interpret(reply: RpcReply | undefined): { data: Record<string, unknown> } | ApplicationFailure | null {
+export function interpret(reply: RpcReply | undefined): { data: Record<string, unknown> } | ApplicationFailure | null {
   if (!reply || reply.error || !plain(reply.data)) return null;
   if (reply.data.ok === false) return fail(typeof reply.data.reason === "string" && REASONS[reply.data.reason] ? REASONS[reply.data.reason] : "unavailable");
   return reply.data.ok === true ? { data: reply.data } : null;
 }
-const denied = (x: { data: Record<string, unknown> } | ApplicationFailure | null): x is ApplicationFailure => !!x && "ok" in x && x.ok === false;
+export const denied = (x: { data: Record<string, unknown> } | ApplicationFailure | null): x is ApplicationFailure => !!x && "ok" in x && x.ok === false;
 
 /** Run a mutation. An untrustworthy/absent reply is `outcome_unknown` with the original requestId. */
 async function mutate<T>(requestId: string, call: () => PromiseLike<RpcReply>, build: (d: Record<string, unknown>) => T | null): Promise<ApplicationResult<{ value: T }>> {
@@ -155,5 +156,40 @@ export async function adminReadApplication(raw: unknown, deps: ApplicationsDepen
   return read(() => deps.gateway.adminRead({ actorUid: who.uid, sessionId: who.sessionId, applicationId: cmd.value.applicationId }), (d) => {
     const item = projectAdminDetail(d.item);
     return item && item.applicationId === cmd.value.applicationId ? item : null;
+  });
+}
+
+/* ---------- Phase 1 HR actions (recruitment-actions-phase1.sql). The database re-checks role, scope and state. ---------- */
+const ADMIN_ACTIONS_ALLOWED = ["shortlist", "hold", "resume", "reject", "talent_pool", "note"] as const;
+const LIFECYCLES = ["submitted", "in_talent_pool", "not_selected", "withdrawn", "completed"] as const;
+
+export async function adminActOnApplication(raw: unknown, deps: ApplicationsDependencies): Promise<ApplicationResult<{ value: AdminActReceiptDto }>> {
+  const who = await admin(deps); if ("ok" in who) return who;
+  if (!plain(raw) || Object.keys(raw).some((k) => !["applicationId", "expectedRevision", "action", "note"].includes(k))) return fail("invalid_request");
+  const { applicationId, expectedRevision, action, note } = raw as Record<string, unknown>;
+  if (!id(applicationId) || !Number.isSafeInteger(expectedRevision) || (expectedRevision as number) < 1 || (expectedRevision as number) > 1_000_000
+      || typeof action !== "string" || !(ADMIN_ACTIONS_ALLOWED as readonly string[]).includes(action)
+      || !(note === undefined || note === null || (typeof note === "string" && note.length <= 2000))) return fail("invalid_request");
+  const limit = await limited(deps, who.uid); if (limit) return limit;
+  const clean = typeof note === "string" && note.trim() ? note.trim() : null;
+  return mutate(applicationId, () => deps.gateway.adminAct({ actorUid: who.uid, sessionId: who.sessionId, applicationId, expectedRevision: expectedRevision as number, action: action as AdminAction, note: clean }), (d) =>
+    Number.isSafeInteger(d.revision) && typeof d.lifecycle === "string" && (LIFECYCLES as readonly string[]).includes(d.lifecycle) && Number.isSafeInteger(d.stage) && typeof d.onHold === "boolean"
+      ? { revision: d.revision as number, lifecycle: d.lifecycle as AdminActReceiptDto["lifecycle"], stage: d.stage as number, onHold: d.onHold } : null);
+}
+
+export async function adminApplicationHistory(raw: unknown, deps: ApplicationsDependencies): Promise<ApplicationResult<{ value: AdminHistoryDto }>> {
+  const who = await admin(deps); if ("ok" in who) return who;
+  const cmd = validateId(raw); if (!cmd.ok) return fail("invalid_request", { fields: cmd.fields });
+  const limit = await limited(deps, who.uid); if (limit) return limit;
+  return read(() => deps.gateway.adminHistory({ actorUid: who.uid, sessionId: who.sessionId, applicationId: cmd.value.applicationId }), (d) => {
+    const c = plain(d.capabilities) ? d.capabilities : null;
+    if (!c || !Number.isSafeInteger(d.revision) || typeof d.onHold !== "boolean" || typeof d.lifecycle !== "string" || !Array.isArray(d.history)) return null;
+    const flag = (k: string) => c[k] === true;
+    const str = (v: unknown) => (typeof v === "string" ? v : null);
+    return {
+      revision: d.revision as number, onHold: d.onHold, lifecycle: d.lifecycle as AdminHistoryDto["lifecycle"], stage: Number(d.stage) || 0,
+      capabilities: { shortlist: flag("shortlist"), hold: flag("hold"), resume: flag("resume"), reject: flag("reject"), talentPool: flag("talentPool"), note: flag("note") },
+      history: (d.history as unknown[]).filter(plain).slice(0, 500).map((h) => ({ action: str(h.action) ?? "", at: str(h.at) ?? "", note: str(h.note), from: str(h.from), to: str(h.to), actor: str(h.actor) ?? "Beeliv team" })),
+    };
   });
 }
