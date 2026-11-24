@@ -3,7 +3,7 @@
  * Notifications live in the top utility area, not the sidebar.
  */
 import type { LucideIcon } from "@/components/applicant/icons";
-import { Briefcase, Calendar, CircleHelp, Clock3, DoorOpen, FileCheck2, Files, House, Settings, UserRound } from "@/components/applicant/icons";
+import { Briefcase, Calendar, CircleHelp, Clock3, DoorOpen, Files, House, Settings, UserRound } from "@/components/applicant/icons";
 import { BookOpen, ClipboardList } from "./icons";
 
 export type StaffNavItem = {
@@ -25,7 +25,7 @@ export const STAFF_NAV: StaffNavItem[] = [
   { href: "/staff/leave", label: "Leave", icon: DoorOpen, mobilePrimary: true },
   { href: "/staff/documents", label: "Documents", icon: Files },
   { href: "/staff/sops-training", label: "SOPs & Training", icon: BookOpen },
-  { href: "/staff/forms", label: "Forms", icon: FileCheck2 },
+  // Forms: no menu item (lead 2026-11-24). Waiting forms open from a pop-up and a Home card (components/staff/forms/FormPrompt.tsx).
   { href: "/staff/records", label: "Warnings & Records", icon: ClipboardList },
   { href: "/staff/profile", label: "Profile", icon: UserRound },
   { href: "/staff/help", label: "Help & support", icon: CircleHelp, secondary: true },

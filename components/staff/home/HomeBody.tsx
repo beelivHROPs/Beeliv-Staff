@@ -7,6 +7,7 @@ import { HomeDesktop, HomeDesktopSkeleton } from "./HomeDesktop";
 import { HomeError, HomeGate, HomeSkeleton } from "./HomeStates";
 import { OnboardingJourney, OnboardingSkeleton } from "./OnboardingJourney";
 import { usePilotMenu } from "@/lib/pilot/context";
+import { FormHomeCard } from "../forms/FormPrompt";
 import { AnnouncementsCard, AssignmentCard, NotificationsCard, QuickActions, RequiredCard, SupportCard } from "./HomeSections";
 
 /**
@@ -42,6 +43,7 @@ export function HomeBody() {
     return (
       <div className="flex flex-col gap-5">
         <HomeHero home={home} />
+        <FormHomeCard />
         <QuickActions />
         <div className="flex flex-col gap-5 min-[1241px]:grid min-[1241px]:grid-cols-[minmax(0,1fr)_340px] min-[1241px]:items-start min-[1600px]:grid-cols-[minmax(0,1fr)_380px]">
           <div className="flex min-w-0 flex-col gap-5">
@@ -60,6 +62,9 @@ export function HomeBody() {
   // Phones keep the calm single-column Home; from 1000px the richer dashboard takes over. The older desktop cards (HomeSections) remain only for the pilot menu above.
   return (
     <>
+      <div className="mb-5 empty:hidden">
+        <FormHomeCard />
+      </div>
       <div className="min-[1000px]:hidden">
         <HomeMobile home={home} />
       </div>
