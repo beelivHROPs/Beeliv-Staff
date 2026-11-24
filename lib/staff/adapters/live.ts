@@ -3,13 +3,15 @@
  * fixture or sample data.
  * Reads with no backend yet answer an honest EMPTY result (null / []), so each screen shows its approved "No ... yet" state
  * instead of an error panel (lead rule: real data, or "Coming soon" / "No ... yet", never an error because a backend is missing).
- * Harmless empties: getNavCounts -> {}, getNotifications -> [], assignment -> null, SOPs/training/records/announcements -> [].
+ * Harmless empties: getNavCounts -> {}, getNotifications -> [], SOPs/training/records/announcements -> [].
+ * My Assignment is real (day1-assignment-client-shifts.sql, ../assignment-live.ts); none yet -> null / [].
  * Unserved WRITES still throw StaffNotConnectedError: nothing is ever claimed as saved.
  * Sensitive inputs go to the transport body only; this file never logs, keeps or echoes them.
  * Only relative imports so it can be unit-tested offline.
  */
 import { liveAttendanceHistory, liveCancelLeave, liveCheck, liveHomeShifts, liveLeaveRequests, liveRequestLeave, liveSchedule, liveToday } from "../workforce-live";
 import type { AdapterEvent, StaffAdapter } from "../adapter";
+import { liveAssignments } from "../assignment-live";
 import { enrollmentCall, enrollmentWrite, StaffNotConnectedError } from "../enrollment-transport";
 import { onboardingFromChecklist, type EnrollmentChecklist } from "../onboarding-checklist";
 import type { AccessibilityInput, AccountStatus, Entitlements, StaffProfile, BankDetailsInput, NextOfKinInput, NinInput, StaffEmployer, StaffEmployment, StaffHome, StaffPersonalDetails, StaffSensitiveStatus } from "../types";
@@ -61,19 +63,21 @@ async function getEntitlements(): Promise<Entitlements> {
  * "onboarding" only while a profile item is still open (otherwise "active"). Everything else is empty.
  */
 async function getStaffHome(): Promise<StaffHome> {
-  const [checklist, today, shifts, who] = await Promise.all([
+  const [checklist, today, shifts, who, placed] = await Promise.all([
     enrollmentCall<EnrollmentChecklist>("checklist-get"),
     // Shifts and attendance are real (workforce-shifts-attendance.sql); if they can't load, Home still opens with none.
     liveToday().catch(() => ({ state: "no-shift" as const, shift: null, checkedInAt: null, checkedOutAt: null, attentionReason: null })),
     liveHomeShifts().catch(() => ({ todaysShifts: [], upcoming: [], recentAttendance: [] })),
     // The person's own name and contact for the greeting (lead 2026-11-24: Home showed "Good evening, •").
     enrollmentCall<ProfileWire>("profile-get").catch(() => null),
+    // Own current placement (day1-assignment-client-shifts.sql); if it can't load, Home shows "No assignment yet".
+    liveAssignments().catch(() => null),
   ]);
   const onboarding = onboardingFromChecklist(checklist);
   const open = onboarding.some((i) => !i.done);
   return {
     profile: { id: "", staffId: "", ...splitFullName(typeof who?.fullName === "string" ? who.fullName : ""), preferredName: null, email: typeof who?.email === "string" ? who.email : "", phone: typeof who?.phone === "string" && who.phone.trim() ? who.phone : null, avatarUrl: null, roleLabel: "Staff", accountStatus: open ? "onboarding" : "active" },
-    assignment: null,
+    assignment: placed?.current ?? null,
     today,
     todaysShifts: shifts.todaysShifts,
     requiredActions: [],
@@ -98,8 +102,8 @@ export const liveStaffAdapter: StaffAdapter = {
   getEntitlements,
   getStaffProfile,
   getNavCounts: async () => ({}),
-  getCurrentAssignment: async () => null,
-  getAssignmentHistory: () => nothingYet(),
+  getCurrentAssignment: async () => (await liveAssignments()).current,
+  getAssignmentHistory: async () => (await liveAssignments()).history,
   getSchedule: (range) => liveSchedule(range),
   getTodayAttendance: () => liveToday(),
   getAttendanceHistory: () => liveAttendanceHistory(),

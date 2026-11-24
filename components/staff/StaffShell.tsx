@@ -323,7 +323,7 @@ function OutletChip() {
       </PopoverTrigger>
       <PopoverContent align="end" className={`${THEME} w-72 bg-white! p-4`}>
         <b className="block">{a.outlet.name}</b>
-        <span className="text-[13px] text-(--ap-muted)">{a.outlet.location} - {a.role}</span>
+        <span className="text-[13px] text-(--ap-muted)">{[a.outlet.location, a.role].filter(Boolean).join(" - ")}</span>
         <Link href="/staff/assignment" className="mt-3 inline-flex text-[13px] font-bold text-(--ap-violet)">
           View assignment
         </Link>
