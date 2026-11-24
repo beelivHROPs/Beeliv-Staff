@@ -46,7 +46,7 @@ export function orgRecordsRuntime(): { deps: OrgRecordsDependencies; origin: str
       },
       // Reads and writes use separate buckets. Before this split every read spent the 15-per-5-minutes write allowance.
       consumeLimit: async (uid, write) => {
-        try { await limitAuth("admin", write ? "invite_manage_write" : "invite_manage_read", `org-records:${uid}`); } catch (error) {
+        try { await limitAuth("admin", write ? "org_write" : "org_read", `org-records:${uid}`); } catch (error) {
           if (error instanceof RateFailure) throw { code: "rate_limited" };
           throw new Error("unavailable");
         }

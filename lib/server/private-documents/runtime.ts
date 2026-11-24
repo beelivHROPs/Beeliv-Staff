@@ -35,7 +35,7 @@ export function privateDocumentRuntime():{origin:string;request:UploadRequestDep
   return {uid:user.id,personId:access.personId,sessionId:claims.session_id,emailVerified:true,app:access.app,status:access.status,entitlements:access.entitlements};
  };
  const consumeLimit=async(uid:string)=>{
-  try{await limitAuth('talent','invite_manage_write','private-document:'+uid);}catch(error){if(error instanceof RateFailure)throw {code:'rate_limited'};throw new Error('private_upload_unavailable');}
+  try{await limitAuth('talent','org_write','private-document:'+uid);}catch(error){if(error instanceof RateFailure)throw {code:'rate_limited'};throw new Error('private_upload_unavailable');}
  };
  return {origin:config.origin,request:{enabled:true,policy:APPROVED_APPLICATION_UPLOAD_POLICY,storageOrigin:config.url,authOrigin:config.url,now:()=>new Date(),verifyIdentity,consumeLimit,
   fingerprint:request=>{const key=process.env.PUBLIC_ENQUIRY_RATE_LIMIT_SECRET;if(!key||key.length<32)throw new Error('private_upload_unavailable');return createHmac('sha256',key).update('private-document:initiate:').update(JSON.stringify(request)).digest('hex');},

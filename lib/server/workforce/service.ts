@@ -21,7 +21,9 @@ async function actor(app: "admin" | "talent") {
   const user = identity.user; const claims = proof?.claims;
   if (identityError || proofError || !user?.email_confirmed_at || claims?.sub !== user.id || typeof claims.session_id !== "string" || !UUID.test(claims.session_id)) throw new AuthFailure("unauthenticated", 401);
   if (app === "admin" && claims.aal !== "aal2") throw new AuthFailure("mfa_required", 403);
-  await limitAuth(app, app === "admin" ? "invite_manage_read" : "setup_read", user.id);
+  // Own bucket (lead 2026-11-24 bug: sharing the setup/invite buckets meant normal browsing used them up and the schedule
+  // "couldn't load"). Per-action limits are enforced again in the workforce_* database functions.
+  await limitAuth(app, app === "admin" ? "org_read" : "staff_enroll_read", `workforce:${user.id}`);
   return { uid: user.id, sessionId: claims.session_id as string };
 }
 

@@ -31,7 +31,7 @@ export function adminSummaryRuntime(): { deps: SummaryDependencies; origin: stri
         return who;
       },
       consumeLimit: async (uid) => {
-        try { await limitAuth("admin", "invite_manage_read", `admin-summary:${uid}`); }
+        try { await limitAuth("admin", "org_read", `admin-summary:${uid}`); }
         catch (e) { if (e instanceof RateFailure) throw { code: "rate_limited" }; throw e; }
       },
       staff: (show) => listStaff({ show, page: 1, pageSize: 1 }, org),

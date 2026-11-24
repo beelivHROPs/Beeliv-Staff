@@ -21,7 +21,7 @@ export function vacancyWriteRuntime():{deps:VacancyWriteDependencies;origin:stri
   consumeLimit:async uid=>{
    // Reuse the reviewed 15-per-five-minute write quota in a separate subject
    // bucket; vacancy writes never consume invitation sender quota for this UID.
-   try{await limitAuth('admin','invite_manage_write','vacancy-write:'+uid);}catch(error){if(error instanceof RateFailure)throw {code:'rate_limited'};throw error;}
+   try{await limitAuth('admin','org_write','vacancy-write:'+uid);}catch(error){if(error instanceof RateFailure)throw {code:'rate_limited'};throw error;}
   },
   fingerprint:command=>{const key=process.env.PUBLIC_ENQUIRY_RATE_LIMIT_SECRET;if(!key||key.length<32)throw new Error('unavailable');return createHmac('sha256',key).update(JSON.stringify(command)).digest('hex');},
   mutate:async args=>{const {data,error}=await adminClient('admin').rpc('recruitment_vacancy_mutate',args);return {data,error};},
