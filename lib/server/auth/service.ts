@@ -125,7 +125,7 @@ export async function acceptInvitation(input: Record<string, unknown>): Promise<
     const phone = normaliseAccountPhone(profile.phone);
     if (name.length < 2 || name.length > 200 || !phone) throw new AuthFailure("validation_failed");
     // One phone number per Beeliv account (auth_people_phone_unique). Say so plainly instead of a provider 500.
-    const { data: taken, error: phoneError } = await adminClient(app).from("auth_people").select("id").eq("phone", phone).limit(1);
+    const { data: taken, error: phoneError } = await adminClient(app).from("auth_people").select("id").eq("phone", phone).neq("email", record.email.toLowerCase()).limit(1);
     if (phoneError) throw new AuthFailure("unavailable", 503);
     if (taken && taken.length) throw new AuthFailure("phone_in_use", 409);
     // Email possession is proven by the high-entropy, emailed business token. Never set/reset an existing user's password.

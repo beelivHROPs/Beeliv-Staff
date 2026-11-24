@@ -169,7 +169,7 @@ function PersonalDetailsForm({ d, onDone }: { d: StaffPersonalDetails; onDone: (
   }
 
   return (
-    <form onSubmit={save} noValidate>
+    <form onSubmit={save} noValidate autoComplete="off">
       <div className={GRID}>
         <Field id="pd-sex" label="Sex">
           <SelectMenu id="pd-sex" placeholder="Select" value={v.sex} options={GENDER_OPTIONS} onChange={(x) => set("sex", x as StaffPersonalDetails["sex"])} />
@@ -181,7 +181,7 @@ function PersonalDetailsForm({ d, onDone }: { d: StaffPersonalDetails; onDone: (
           <DatePicker id="pd-birthday" title="Birthday" initialView="years" max={new Date().toISOString().slice(0, 10)} value={v.birthday} onChange={(x) => set("birthday", x)} />
         </Field>
         <Field id="pd-nationality" label="Nationality">
-          <input id="pd-nationality" className="ap-input" value={v.nationality} maxLength={60} autoComplete="country-name" onChange={(e) => set("nationality", e.target.value)} />
+          <input id="pd-nationality" className="ap-input" value={v.nationality} maxLength={60} autoComplete="off" onChange={(e) => set("nationality", e.target.value)} />
         </Field>
         <Field id="pd-state" label="State of origin">
           <SelectMenu id="pd-state" placeholder="Select state of origin" value={v.stateOfOrigin} options={NIGERIAN_STATES} onChange={(x) => set("stateOfOrigin", x)} />
@@ -192,7 +192,7 @@ function PersonalDetailsForm({ d, onDone }: { d: StaffPersonalDetails; onDone: (
       </div>
       <div className="mt-4">
         <Field id="pd-address" label="Home address">
-          <input id="pd-address" className="ap-input" value={v.homeAddress} maxLength={200} autoComplete="street-address" onChange={(e) => set("homeAddress", e.target.value)} />
+          <input id="pd-address" className="ap-input" value={v.homeAddress} maxLength={200} autoComplete="off" onChange={(e) => set("homeAddress", e.target.value)} />
         </Field>
       </div>
       <p className="mt-3 text-[14px] text-(--ap-muted)">Your email comes from your account and your team is set by Beeliv, so neither is asked here.</p>
@@ -441,12 +441,18 @@ function SensitiveSection({ id, title, icon: Icon, state, rows, intro, form }: {
 }
 
 /** Runs a sensitive save: nothing typed is logged or shown; the toast names only the section. */
-async function submitSensitive(work: () => Promise<StaffSensitiveStatus>, state: SensitiveState, what: string, onDone: () => void, fail: () => void) {
+async function submitSensitive(work: () => Promise<StaffSensitiveStatus>, state: SensitiveState, what: string, onDone: () => void, fail: (shown?: boolean) => void) {
   try {
     await withStaffPreloader("save", work);
     toast.add({ title: state === "empty" ? `${what} saved` : "Change sent to Beeliv HR", type: "success" });
     onDone();
-  } catch {
+  } catch (error) {
+    // Secure (encrypted) details need Beeliv's encryption keys switched on. Say so plainly instead of "try again".
+    const unavailable = error instanceof Error && /isn't available right now|not available/i.test(error.message);
+    if (unavailable) {
+      toast.add({ title: "Secure details can't be saved yet", description: "Beeliv is switching on encryption for these details. Please try again soon.", type: "error" });
+      return fail(true);
+    }
     fail();
   }
 }
@@ -493,8 +499,8 @@ function NextOfKinForm({ state, onDone }: { state: SensitiveState; onDone: () =>
       state,
       "Next of kin",
       onDone,
-      () => {
-        saveFailed();
+      (shown?: boolean) => {
+        if (!shown) saveFailed();
         setBusy(false);
       },
     );
@@ -530,7 +536,7 @@ export function NinCard({ load }: { load: Loadable<StaffSensitiveStatus> }) {
           icon={IdCard}
           state={s.nin.state}
           rows={[["National Identification Number (NIN)", s.nin.masked ?? ""]]}
-          intro="Add your 11-digit National Identification Number. It is never shown back in full."
+          intro="Add your 11-digit National Identification Number. It is encrypted and kept private: only authorised Beeliv HR can see it, and it is never shared with your employer."
           form={(close) => <NinForm state={s.nin.state} onDone={close} />}
         />
       )}
@@ -560,8 +566,8 @@ function NinForm({ state, onDone }: { state: SensitiveState; onDone: () => void 
       state,
       "NIN",
       onDone,
-      () => {
-        saveFailed();
+      (shown?: boolean) => {
+        if (!shown) saveFailed();
         setBusy(false);
       },
     );
@@ -599,7 +605,7 @@ export function BankCard({ load }: { load: Loadable<StaffSensitiveStatus> }) {
           icon={ShieldCheck}
           state={s.bank.state}
           rows={[["Bank account number", s.bank.maskedAccount ?? ""]]}
-          intro="Add the account name, account number and bank. Only part of the number is ever shown back."
+          intro="Add the account name, account number and bank so you get paid on time. Your details are encrypted and only used for payroll."
           form={(close) => <BankForm state={s.bank.state} onDone={close} />}
         />
       )}
@@ -631,8 +637,8 @@ function BankForm({ state, onDone }: { state: SensitiveState; onDone: () => void
       state,
       "Bank details",
       onDone,
-      () => {
-        saveFailed();
+      (shown?: boolean) => {
+        if (!shown) saveFailed();
         setBusy(false);
       },
     );
@@ -676,7 +682,7 @@ export function AccessibilityCard({ load }: { load: Loadable<StaffSensitiveStatu
           icon={UserRound}
           state={s.accessibility.state}
           rows={[["Physically challenged", "Answer saved"]]}
-          intro="Tell Beeliv if you are physically challenged, so the right support can be arranged. Your answer is not shown back."
+          intro="Tell Beeliv if you are physically challenged, so the right support can be arranged. Your answer is private and only seen by Beeliv HR."
           form={(close) => <AccessibilityForm state={s.accessibility.state} onDone={close} />}
         />
       )}
@@ -707,8 +713,8 @@ function AccessibilityForm({ state, onDone }: { state: SensitiveState; onDone: (
       state,
       "Your answer",
       onDone,
-      () => {
-        saveFailed();
+      (shown?: boolean) => {
+        if (!shown) saveFailed();
         setBusy(false);
       },
     );
