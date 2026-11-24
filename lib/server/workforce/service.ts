@@ -60,6 +60,9 @@ export async function workforceAdmin(action: string, input: Rec) {
     case "week-publish": return call("admin", "workforce_week_publish", { p_outlet_id: uuidOf(input.outletId), p_week_start: dateOf(input.weekStart) });
     case "week-copy": return call("admin", "workforce_week_copy", { p_outlet_id: uuidOf(input.outletId), p_week_start: dateOf(input.weekStart) });
     case "attendance": return call("admin", "workforce_attendance_list", { p_from: dateOf(input.from), p_to: dateOf(input.to) });
+    case "leave": return call("admin", "workforce_leave_list", {});
+    case "leave-decide": return call("admin", "workforce_leave_decide", { p_leave_id: uuidOf(input.leaveId), p_expected_revision: intOf(input.expectedRevision, 1, 1_000_000),
+      p_decision: input.decision === "approve" || input.decision === "decline" ? input.decision : bad(), p_note: str(input.note).slice(0, 1000) });
     default: throw new AuthFailure("invalid_request", 404);
   }
 }
@@ -69,6 +72,9 @@ export async function workforceStaff(action: string, input: Rec) {
     case "my-shifts": return call("talent", "workforce_my_shifts", { p_from: dateOf(input.from), p_to: dateOf(input.to) });
     case "check-in": return call("talent", "workforce_check", { p_shift_id: uuidOf(input.shiftId), p_kind: "in" });
     case "check-out": return call("talent", "workforce_check", { p_shift_id: uuidOf(input.shiftId), p_kind: "out" });
+    case "leave-mine": return call("talent", "workforce_leave_mine", {});
+    case "leave-request": return call("talent", "workforce_leave_request", { p_type: str(input.type).slice(0, 40), p_start: dateOf(input.startDate), p_end: dateOf(input.endDate), p_reason: str(input.reason).slice(0, 1000) });
+    case "leave-cancel": return call("talent", "workforce_leave_cancel", { p_leave_id: uuidOf(input.leaveId) });
     default: throw new AuthFailure("invalid_request", 404);
   }
 }

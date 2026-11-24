@@ -5,7 +5,7 @@
  * Sensitive inputs go to the transport body only; this file never logs, keeps or echoes them.
  * Only relative imports so it can be unit-tested offline.
  */
-import { liveAttendanceHistory, liveCheck, liveHomeShifts, liveSchedule, liveToday } from "../workforce-live";
+import { liveAttendanceHistory, liveCancelLeave, liveCheck, liveHomeShifts, liveLeaveRequests, liveRequestLeave, liveSchedule, liveToday } from "../workforce-live";
 import type { AdapterEvent, StaffAdapter } from "../adapter";
 import { enrollmentCall, enrollmentWrite, StaffNotConnectedError } from "../enrollment-transport";
 import { onboardingFromChecklist, type EnrollmentChecklist } from "../onboarding-checklist";
@@ -96,7 +96,7 @@ export const liveStaffAdapter: StaffAdapter = {
   getSchedule: (range) => liveSchedule(range),
   getTodayAttendance: () => liveToday(),
   getAttendanceHistory: () => liveAttendanceHistory(),
-  getLeaveRequests: () => notConnected(),
+  getLeaveRequests: () => liveLeaveRequests(),
   getStaffDocuments: getLiveStaffDocuments,
   getSOPs: () => notConnected(),
   getSopLibrary: () => notConnected(),
@@ -110,8 +110,8 @@ export const liveStaffAdapter: StaffAdapter = {
 
   checkIn: () => wrote(() => liveCheck("in")),
   checkOut: () => wrote(() => liveCheck("out")),
-  requestLeave: () => notConnected(),
-  cancelLeaveRequest: () => notConnected(),
+  requestLeave: (input) => wrote(() => liveRequestLeave(input)),
+  cancelLeaveRequest: (id) => wrote(() => liveCancelLeave(id)),
   uploadStaffDocument: (slot, file) => wrote(() => sendLiveStaffDocument(slot, file)),
   replaceStaffDocument: (slot, file) => wrote(() => sendLiveStaffDocument(slot, file)),
   acknowledgeAgreement: () => notConnected(),
