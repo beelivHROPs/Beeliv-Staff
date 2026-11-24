@@ -104,7 +104,7 @@ export function staffEnrollmentRuntime(): { deps: StaffEnrollmentDependencies; o
         return { uid: user.id, personId: access.personId, sessionId: claims.session_id, emailVerified: true };
       },
       consumeLimit: async (uid) => {
-        try { await limitAuth("talent", "invite_manage_write", `staff-enrollment:${uid}`); } catch (error) {
+        try { await limitAuth("talent", "staff_enroll_read", `staff-enrollment:${uid}`); } catch (error) {
           if (error instanceof RateFailure) throw { code: "rate_limited" };
           throw new Error("unavailable");
         }

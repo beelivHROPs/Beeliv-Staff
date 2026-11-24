@@ -61,16 +61,18 @@ async function getEntitlements(): Promise<Entitlements> {
  * "onboarding" only while a profile item is still open (otherwise "active"). Everything else is empty.
  */
 async function getStaffHome(): Promise<StaffHome> {
-  const [checklist, today, shifts] = await Promise.all([
+  const [checklist, today, shifts, who] = await Promise.all([
     enrollmentCall<EnrollmentChecklist>("checklist-get"),
     // Shifts and attendance are real (workforce-shifts-attendance.sql); if they can't load, Home still opens with none.
     liveToday().catch(() => ({ state: "no-shift" as const, shift: null, checkedInAt: null, checkedOutAt: null, attentionReason: null })),
     liveHomeShifts().catch(() => ({ todaysShifts: [], upcoming: [], recentAttendance: [] })),
+    // The person's own name and contact for the greeting (lead 2026-11-24: Home showed "Good evening, •").
+    enrollmentCall<ProfileWire>("profile-get").catch(() => null),
   ]);
   const onboarding = onboardingFromChecklist(checklist);
   const open = onboarding.some((i) => !i.done);
   return {
-    profile: { id: "", staffId: "", firstName: "", lastName: "", preferredName: null, email: "", phone: null, avatarUrl: null, roleLabel: "", accountStatus: open ? "onboarding" : "active" },
+    profile: { id: "", staffId: "", ...splitFullName(typeof who?.fullName === "string" ? who.fullName : ""), preferredName: null, email: typeof who?.email === "string" ? who.email : "", phone: typeof who?.phone === "string" && who.phone.trim() ? who.phone : null, avatarUrl: null, roleLabel: "Staff", accountStatus: open ? "onboarding" : "active" },
     assignment: null,
     today,
     todaysShifts: shifts.todaysShifts,
