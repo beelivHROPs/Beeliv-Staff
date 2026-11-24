@@ -1,7 +1,10 @@
 /**
- * Live Staff adapter. Only the personal-details slice is served (docs/contracts/staff-personal-details-wire.md). Every other
- * method throws StaffNotConnectedError so a screen shows its own error state: it NEVER returns fixture or sample data.
- * Harmless empties: getNavCounts -> {} and getNotifications -> [].
+ * Live Staff adapter. Only the personal-details slice is served (docs/contracts/staff-personal-details-wire.md). It NEVER returns
+ * fixture or sample data.
+ * Reads with no backend yet answer an honest EMPTY result (null / []), so each screen shows its approved "No ... yet" state
+ * instead of an error panel (lead rule: real data, or "Coming soon" / "No ... yet", never an error because a backend is missing).
+ * Harmless empties: getNavCounts -> {}, getNotifications -> [], assignment -> null, SOPs/training/records/announcements -> [].
+ * Unserved WRITES still throw StaffNotConnectedError: nothing is ever claimed as saved.
  * Sensitive inputs go to the transport body only; this file never logs, keeps or echoes them.
  * Only relative imports so it can be unit-tested offline.
  */
@@ -15,6 +18,8 @@ import { getLiveStaffDocuments, sendLiveStaffDocument } from "../document-transp
 const listeners = new Set<(event: AdapterEvent) => void>();
 const emit = (e: AdapterEvent) => listeners.forEach((l) => l(e));
 const notConnected = <T>(): Promise<T> => Promise.reject(new StaffNotConnectedError());
+/** A read whose backend does not exist yet: nothing to show, so the screen renders its approved empty state. Never sample data. */
+const nothingYet = async <T>(): Promise<T[]> => [];
 
 /** Runs a write, then tells subscribers to refresh. A failed write notifies nobody. */
 async function wrote<T>(run: () => Promise<T>): Promise<T> {
@@ -91,18 +96,18 @@ export const liveStaffAdapter: StaffAdapter = {
   getEntitlements,
   getStaffProfile,
   getNavCounts: async () => ({}),
-  getCurrentAssignment: () => notConnected(),
-  getAssignmentHistory: () => notConnected(),
+  getCurrentAssignment: async () => null,
+  getAssignmentHistory: () => nothingYet(),
   getSchedule: (range) => liveSchedule(range),
   getTodayAttendance: () => liveToday(),
   getAttendanceHistory: () => liveAttendanceHistory(),
   getLeaveRequests: () => liveLeaveRequests(),
   getStaffDocuments: getLiveStaffDocuments,
-  getSOPs: () => notConnected(),
-  getSopLibrary: () => notConnected(),
-  getTraining: () => notConnected(),
-  getStaffRecords: () => notConnected(),
-  getAnnouncements: () => notConnected(),
+  getSOPs: () => nothingYet(),
+  getSopLibrary: () => nothingYet(),
+  getTraining: () => nothingYet(),
+  getStaffRecords: () => nothingYet(),
+  getAnnouncements: () => nothingYet(),
   getNotifications: async () => [],
   getPersonalDetails: () => enrollmentCall<StaffPersonalDetails>("personal-get"),
   getEmployment: () => enrollmentCall<StaffEmployment>("employment-get"),
