@@ -25,6 +25,7 @@ import { GENDER_OPTIONS, NIGERIAN_STATES } from "@/lib/applicant/reference-data"
 import { saveProfile, useApplicantStore } from "@/lib/applicant/service";
 import { currentJob, formatIsoLabel, periodToRange, previousJob, profileFacts } from "@/lib/applicant/documentation";
 import { isValidPhone } from "@/lib/phone/phone";
+import { enrollmentErrorMessage, StaffEnrollmentError, StaffOutcomeUnknownError, StaffUnresolvedIntentError } from "@/lib/staff/enrollment-transport";
 import { useEmployment } from "@/lib/staff/hooks";
 import { EDUCATION_OPTIONS, EMPTY_EMPLOYER, NIGERIAN_BANKS, RELATIONSHIP_STATUS_OPTIONS, digitsOnly, isValidNin, isValidNuban } from "@/lib/staff/personal-details";
 import { saveAccessibility, saveBankDetails, saveEmployer, saveNextOfKin, saveNin, savePersonalDetails } from "@/lib/staff/service";
@@ -447,10 +448,17 @@ async function submitSensitive(work: () => Promise<StaffSensitiveStatus>, state:
     toast.add({ title: state === "empty" ? `${what} saved` : "Change sent to Beeliv HR", type: "success" });
     onDone();
   } catch (error) {
-    // Secure (encrypted) details need Beeliv's encryption keys switched on. Say so plainly instead of "try again".
-    const unavailable = error instanceof Error && /isn't available right now|not available/i.test(error.message);
-    if (unavailable) {
+    // Secure (encrypted) details need Beeliv's encryption keys switched on. Until then the server fails closed and answers the
+    // fixed public code `unavailable` (it never says why), which the transport surfaces as StaffEnrollmentError. Match that code,
+    // not message text, and say so plainly instead of "try again".
+    if (error instanceof StaffEnrollmentError && error.code === "unavailable") {
       toast.add({ title: "Secure details can't be saved yet", description: "Beeliv is switching on encryption for these details. Please try again soon.", type: "error" });
+      return fail(true);
+    }
+    // Any other transport error carries fixed, value-free wording (session ended, outcome unknown, too many requests...).
+    // Show that instead of a bare "try again" so the person knows what to do. A plain "not saved" keeps the generic toast.
+    if (error instanceof StaffOutcomeUnknownError || error instanceof StaffUnresolvedIntentError || (error instanceof StaffEnrollmentError && error.code !== "not_saved")) {
+      toast.add({ title: error instanceof StaffOutcomeUnknownError ? "We couldn't confirm the save" : "We couldn't save your changes", description: enrollmentErrorMessage(error), type: "error" });
       return fail(true);
     }
     fail();

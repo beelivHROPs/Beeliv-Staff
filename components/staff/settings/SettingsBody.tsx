@@ -1,12 +1,14 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { LockKeyhole, LogOut } from "@/components/applicant/icons";
 import { toast } from "@/components/ui/toast";
 import { useStaffProfile } from "@/lib/staff/hooks";
 import { ActionPill, Panel, confirmAction } from "../kit";
 import { setStaffDark, useStaffDark } from "@/lib/staff/theme";
+import { staffMode } from "@/lib/staff/mode";
+import { authPaths } from "@/lib/auth/portals";
+import { usePortalSignOut } from "@/lib/ui/use-portal-sign-out";
 import { AlwaysSent } from "@/components/shared/AlwaysSent";
 import { isRequired } from "@/lib/notifications/catalog";
 import { STAFF_KIND } from "@/lib/notifications/adapters";
@@ -15,8 +17,10 @@ import type { NotificationEvent } from "@/lib/staff/types";
 /**
  * Staff Settings. One Talent app, one login: the sign-in email/password
  * belong to the SAME account as the Applicant side, so there is no separate
- * staff credential here. Auth is not wired yet, so account actions confirm
- * honestly instead of pretending to change anything.
+ * staff credential here.
+ *  - Live: "Change password" opens the real Talent forgot-password flow (a reset link is emailed); the sign-in email has no
+ *    self-service backend, so a calm note says to contact Beeliv HR. Sign out ends the real session (same hook as the shell).
+ *  - Mock/preview: account actions confirm honestly instead of pretending to change anything.
  *
  * Notification preferences are DEVICE-LOCAL for now (localStorage) - there is
  * no preferences contract in the data layer yet (TBD); a backend adapter
@@ -64,6 +68,7 @@ function setPref(key: NotificationEvent, on: boolean) {
   listeners.forEach((l) => l());
 }
 
+/** Mock/preview mode only. Live mode never shows this. */
 function preview(action: string) {
   toast.add({ title: `${action} isn't connected yet`, description: "This is a preview. No account changes were made." });
 }
@@ -83,21 +88,21 @@ function Row({ title, detail, children }: { title: string; detail: string; child
 export function SettingsBody() {
   const dark = useStaffDark();
   const prefs = usePrefs();
-  const router = useRouter();
   const { data: profile } = useStaffProfile();
-
-  async function signOut() {
-    const ok = await confirmAction({
+  const live = staffMode() === "live";
+  // Same sign-out as the shell's menu: live ends the real session, preview returns to the public site.
+  const signOut = usePortalSignOut(
+    "staff",
+    {
       tone: "neutral",
       icon: LogOut,
       title: "Sign out of Beeliv?",
       description: "You'll be signed out of your Beeliv account on this device. Sign back in any time.",
       confirmLabel: "Sign out",
       cancelLabel: "Stay signed in",
-    });
-    // Auth isn't wired yet, so (like the shell's menu) this returns to the public site.
-    if (ok) router.push("/");
-  }
+    },
+    confirmAction,
+  );
 
   return (
     <div className="w-full pt-1 pb-2">
@@ -144,14 +149,25 @@ export function SettingsBody() {
 
         <Panel id="s-acct" title="Account & security">
           <Row title="Sign-in email" detail={profile ? `${profile.email} · shared with your whole Beeliv account` : "Shared with your whole Beeliv account"}>
-            <ActionPill variant="outline" compact arrow={false} onClick={() => preview("Changing your email")} ariaLabel="Change sign-in email">
-              Change
-            </ActionPill>
+            {live ? (
+              <LockKeyhole className="size-4 shrink-0 text-(--ap-muted)" aria-hidden="true" />
+            ) : (
+              <ActionPill variant="outline" compact arrow={false} onClick={() => preview("Changing your email")} ariaLabel="Change sign-in email">
+                Change
+              </ActionPill>
+            )}
           </Row>
-          <Row title="Password" detail="One password for everything you do with Beeliv">
-            <ActionPill variant="outline" compact arrow={false} onClick={() => preview("Password reset")} ariaLabel="Change password">
-              Change
-            </ActionPill>
+          {live ? <p className="ap-sm -mt-1 pb-3.5">To change your sign-in email, contact Beeliv HR.</p> : null}
+          <Row title="Password" detail={live ? "One password for everything you do with Beeliv. We'll email you a link to set a new one." : "One password for everything you do with Beeliv"}>
+            {live ? (
+              <ActionPill href={authPaths("staff").forgotPath} variant="outline" compact arrow={false} ariaLabel="Change password">
+                Change
+              </ActionPill>
+            ) : (
+              <ActionPill variant="outline" compact arrow={false} onClick={() => preview("Password reset")} ariaLabel="Change password">
+                Change
+              </ActionPill>
+            )}
           </Row>
         </Panel>
 

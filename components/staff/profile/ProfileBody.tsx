@@ -195,7 +195,7 @@ export function ProfileBody() {
           </Panel>
           <Panel title="Account">
             <Facts rows={[rowOf("Beeliv staff ID", profile.staffId, "managed"), rowOf("Sign-in email", profile.email, "managed")]} />
-            <p className="mt-3 text-[14px] text-(--ap-muted)">Shared across your Beeliv account. Change it in Settings.</p>
+            <p className="mt-3 text-[14px] text-(--ap-muted)">{live ? "Shared across your Beeliv account. Change your password in Settings; to change your email, contact Beeliv HR." : "Shared across your Beeliv account. Change it in Settings."}</p>
             <ActionPill href="/staff/settings" icon={Settings} variant="outline" compact className="mt-4">
               Account &amp; security
             </ActionPill>
@@ -210,28 +210,33 @@ export function ProfileBody() {
 
 function PersonalCard({ profile, fullName }: { profile: StaffProfile; fullName: string }) {
   const [editing, setEditing] = useState(false);
+  // Live: preferred name / phone have no save endpoint yet (updateStaffContact is not served), so no Edit that would only fail.
+  const live = staffMode() === "live";
   return (
     <Panel
       title="Personal & contact"
       aside={
-        editing ? undefined : (
+        editing || live ? undefined : (
           <ActionPill variant="outline" compact arrow={false} icon={Pencil} onClick={() => setEditing(true)} ariaLabel="Edit personal and contact details">
             Edit
           </ActionPill>
         )
       }
     >
-      {editing ? (
+      {editing && !live ? (
         <PersonalForm profile={profile} onDone={() => setEditing(false)} />
       ) : (
-        <Facts
-          rows={[
-            rowOf("Full name", fullName, "managed"),
-            rowOf("Preferred name", profile.preferredName, "editable"),
-            rowOf("Phone", profile.phone ? formatPhone(profile.phone) : profile.phone, "editable"),
-            rowOf("Email", profile.email, "managed"),
-          ]}
-        />
+        <>
+          <Facts
+            rows={[
+              rowOf("Full name", fullName, "managed"),
+              rowOf("Preferred name", profile.preferredName, live ? "managed" : "editable"),
+              rowOf("Phone", profile.phone ? formatPhone(profile.phone) : profile.phone, live ? "managed" : "editable"),
+              rowOf("Email", profile.email, "managed"),
+            ]}
+          />
+          {live ? <p className="mt-3 text-[14px] text-(--ap-muted)">To change these, contact Beeliv HR.</p> : null}
+        </>
       )}
     </Panel>
   );
