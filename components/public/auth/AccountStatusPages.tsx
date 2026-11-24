@@ -16,6 +16,7 @@ export function AccountSuspended({ portal = "talent" }: { portal?: Portal }) {
     <StatusPanel
       portal={frameOf(portal)}
       icon={<AlertIcon size={26} strokeWidth={1.7} />}
+      screen="login"
       lead="This account is not "
       accent="active."
       sub="Please contact Beeliv."
@@ -50,6 +51,7 @@ export function AccessDenied({
     <StatusPanel
       portal={frameOf(portal)}
       icon={<ShieldCheckIcon size={26} strokeWidth={1.7} />}
+      screen="login"
       lead="You don't have access to "
       accent="this area."
       sub="If you think this is a mistake, contact Beeliv."

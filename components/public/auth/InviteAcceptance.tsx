@@ -119,6 +119,7 @@ function InviteAcceptanceInner({
     return (
       <StatusPanel
         portal={doneApp}
+        screen="verified"
         icon={<CheckIcon size={26} strokeWidth={2} />}
         lead="Invitation "
         accent="accepted."
