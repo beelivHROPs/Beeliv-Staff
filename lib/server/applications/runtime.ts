@@ -59,7 +59,7 @@ export function applicationsRuntime(app: "talent" | "admin"): { deps: Applicatio
         return base ? { uid: base.user.id, sessionId: base.claims.session_id as string, aal: String(base.claims.aal ?? ""), emailVerified: true } : null;
       },
       consumeLimit: async (uid) => {
-        try { await limitAuth(app, "invite_manage_write", `applications:${uid}`); } catch (error) {
+        try { await limitAuth(app, "org_read", `applications:${uid}`); } catch (error) {
           if (error instanceof RateFailure) throw { code: "rate_limited" };
           throw new Error("unavailable");
         }

@@ -6,7 +6,7 @@
  * Keyboard: ↑/↓ move, Enter/Space pick, Home/End jump, Esc closes, typing a
  * letter jumps to the first matching option.
  */
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown } from "@/components/applicant/icons";
 
 export type SelectOption = string | { value: string; label: string };
@@ -68,6 +68,9 @@ export function SelectMenu({
   const [open, setOpen] = useState(false);
   const [hi, setHi] = useState(0);
   const [up, setUp] = useState(false);
+  // The list can be wider than its field: if it would run past the screen's right edge, it lines up with the field's
+  // right edge instead, so the page never scrolls sideways (lead 2026-11-24: the sidebar moved when a list opened).
+  const [flip, setFlip] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
@@ -91,7 +94,16 @@ export function SelectMenu({
     if (open) list.current?.children[hi]?.scrollIntoView({ block: "nearest" });
   }, [open, hi]);
 
+  useLayoutEffect(() => {
+    if (!open) return;
+    const el = list.current;
+    if (!el || align === "right") return;
+    const box = el.getBoundingClientRect();
+    if (box.right > document.documentElement.clientWidth - 8) setFlip(true);
+  }, [open, align]);
+
   function show() {
+    setFlip(false);
     setHi(Math.max(0, opts.findIndex((o) => val(o) === value)));
     // Open upwards when there is no room below (e.g. a field near the bottom of the screen).
     const r = wrap.current?.getBoundingClientRect();
@@ -171,7 +183,7 @@ export function SelectMenu({
           aria-label={label}
           className={`ap-pop-in ${up ? "ap-pop-up" : ""} absolute z-50 max-h-72 w-max max-w-[calc(100vw-32px)] min-w-full overflow-y-auto overscroll-contain rounded-2xl border border-(--ap-line) bg-white p-1.5 shadow-[0_18px_40px_rgba(37,0,68,.14)] ${
             up ? "bottom-[calc(100%+6px)]" : "top-[calc(100%+6px)]"
-          } ${align === "right" ? "right-0" : "left-0"} ${menuClassName}`}
+          } ${align === "right" || flip ? "right-0" : "left-0"} ${menuClassName}`}
         >
           {opts.map((o, i) => {
             const on = val(o) === value;

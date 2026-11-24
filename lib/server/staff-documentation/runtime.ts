@@ -82,7 +82,7 @@ export function staffDocumentationRuntime(app: "talent" | "admin"): { deps: Staf
         return p ? { uid: p.user.id, sessionId: p.claims.session_id as string, aal: String(p.claims.aal ?? ""), emailVerified: true } : null;
       },
       consumeLimit: async (uid) => {
-        try { await limitAuth(app, "invite_manage_write", `staff-documentation:${uid}`); } catch (error) {
+        try { await limitAuth(app, "staff_enroll_read", `staff-documentation:${uid}`); } catch (error) {
           if (error instanceof RateFailure) throw { code: "rate_limited" };
           throw new Error("unavailable");
         }

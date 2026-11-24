@@ -1,14 +1,11 @@
 "use client";
 
 import { useStaffHome, useStaffProfile } from "@/lib/staff/hooks";
-import { HomeHero } from "./HomeHero";
 import { HomeMobile } from "./HomeMobile";
 import { HomeDesktop, HomeDesktopSkeleton } from "./HomeDesktop";
 import { HomeError, HomeGate, HomeSkeleton } from "./HomeStates";
 import { OnboardingJourney, OnboardingSkeleton } from "./OnboardingJourney";
-import { usePilotMenu } from "@/lib/pilot/context";
 import { FormHomeCard } from "../forms/FormPrompt";
-import { AnnouncementsCard, AssignmentCard, NotificationsCard, QuickActions, RequiredCard, SupportCard } from "./HomeSections";
 
 /**
  * Staff Home. Mobile order is the DOM/`order-*` sequence (today -> required ->
@@ -18,7 +15,6 @@ import { AnnouncementsCard, AssignmentCard, NotificationsCard, QuickActions, Req
  */
 export function HomeBody() {
   const { data: home, status, retry } = useStaffHome();
-  const pilot = usePilotMenu();
   // The shell already loaded the profile, so new staff see a skeleton that matches their own screen.
   const onboarding = useStaffProfile().data?.accountStatus === "onboarding";
   if (status === "loading")
@@ -38,28 +34,8 @@ export function HomeBody() {
   if (s !== "active" && s !== "onboarding") return <HomeGate status={s} />;
   if (s === "onboarding") return <OnboardingJourney home={home} />;
 
-  if (pilot) {
-    // Pilot menu: schedule, attendance, leave and training cards point only at later-stage screens, so they are left out.
-    return (
-      <div className="flex flex-col gap-5">
-        <HomeHero home={home} />
-        <FormHomeCard />
-        <QuickActions />
-        <div className="flex flex-col gap-5 min-[1241px]:grid min-[1241px]:grid-cols-[minmax(0,1fr)_340px] min-[1241px]:items-start min-[1600px]:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="flex min-w-0 flex-col gap-5">
-            <AssignmentCard a={home.assignment} className="" />
-            <RequiredCard actions={home.requiredActions} className="" />
-          </div>
-          <div className="flex min-w-0 flex-col gap-5">
-            <AnnouncementsCard items={home.announcements} className="" />
-            <NotificationsCard className="" />
-            <SupportCard className="" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // Phones keep the calm single-column Home; from 1000px the richer dashboard takes over. The older desktop cards (HomeSections) remain only for the pilot menu above.
+  // Lead 2026-11-24: always the approved Home (same as localhost); the older pilot-menu cards are no longer used.
+  // Phones keep the calm single-column Home; from 1000px the richer dashboard takes over.
   return (
     <>
       <div className="mb-5 empty:hidden">
