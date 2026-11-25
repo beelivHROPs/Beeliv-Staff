@@ -12,6 +12,7 @@ import type { StaffDocument } from "@/lib/staff/types";
 import { ClipboardList as ClipboardCheck } from "../icons";
 import { ActionPill, Disc, PASTEL } from "../kit";
 import { DocumentsPhone, DocumentsPhoneSkeleton } from "./DocumentsPhone";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 /** Route-level and in-page loading: one skeleton for every width (the same layout is used everywhere). */
 export function DocumentsSkeleton() {
@@ -42,8 +43,8 @@ export function DocumentsBody() {
       // Replace when a file already exists, otherwise a first upload.
       await ((doc.hasCurrentFile ?? Boolean(doc.fileName)) ? replaceStaffDocument(doc.id, file) : uploadStaffDocument(doc.id, file));
       toast.add({ title: "Document uploaded", description: "Check its status below. Uploading does not mean it has been approved.", type: "success" });
-    } catch {
-      toast.add({ title: "We couldn't confirm the upload", description: "Refresh your documents to check its status before trying again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't confirm the upload", description: errorMessage(e, "Refresh your documents to check its status before trying again."), type: "error" });
     } finally {
       setBusyId(null);
     }

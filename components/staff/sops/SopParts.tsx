@@ -11,6 +11,7 @@ import { acknowledgeSOP, openSop } from "@/lib/staff/service";
 import { SOP_STATUS_LABEL, safeHttpsUrl, sopMeta, sopStatus } from "@/lib/staff/sops/derive";
 import type { SopItem, SopKind } from "@/lib/staff/sops/types";
 import { BookOpen, Coffee, Globe } from "../icons";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 type Icon = ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>;
 
@@ -53,8 +54,8 @@ export async function signOff(item: SopItem): Promise<boolean> {
     await acknowledgeSOP(item.id);
     toast.add({ title: "Signed off", type: "success" });
     return true;
-  } catch {
-    toast.add({ title: "We couldn't save that", description: "Please try again.", type: "error" });
+  } catch (e) {
+    toast.add({ title: "We couldn't save that", description: errorMessage(e), type: "error" });
     return false;
   }
 }

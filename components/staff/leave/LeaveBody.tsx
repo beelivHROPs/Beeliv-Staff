@@ -12,6 +12,7 @@ import { LeavePhone, LeavePhoneSkeleton } from "./LeavePhone";
 import { LeaveDesktop } from "./LeaveDesktop";
 import { RequestForm } from "./RequestForm";
 import { Sheet } from "./Sheet";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 export function LeaveSkeleton() {
   return <LeavePhoneSkeleton />;
@@ -73,8 +74,8 @@ function Detail({ req }: { req: LeaveRequest }) {
     try {
       await cancelLeaveRequest(req.id);
       toast.add({ title: "Leave request cancelled", type: "success" });
-    } catch {
-      toast.add({ title: "We couldn't cancel that request", description: "Please try again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't cancel that request", description: errorMessage(e), type: "error" });
     } finally {
       setBusy(false);
     }

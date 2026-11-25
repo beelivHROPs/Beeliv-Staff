@@ -5,6 +5,7 @@
  * Same-origin JSON only; the server derives who is signed in, owner, status and stage. Nothing here is authority.
  */
 import type { Application, ApplicationLifecycle, ApplyFormData, Interview } from "./types";
+import { explainError, NETWORK_MESSAGE } from "../shared/error-messages";
 
 export type LiveApplicationError = { code: string; message: string };
 type Reply<T> =
@@ -37,7 +38,7 @@ async function call<T>(
       ok: false,
       error: {
         code: "offline",
-        message: "You seem to be offline. Check your connection and try again.",
+        message: NETWORK_MESSAGE,
       },
     };
   }
@@ -58,9 +59,8 @@ async function call<T>(
   }
   const code =
     typeof j?.error?.code === "string" ? j.error.code : "unavailable";
-  const message =
-    typeof j?.error?.message === "string" ? j.error.message : FALLBACK.message;
-  return { ok: false, error: { code, message } };
+  // Our own wording from lib/shared/error-messages.ts, never the server's text.
+  return { ok: false, error: { code, message: code === "unavailable" ? FALLBACK.message : explainError(code, "application") } };
 }
 
 /* ---------- wire DTOs (mirror lib/server/applications/types.ts; copied, never imported from lib/server) ---------- */

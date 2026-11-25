@@ -21,6 +21,7 @@ import { StaffAvatar } from "../StaffAvatar";
 import { withStaffPreloader } from "../StaffPreloader";
 import { AccessibilityCard, BankCard, EducationCard, EmploymentCard, NextOfKinCard, NinCard, PersonalDetailsCard } from "./DetailsSections";
 import { ProfileSkeleton } from "./ProfileSkeleton";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 /**
  * Staff Profile (brief section 13). Fields are split three ways:
@@ -269,8 +270,8 @@ function PersonalForm({ profile, onDone }: { profile: StaffProfile; onDone: () =
       });
       toast.add({ title: "Profile updated", type: "success" });
       onDone();
-    } catch {
-      toast.add({ title: "We couldn't save your changes", description: "Please try again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't save your changes", description: errorMessage(e), type: "error" });
       setBusy(false);
     }
   }

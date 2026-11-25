@@ -10,6 +10,8 @@
  *  - Error text is fixed wording. It never contains a value the person typed and never names another account.
  */
 
+import { explainError, isKnownErrorCode, NETWORK_MESSAGE } from "../shared/error-messages";
+
 export type EnrollmentAction =
   | "personal-get" | "employment-get" | "sensitive-status" | "checklist-get" | "profile-get"
   | "personal-save" | "employer-save" | "kin-save" | "nin-save" | "bank-save" | "accessibility-save";
@@ -64,16 +66,22 @@ function fingerprint(payload: unknown): string {
   return `${h.toString(16)}:${text.length}`;
 }
 
+/**
+ * Fixed wording (never a typed value). The section-specific sentences below stay; every other code uses the shared
+ * explanation in lib/shared/error-messages.ts. "not_saved" stays deliberately vague: a duplicate NIN / bank must
+ * never be distinguishable from any other failed save.
+ */
+const ENROLLMENT_WORDING: Record<string, string> = {
+  invalid_request: "Check the details and try again.",
+  not_saved: "We couldn't save your changes.",
+  unauthenticated: "Your session has ended. Sign in again to continue.",
+  forbidden: "Your account can't do that yet.",
+  conflict: "That request clashed with an earlier one. Reload the page and try again.",
+  rate_limited: "Too many requests. Please wait a few minutes and try again.",
+  unavailable: "This isn't available right now. Please try again in a moment.",
+};
 function messageFor(code: string): string {
-  switch (code) {
-    case "invalid_request": return "Check the details and try again.";
-    case "not_saved": return "We couldn't save your changes.";
-    case "unauthenticated": return "Your session has ended. Sign in again to continue.";
-    case "forbidden": return "Your account can't do that yet.";
-    case "conflict": return "That request clashed with an earlier one. Reload the page and try again.";
-    case "rate_limited": return "Too many requests. Please wait a few minutes and try again.";
-    default: return "This isn't available right now. Please try again in a moment.";
-  }
+  return ENROLLMENT_WORDING[code] ?? (isKnownErrorCode(code) ? explainError(code, "enrollment") : ENROLLMENT_WORDING.unavailable);
 }
 
 export async function enrollmentCall<T>(action: EnrollmentAction, body: Record<string, unknown> = {}, fetcher: typeof fetch = fetch): Promise<T> {
@@ -90,7 +98,7 @@ export async function enrollmentCall<T>(action: EnrollmentAction, body: Record<s
     });
     try { wire = (await response.json()) as Wire; } catch { wire = null; }
   } catch {
-    throw write ? new StaffOutcomeUnknownError(requestId) : new StaffEnrollmentError("unavailable", messageFor("unavailable"));
+    throw write ? new StaffOutcomeUnknownError(requestId) : new StaffEnrollmentError("unavailable", NETWORK_MESSAGE);
   } finally {
     clearTimeout(timer);
   }

@@ -18,7 +18,7 @@ export const AUTH_ERROR_MESSAGES = {
   invitation_unavailable: "This invitation isn't available. Ask Beeliv to send you a new one.",
   weak_password: "Use at least 8 characters, including a number.",
   validation_failed: "Please check your personal details.",
-  phone_in_use: "This phone number is already used by another Beeliv account. Use a different number.",
+  phone_in_use: "This phone number can't be used. Check it, or use a different number.",
   invalid_code: "That code is wrong or has expired. Check your email, or send a new code.",
   forbidden: "This request is not allowed.",
   invalid_request: "Refresh the form and try again.",

@@ -14,6 +14,7 @@ import { deleteNotification, markNotificationRead } from "@/lib/staff/service";
 import { fromStaff } from "@/lib/notifications/adapters";
 import { confirmAction } from "../kit";
 import { NotificationsSkeleton } from "./NotificationsSkeleton";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 export function NotificationsBody() {
   const { data, status, retry } = useNotifications();
@@ -39,8 +40,8 @@ export function NotificationsBody() {
     try {
       await Promise.all(items.filter((n) => n.readAt === null).map((n) => markNotificationRead(n.id)));
       toast.add({ title: "All notifications marked as read" });
-    } catch {
-      toast.add({ title: "We couldn't update your notifications", description: "Please try again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't update your notifications", description: errorMessage(e), type: "error" });
     }
   }
 

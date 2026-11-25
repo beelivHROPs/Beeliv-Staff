@@ -26,6 +26,7 @@ import { phoneError } from "@/lib/phone/phone";
 import { usePortalSignOut } from "@/lib/ui/use-portal-sign-out";
 import type { GlyphName } from "@/components/shared/icons/BoldTile";
 import { firstName, heroSurface, JOURNEY_FOCUS as FOCUS, JourneyHeroDeco, JourneyRing, type RailRow, StepRail } from "./journey";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 // The auth screens' button (au-btn-hero) reads the public-site tokens; map them to this app's own colours.
 const AU_VARS = { "--beeliv-purple": "var(--ap-violet)", "--deep-plum": "var(--ap-plum)", "--muted-text": "var(--ap-muted)", "--ps-ease": "cubic-bezier(0.22, 1, 0.36, 1)" } as CSSProperties;
@@ -249,7 +250,7 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
       setSaved("Your details are saved.");
       advanceFrom(next);
     } catch (e) {
-      if (!fail(e, { kind: "details", name: name.trim(), phone })) toast.add({ title: "We couldn't save that", description: "Please try again.", type: "error" });
+      if (!fail(e, { kind: "details", name: name.trim(), phone })) toast.add({ title: "We couldn't save that", description: errorMessage(e), type: "error" });
     } finally {
       setBusy(false);
     }
@@ -280,7 +281,7 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
       setSaved("Your agreements are recorded.");
       advanceFrom(next);
     } catch (e) {
-      if (!fail(e, { kind: "agreement", id: current?.id ?? "", accepted: current?.accepted ?? true })) toast.add({ title: "We couldn't record that", description: "Please try again.", type: "error" });
+      if (!fail(e, { kind: "agreement", id: current?.id ?? "", accepted: current?.accepted ?? true })) toast.add({ title: "We couldn't record that", description: errorMessage(e), type: "error" });
     } finally {
       setResponding(false);
     }
@@ -301,7 +302,7 @@ function SetupFlow({ data, setData, reload, service, mode, portal, brand, what, 
       if (res.setup) setData(res.setup);
       setBlocked(res.ok ? ["Beeliv has not confirmed your setup yet."] : res.reasons);
     } catch (e) {
-      if (!fail(e, { kind: "finish" })) toast.add({ title: "We couldn't check your setup", description: "Please try again.", type: "error" });
+      if (!fail(e, { kind: "finish" })) toast.add({ title: "We couldn't check your setup", description: errorMessage(e), type: "error" });
     } finally {
       setBusy(false);
     }
