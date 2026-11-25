@@ -3,22 +3,24 @@
  * Only PUBLISHED shifts are returned; check-in / out windows and late rules live in the database, never here.
  */
 import type { AttendanceRecord, AttendanceState, DateRange, LeaveRequest, LeaveRequestInput, Shift, TodayAttendance } from "./types";
+import { errorFromReply, networkError } from "../shared/error-messages";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : null);
 const str = (v: unknown) => (typeof v === "string" ? v : "");
-const REASON: Record<string, string> = {
-  too_early: "Check-in opens 2 hours before your shift starts.",
-  shift_over: "This shift has ended, so it can no longer be recorded here. Tell your HR officer.",
-  not_checked_in: "Check in first.",
-};
-
-async function call(action: string, body: Rec): Promise<Rec> {
-  const res = await fetch(`/api/staff/workforce/${action}`, { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+/** too_early / shift_over / not_checked_in and every other reason are explained in lib/shared/error-messages.ts. */
+async function post(action: string, body: Rec, context?: string): Promise<Rec> {
+  let res: Response;
+  try {
+    res = await fetch(`/api/staff/workforce/${action}`, { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  } catch {
+    throw networkError();
+  }
   const j = rec(await res.json().catch(() => null));
   if (j?.ok === true) return j;
-  throw new Error(REASON[str(j?.reason)] ?? "We couldn't reach Beeliv. Please try again.");
+  throw errorFromReply(j, context);
 }
+const call = (action: string, body: Rec) => post(action, body);
 
 type LiveShift = Shift & { startsAt: string; endsAt: string; checkIn: string | null; checkOut: string | null };
 function shift(raw: unknown): LiveShift | null {
@@ -98,17 +100,8 @@ export async function liveHomeShifts(): Promise<{ todaysShifts: Shift[]; upcomin
 }
 
 /* ---------- leave (workforce-leave.sql) ---------- */
-const LEAVE_REASON: Record<string, string> = {
-  overlap: "You already have leave on some of these dates.",
-  invalid_request: "Check the dates. Leave can't start in the past (sick leave can go back up to 7 days) and lasts at most 60 days.",
-  invalid_transition: "This request can no longer be cancelled.",
-};
-async function leaveCall(action: string, body: Rec): Promise<Rec> {
-  const res = await fetch(`/api/staff/workforce/${action}`, { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const j = rec(await res.json().catch(() => null));
-  if (j?.ok === true) return j;
-  throw new Error(LEAVE_REASON[str(j?.reason)] ?? "We couldn't reach Beeliv. Please try again.");
-}
+/** Leave reasons (overlap, the date rules, ...) are explained in lib/shared/error-messages.ts under "leave". */
+const leaveCall = (action: string, body: Rec) => post(action, body, "leave");
 function leaveItem(raw: unknown): LeaveRequest | null {
   const l = rec(raw);
   if (!l) return null;

@@ -13,6 +13,7 @@ import { acknowledgeSOP, completeSOP, saveSOPProgress } from "@/lib/staff/servic
 import type { SOPAssignment } from "@/lib/staff/types";
 import { ImageRoom } from "../ImageRoom";
 import type { LearningEntry } from "./learning";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 const BACK = "ap-hit mb-1.5 mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-(--ap-violet) hover:text-(--ap-plum)";
 const BTN = "ap-btn text-[15px] font-semibold";
@@ -65,8 +66,8 @@ export function SopReader({ a, next }: { a: SOPAssignment; next: LearningEntry |
       setDoneAt(res.completedAt ?? new Date().toISOString());
       setShowDone(true);
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    } catch {
-      toast.add({ title: "We couldn't save that", description: "Please try again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't save that", description: errorMessage(e), type: "error" });
     } finally {
       setBusy(false);
     }

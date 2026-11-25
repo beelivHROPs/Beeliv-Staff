@@ -1,5 +1,6 @@
 import type { StaffDocument, DocumentStatus } from "./types";
 import type { OwnChecklistDto, OwnSlotDto, UploadGrant } from "../server/staff-documentation/types";
+import { errorFromReply, networkError } from "../shared/error-messages";
 
 const STATES: Record<OwnSlotDto["state"], DocumentStatus> = {
   requested: "required", checking: "under-review", available: "under-review", verified: "verified",
@@ -8,13 +9,19 @@ const STATES: Record<OwnSlotDto["state"], DocumentStatus> = {
 const SLOTS = new Set(["passport-photo", "nin-copy", "medical-fitness"]);
 
 async function call<T>(action: string, body: Record<string, unknown> = {}): Promise<T> {
-  const response = await fetch(`/api/staff/documentation/${action}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-    credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(30000),
-  });
-  const reply = await response.json();
-  if (!response.ok || reply?.ok !== true || !reply.value) throw new Error("Documents are temporarily unavailable. Refresh before trying again.");
-  return reply.value as T;
+  let response: Response;
+  try {
+    response = await fetch(`/api/staff/documentation/${action}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(30000),
+    });
+  } catch {
+    throw networkError();
+  }
+  const reply: unknown = await response.json().catch(() => null);
+  const ok = reply as { ok?: unknown; value?: unknown } | null;
+  if (!response.ok || ok?.ok !== true || !ok.value) throw errorFromReply(reply, "documents");
+  return ok.value as T;
 }
 
 export async function getLiveStaffDocuments(): Promise<StaffDocument[]> {
@@ -45,7 +52,7 @@ export async function sendLiveStaffDocument(slot: string, file: File): Promise<S
   const upload = await fetch(url, {
     method: "PUT", body: file, headers: { "Content-Type": file.type, "x-upsert": "false" },
     credentials: "omit", referrerPolicy: "no-referrer", redirect: "error", signal: AbortSignal.timeout(120000),
-  });
+  }).catch(() => { throw new Error("The upload didn't finish. Check your internet connection, then refresh your documents before trying again."); });
   if (!upload.ok) throw new Error("We could not confirm the upload. Refresh your documents before trying again.");
   await call("complete", { requestId: crypto.randomUUID(), uploadId: grant.uploadId });
   const result = (await getLiveStaffDocuments()).find(item => item.id === slot);

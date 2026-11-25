@@ -33,6 +33,7 @@ import type { Loadable, SensitiveState, StaffEmployer, StaffPersonalDetails, Sta
 import { ErrorPanel } from "../ErrorPanel";
 import { ActionPill, Dot, Facts, Panel, Segmented, Sk } from "../kit";
 import { withStaffPreloader } from "../StaffPreloader";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 /* ---------- shared bits ---------- */
 
@@ -95,7 +96,8 @@ function Gate<T>({ load, title, error, children }: { load: Loadable<T>; title: s
   return <>{children(load.data)}</>;
 }
 
-const saveFailed = () => toast.add({ title: "We couldn't save your changes", description: "Please try again.", type: "error" });
+/** The reason from the server when there is one (fixed wording, never a typed value). */
+const saveFailed = (e?: unknown) => toast.add({ title: "We couldn't save your changes", description: e === undefined ? "Please try again." : errorMessage(e), type: "error" });
 
 /* ---------- Personal details ---------- */
 
@@ -163,8 +165,8 @@ function PersonalDetailsForm({ d, onDone }: { d: StaffPersonalDetails; onDone: (
       });
       toast.add({ title: "Personal details saved", type: "success" });
       onDone();
-    } catch {
-      saveFailed();
+    } catch (e) {
+      saveFailed(e);
       setBusy(false);
     }
   }
@@ -224,8 +226,8 @@ function EducationBody({ d }: { d: StaffPersonalDetails }) {
       await withStaffPreloader("save", () => savePersonalDetails({ ...d, education: value }));
       toast.add({ title: "Education saved", type: "success" });
       setEditing(false);
-    } catch {
-      saveFailed();
+    } catch (e) {
+      saveFailed(e);
     } finally {
       setBusy(false);
     }
@@ -336,8 +338,8 @@ function JobForm({ which, initial, onDone }: { which: "current" | "previous"; in
       await withStaffPreloader("save", () => saveEmployer(which, clean));
       toast.add({ title: which === "current" ? "Current job saved" : "Previous job saved", type: "success" });
       onDone();
-    } catch {
-      saveFailed();
+    } catch (e) {
+      saveFailed(e);
       setBusy(false);
     }
   }

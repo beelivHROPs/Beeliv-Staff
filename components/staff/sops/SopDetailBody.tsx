@@ -11,6 +11,7 @@ import { ErrorPanel } from "../ErrorPanel";
 import { ActionPill, Dot, Facts, PANEL, Panel, Sk, StateCard, confirmAction } from "../kit";
 import { toEntries, type LearningEntry } from "./learning";
 import { ReaderSkeleton, SopFullReader } from "./SopFullReader";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 const BACK_HREF = "/staff/sops-training";
 
@@ -135,8 +136,8 @@ function ProgressPanel({ entry }: { entry: LearningEntry }) {
     try {
       await work();
       toast.add({ title: success, type: "success" });
-    } catch {
-      toast.add({ title: "We couldn't save that", description: "Please try again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't save that", description: errorMessage(e), type: "error" });
     } finally {
       setBusy(false);
     }

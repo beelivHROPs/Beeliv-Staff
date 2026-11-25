@@ -14,6 +14,7 @@ import { ActionPill, confirmAction } from "../kit";
 import { HeroCarousel, HeroRotatingText, useHeroRotation } from "../HeroCarousel";
 import { withStaffPreloader } from "../StaffPreloader";
 import { usePilotMenu } from "@/lib/pilot/context";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 function heroLine(home: StaffHome, pilot: boolean): string {
   const outlet = home.assignment?.client.name ?? "your outlet";
@@ -97,8 +98,8 @@ export async function runClock(kind: "in" | "out", shift: StaffHome["today"]["sh
   try {
     await withStaffPreloader(kind === "in" ? "check-in" : "check-out", () => (kind === "in" ? checkIn() : checkOut()));
     toast.add({ title: kind === "in" ? "You're checked in" : "You're checked out", type: "success" });
-  } catch {
-    toast.add({ title: "We couldn't record that", description: "Please try again.", type: "error" });
+  } catch (e) {
+    toast.add({ title: "We couldn't record that", description: errorMessage(e), type: "error" });
   }
 }
 

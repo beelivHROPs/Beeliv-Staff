@@ -3,7 +3,8 @@
  * fixture or sample data.
  * Reads with no backend yet answer an honest EMPTY result (null / []), so each screen shows its approved "No ... yet" state
  * instead of an error panel (lead rule: real data, or "Coming soon" / "No ... yet", never an error because a backend is missing).
- * Harmless empties: getNavCounts -> {}, getNotifications -> [], SOPs/training/records/announcements -> [].
+ * Harmless empties: getNavCounts -> {}, getNotifications -> [], SOPs/training/announcements -> [].
+ * Warnings & Records are real (day2-warnings-requests.sql, ../warnings-live.ts).
  * My Assignment is real (day1-assignment-client-shifts.sql, ../assignment-live.ts); none yet -> null / [].
  * Unserved WRITES still throw StaffNotConnectedError: nothing is ever claimed as saved.
  * Sensitive inputs go to the transport body only; this file never logs, keeps or echoes them.
@@ -12,6 +13,7 @@
 import { liveAttendanceHistory, liveCancelLeave, liveCheck, liveHomeShifts, liveLeaveRequests, liveRequestLeave, liveSchedule, liveToday } from "../workforce-live";
 import type { AdapterEvent, StaffAdapter } from "../adapter";
 import { liveAssignments } from "../assignment-live";
+import { liveAcknowledgeRecord, liveStaffRecords } from "../warnings-live";
 import { enrollmentCall, enrollmentWrite, StaffNotConnectedError } from "../enrollment-transport";
 import { onboardingFromChecklist, type EnrollmentChecklist } from "../onboarding-checklist";
 import type { AccessibilityInput, AccountStatus, Entitlements, StaffProfile, BankDetailsInput, NextOfKinInput, NinInput, StaffEmployer, StaffEmployment, StaffHome, StaffPersonalDetails, StaffSensitiveStatus } from "../types";
@@ -112,7 +114,7 @@ export const liveStaffAdapter: StaffAdapter = {
   getSOPs: () => nothingYet(),
   getSopLibrary: () => nothingYet(),
   getTraining: () => nothingYet(),
-  getStaffRecords: () => nothingYet(),
+  getStaffRecords: () => liveStaffRecords(),
   getAnnouncements: () => nothingYet(),
   getNotifications: async () => [],
   getPersonalDetails: () => enrollmentCall<StaffPersonalDetails>("personal-get"),
@@ -134,7 +136,7 @@ export const liveStaffAdapter: StaffAdapter = {
   saveSOPProgress: () => notConnected(),
   markNotificationRead: () => notConnected(),
   deleteNotification: () => notConnected(),
-  acknowledgeStaffRecord: () => notConnected(),
+  acknowledgeStaffRecord: (id: string) => wrote(() => liveAcknowledgeRecord(id)),
   updateStaffContact: () => notConnected(),
   savePersonalDetails: (input: StaffPersonalDetails) => wrote(() => enrollmentWrite<StaffPersonalDetails>("personal-save", { input })),
   saveEmployer: (which: "current" | "previous", input: StaffEmployer) => wrote(() => enrollmentWrite<StaffEmployment>("employer-save", { which, input })),

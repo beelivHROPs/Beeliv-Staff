@@ -11,6 +11,7 @@ import { requestLeave } from "@/lib/staff/service";
 import { ACCEPT, fileProblem, FORMATS } from "../documents/file-rules";
 import { ActionPill, confirmAction } from "../kit";
 import { LEAVE_TYPE_OPTIONS } from "./leave-meta";
+import { errorMessage } from "@/lib/shared/error-messages";
 
 /**
  * Request Leave form. It only collects and checks the basics (type, dates in
@@ -70,8 +71,8 @@ export function RequestForm({ onDone, bare = true }: { onDone: () => void; bare?
       toast.add({ title: "Leave request sent", description: "You'll see its status here once Beeliv responds.", type: "success" });
       setType(""); setStart(""); setEnd(""); setReason(""); setFile(null); setErrors({});
       onDone();
-    } catch {
-      toast.add({ title: "We couldn't send your request", description: "Please try again.", type: "error" });
+    } catch (e) {
+      toast.add({ title: "We couldn't send your request", description: errorMessage(e), type: "error" });
     } finally {
       setBusy(false);
     }

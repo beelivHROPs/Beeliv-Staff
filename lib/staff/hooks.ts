@@ -11,6 +11,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import * as service from "./service";
+import { noteLoadFailure } from "../shared/load-failure";
 import type { SopItem } from "./sops/types";
 import type {
   Announcement,
@@ -57,7 +58,11 @@ function useLoad<T>(load: () => Promise<T>, isEmpty: (d: T) => boolean): Loadabl
     let cancelled = false;
     load().then(
       (data) => !cancelled && setResult({ key, data, failed: false }),
-      () => !cancelled && setResult({ key, data: null, failed: true }),
+      (e: unknown) => {
+        if (cancelled) return;
+        noteLoadFailure(e); // the "couldn't load" panel names a specific reason when there is one
+        setResult({ key, data: null, failed: true });
+      },
     );
     return () => {
       cancelled = true;

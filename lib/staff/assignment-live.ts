@@ -5,6 +5,7 @@
  * Only relative imports so it can be unit-tested offline.
  */
 import type { StaffAssignment } from "./types";
+import { errorFromReply, networkError } from "../shared/error-messages";
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : null);
@@ -44,9 +45,14 @@ function assignment(raw: Rec, current: boolean): StaffAssignment | null {
 export type LiveAssignments = { current: StaffAssignment | null; history: StaffAssignment[] };
 
 async function load(): Promise<LiveAssignments> {
-  const res = await fetch("/api/staff/workforce/my-assignment", { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: "{}" });
+  let res: Response;
+  try {
+    res = await fetch("/api/staff/workforce/my-assignment", { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "Content-Type": "application/json" }, body: "{}" });
+  } catch {
+    throw networkError();
+  }
   const j = rec(await res.json().catch(() => null));
-  if (j?.ok !== true) throw new Error("We couldn't reach Beeliv. Please try again.");
+  if (j?.ok !== true) throw errorFromReply(j);
   const c = rec(j.current);
   const current = c ? assignment(c, true) : null;
   const past = (Array.isArray(j.history) ? j.history : []).map((h) => rec(h)).flatMap((h) => (h ? [assignment(h, false)] : [])).filter((a): a is StaffAssignment => !!a);

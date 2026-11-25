@@ -21,6 +21,7 @@ import {
   useApplicantStore,
 } from "@/lib/applicant/service";
 import { readScreeningAnswers } from "@/lib/applicant/screening";
+import { errorMessage } from "@/lib/shared/error-messages";
 import { questionsForJob } from "@/lib/journeys/applicant";
 import type { ApplyFormData } from "@/lib/applicant/types";
 import { JobThumb } from "./primitives";
@@ -74,7 +75,8 @@ type Init =
 
 /** A live server refusal in plain words; anything unexpected gets one generic line. */
 function liveMessage(e: unknown): string {
-  return e instanceof LiveApplicationFailure ? e.message : "Something went wrong. Please try again.";
+  if (e instanceof LiveApplicationFailure) return e.code === "already_submitted" ? "You've already applied for this job." : e.message;
+  return errorMessage(e, "Your changes didn't reach Beeliv. Please try again in a moment.");
 }
 
 function locationFrom(address: string, state: string): string {
@@ -320,8 +322,8 @@ export function ApplyBody({ job }: { job: Job }) {
           otherText: test.otherText,
         });
         test.update({ submittedAt: new Date().toISOString(), submissionId: sent.id });
-      } catch {
-        toast.add({ title: "We couldn't send your test answers", description: "They are saved on this device. Try submitting again." });
+      } catch (e) {
+        toast.add({ title: "We couldn't send your test answers", description: `${errorMessage(e, "Beeliv didn't receive them.")} Your answers are saved on this device, so you can submit again.` });
         return;
       }
     }

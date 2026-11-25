@@ -182,16 +182,8 @@ export function SearchBar({
           <div className="min-w-0 flex-1">
             <SearchField value={s.draft} onChange={s.setDraft} onClear={s.clear} label={search.label} placeholder={search.placeholder} />
           </div>
-          {/* Desktop: a small inline "Searching" beside the search box, so the tabs and filters below never jump down (lead 2026-11-21). */}
-          {s.busy ? (
-            <span role="status" aria-live="polite" className="inline-flex shrink-0 items-center gap-1.5 px-1 text-[13px] font-semibold text-(--ap-muted)">
-              <svg viewBox="0 0 24 24" className="size-4 animate-spin text-(--ap-violet) motion-reduce:animate-none" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.2" strokeWidth="3" />
-                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-              Searching
-            </span>
-          ) : null}
+          {/* Desktop (lead 2026-11-25): the visible "Searching" spinner sits in the middle of the list area (search-card.css); this is the screen-reader announcement. */}
+          {s.busy ? <span role="status" aria-live="polite" className="sr-only">Searching</span> : null}
           {filter ? <FunnelButton count={filter.count} onClick={filter.onClick} /> : filterSlot}
         </form>
       )}
