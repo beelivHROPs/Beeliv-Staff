@@ -3,6 +3,7 @@ import { adminClient, sessionClient } from "../auth/session";
 import { AuthFailure } from "../auth/service";
 import { limitAuth } from "../auth/rate";
 import { projectMyAssignment, validMyAssignmentInput } from "./assignment";
+import { parseWarningAck, parseWarningIssue, parseWarningWithdraw, validNoInput } from "./warnings";
 
 /**
  * Scheduling + attendance (docs/contracts/workforce-shifts-attendance.sql). The database functions re-check every
@@ -66,6 +67,10 @@ export async function workforceAdmin(action: string, input: Rec) {
     case "leave": return call("admin", "workforce_leave_list", {});
     case "leave-decide": return call("admin", "workforce_leave_decide", { p_leave_id: uuidOf(input.leaveId), p_expected_revision: intOf(input.expectedRevision, 1, 1_000_000),
       p_decision: input.decision === "approve" || input.decision === "decline" ? input.decision : bad(), p_note: str(input.note).slice(0, 1000) });
+    // Staff warnings (day2-warnings-requests.sql, part A). Strict shapes; the database re-checks permission, scope and state.
+    case "warning-list": return validNoInput(input) ? call("admin", "staff_warning_admin_list", {}) : bad();
+    case "warning-issue": return call("admin", "staff_warning_admin_issue", parseWarningIssue(input) ?? bad());
+    case "warning-withdraw": return call("admin", "staff_warning_admin_withdraw", parseWarningWithdraw(input) ?? bad());
     default: throw new AuthFailure("invalid_request", 404);
   }
 }
@@ -84,6 +89,9 @@ export async function workforceStaff(action: string, input: Rec) {
       const d = await call("talent", "staff_my_assignment", {});
       return d.ok === true ? projectMyAssignment(d) : d;
     }
+    // Own warnings only (the session is the person); acknowledge with an optional comment.
+    case "warning-mine": return validNoInput(input) ? call("talent", "staff_warning_mine", {}) : bad();
+    case "warning-ack": return call("talent", "staff_warning_acknowledge", parseWarningAck(input) ?? bad());
     default: throw new AuthFailure("invalid_request", 404);
   }
 }
